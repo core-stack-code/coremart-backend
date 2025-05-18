@@ -1,10 +1,28 @@
 import app from './app';
-import dotenv from 'dotenv';
+import { connectDB, disconnectDB } from './api/config/database';
+import { env } from './api/config/env';
 
-dotenv.config();
+const PORT = Number(env.PORT) || 5000;
 
-const port = process.env.PORT || 4000;
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server running... at ${PORT}`);
+    });
+  } 
+  catch (error) {
+    console.error('Failed to start server:', error);
+  }
+};
 
-app.listen(port, () => {
-  console.log(`Running... ${port}`);
-});
+const serverShutdown = async (signal: string) => {
+  console.log(`${signal} received. Shutting down gracefully...`);
+  await disconnectDB();
+  process.exit(0);
+};
+
+process.on('SIGINT', () => serverShutdown('SIGINT'));
+process.on('SIGTERM', () => serverShutdown('SIGTERM'));
+
+startServer();
