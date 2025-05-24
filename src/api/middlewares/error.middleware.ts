@@ -21,8 +21,8 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, next:
 
     logger.error('Global Error Handler:', {
         message: err.message,
+        code: status,
         // stack: err.stack,
-        code: err.code,
     });
 
     errorResponse(res, { status, message });

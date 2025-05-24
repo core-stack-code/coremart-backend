@@ -20,6 +20,9 @@ const userSchema = new Schema<IUser>({
     isVerified: { type: Boolean, default: false },
     provider: { type: String, enum: ['local', 'github'], default: 'local' },
     oauthId: { type: String },
+}, {
+    versionKey: false,
+    timestamps: true,
 });
 
 

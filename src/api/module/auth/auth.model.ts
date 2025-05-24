@@ -14,6 +14,7 @@ const authSchema = new Schema<IAuth>({
     resendCount: { type: Number, default: 3 },
 }, {
     timestamps: true,
+    versionKey: false,
 })
 
 

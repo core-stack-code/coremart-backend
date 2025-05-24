@@ -25,7 +25,7 @@ export const signUpController = async (req: Request, res: Response, next: NextFu
 
 export const verifyUserController = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const { otp, email } = req.body
+        const { otp, email, isRememberMe } = req.body
         const user = await findUserWithEmail(email)
 
         if(!user){
@@ -38,7 +38,7 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             throw new CustomError("Verification faild, please try agin.", 500)
         }
 
-        const { accessToken, refreshToken } = await generateAuthTokens(user)
+        const { accessToken, refreshToken } = await generateAuthTokens(user, isRememberMe)
 
         // cookie name for access token
         res.cookie('__Host-atkn', accessToken, {
@@ -46,8 +46,9 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             secure: true,
             sameSite: 'strict',
             path: '/',
-            maxAge: 60 * 60 * 1000
+            maxAge: isRememberMe ? (30 * 24 * 60 * 60 * 1000) : (60 *60 * 1000) // 60 minutes or 30 days
         });
+
         // cookie name for refresh token
         res.cookie('__Secure-rtkn', refreshToken, {
             httpOnly: true,
@@ -66,7 +67,6 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
                 user: {
                     name: user.name,
                     email: user.email,
-
                 }
             }
         });
@@ -78,16 +78,16 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
 
 export const loginController = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const { email } = req.body
+        const { email, password, isRememberMe } = req.body
         const user = await findUserWithEmail(email)
 
         if(!user || !user.isVerified){
             throw new CustomError("Email is not register.", 401)
         }
 
-        await checkCredential(req.body, user)
+        await checkCredential(password, user)
 
-        const { accessToken, refreshToken } = await generateAuthTokens(user)
+        const { accessToken, refreshToken } = await generateAuthTokens(user, isRememberMe)
 
         // cookie name for access token
         res.cookie('__Host-atkn', accessToken, {
@@ -95,8 +95,9 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             secure: true,
             sameSite: 'strict',
             path: '/',
-            maxAge: 60 * 60 * 1000
+            maxAge: isRememberMe ? (30 * 24 * 60 * 60 * 1000) : (60 *60 * 1000) // 60 minutes or 30 days
         });
+
         // cookie name for refresh token
         res.cookie('__Secure-rtkn', refreshToken, {
             httpOnly: true,
@@ -115,7 +116,6 @@ export const loginController = async (req: Request, res: Response, next: NextFun
                 user: {
                     name: user.name,
                     email: user.email,
-
                 }
             }
         })

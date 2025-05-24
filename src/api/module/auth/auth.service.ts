@@ -1,10 +1,9 @@
-
 import User, { IUser } from "../users/user.model";
 import Auth from "./auth.model";
+import { env } from "../../config/env";
+import { SignupPayload } from "./auth.schemas";
 import { generateOTP } from "../../utils/helper";
 import { CustomError } from "../../utils/response";
-import { LoginPayload, SignupPayload } from "./auth.schemas";
-import { env } from "../../config/env";
 import { generateJwtToken } from "../../utils/jwt";
 
 type OtpContext = 'VERIFY_EMAIL' | 'FORGOT_PASSWORD';
@@ -88,8 +87,8 @@ export const verifyOtp = async (userId: unknown, otp: number, markUserVerified: 
     return true;
 };
 
-export const checkCredential = async (payload: LoginPayload, user: IUser) => {
-    const isPasswordMatch = await user.comparePassword(payload.password)
+export const checkCredential = async (password: string, user: IUser) => {
+    const isPasswordMatch = await user.comparePassword(password)
     if(!isPasswordMatch){
         throw new CustomError("Invalid user credentials.", 400)
     }
@@ -107,11 +106,11 @@ export const resetAuthData = async (userId: unknown) => {
     await auth.save();
 }
 
-export const generateAuthTokens = async (user: IUser) => {
+export const generateAuthTokens = async (user: IUser, isRememberMe: boolean) => {
     const accessToken = generateJwtToken({
         sub: user._id,
         email: user.email,
-    }, env.JWT_ACCESS_SECRET, '1h');
+    }, env.JWT_ACCESS_SECRET, isRememberMe ? '30d': '1h');
 
     const refreshToken = generateJwtToken({
         sub: user._id,
