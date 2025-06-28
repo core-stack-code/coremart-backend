@@ -57,7 +57,21 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             path: '/',
             maxAge: 30 * 24 * 60 * 60 * 1000
         });
-        
+
+        if(req.clinetType === 'web'){
+            successResponse(res, {
+                status: 200,
+                message: 'User verified successfully.',
+                data: {
+                    user: {
+                        name: user.name,
+                        email: user.email,
+                    }
+                }
+            });
+            return;
+        }
+
         successResponse(res, {
             status: 200,
             message: 'User verified successfully.',
@@ -70,6 +84,7 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
                 }
             }
         });
+
     }
     catch(error){
         next(error);
@@ -106,6 +121,20 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             path: '/',
             maxAge: 30 * 24 * 60 * 60 * 1000
         });
+
+        if(req.clinetType === 'web'){
+            successResponse(res, {
+                status: 200,
+                message: "Success",
+                data: {
+                    user: {
+                        name: user.name,
+                        email: user.email,
+                    }
+                }
+            })
+            return;
+        }
 
         successResponse(res, {
             status: 200,

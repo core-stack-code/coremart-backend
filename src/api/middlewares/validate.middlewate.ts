@@ -22,3 +22,19 @@ export const validateRequest = (schema: ZodSchema<any>) => {
         }
     };
 };
+
+export const validateQuery = (schema: ZodSchema<any>) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const validated = schema.parse(req.query);
+        res.locals.query = validated;              
+            next();
+        }
+        catch (error) {
+            if (error instanceof ZodError) {
+                errorResponse(res, { status: 400, message: error.errors[0].message });
+            }
+            next(error);
+        }
+    }
+}

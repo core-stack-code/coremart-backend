@@ -10,6 +10,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string(),
   JWT_ACCESS_SECRET: z.string(),
   JWT_REFRESH_SECRET: z.string(),
+  CLIENT_DOMAIN_URL: z.string().url(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
