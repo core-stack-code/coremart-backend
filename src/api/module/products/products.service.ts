@@ -1,6 +1,6 @@
 import { RecordType } from "zod";
 import { ProductListQuery } from "./products.schemas";
-import { Product } from "./products.model";
+import { Product } from "./products.modal";
 
 export const getProductListFilter = (query: ProductListQuery): Record<string, any> => {
     const filters: Record<string, any> = {};

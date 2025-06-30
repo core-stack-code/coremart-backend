@@ -1,4 +1,4 @@
-import { ProductLean  } from "../products/products.model";
+import { ProductLean  } from "../products/products.modal";
 import { Favorites } from "./favorites.modal";
 
 export type ProductWithFav = ProductLean & { isFav: boolean };

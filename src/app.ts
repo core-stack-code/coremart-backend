@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from './api/module/auth/auth.routes';
 import productRoutes from './api/module/products/products.routes'
+import reviewRoutes from './api/module/reviews/reviews.routes'
 
 import { globalErrorHandler } from './api/middlewares/error.middleware';
 import { authMiddleware } from './api/middlewares/auth.middleware';
@@ -22,6 +23,7 @@ app.use(cookieParser());
 // api routes
 app.use('/api/auth', authRoutes)
 app.use('/api/product', productRoutes)
+app.use('/api/review', reviewRoutes)
 
 // test route
 app.get('/api/test', (req: Request, res: Response) => {

@@ -1,5 +1,11 @@
-import { model, Schema } from "mongoose";
-import { IFavorites } from "./favorites.types";
+import { model, Schema, Types } from "mongoose";
+
+export interface IFavorites {
+    userId: Types.ObjectId;
+    productId: Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
 
 const favoritesSchema = new Schema<IFavorites>({
     userId: { 

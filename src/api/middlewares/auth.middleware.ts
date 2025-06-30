@@ -1,16 +1,31 @@
 import { NextFunction, Request, Response } from "express";
 import { CustomError } from "../utils/response";
 import { logger } from "../utils/logger";
+import { env } from "../config/env";
+import { verifyJwtToken } from "../utils/jwt";
+import { LoggedInAuth } from "../types/exprses";
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies['__Host-atkn'] || req.headers.authorization?.split(" ")[1];
+        logger.info('checking in middleware', token)
 
         if (!token) {
             throw new CustomError("Unauthorized access", 401);
         }
 
-        // Here you would typically verify the token and attach user info to the request
+        const decode = verifyJwtToken(token, env.JWT_ACCESS_SECRET)
+        if (!decode) {
+            throw new CustomError("Session has expire", 401);
+        }
+
+        const auth: LoggedInAuth = {
+            userId: decode.sub as string,
+            email: decode.email,
+            isGuest: false
+        }
+        
+        req.auth = auth
         next();
     } catch (error) {
         next(error);

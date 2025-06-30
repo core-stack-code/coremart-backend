@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Product } from "./api/module/products/products.model";
+import { Product } from "./api/module/products/products.modal";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
 import { logger } from "./api/utils/logger";
 import { connectDB } from './api/config/database';
@@ -106,7 +106,7 @@ const seed = async () => {
         await Product.insertMany(products);
     }
     catch (error) {
-        logger.error(error);
+        logger.error('error in seed', error);
     }
 }
 

@@ -8,22 +8,34 @@ const formatArgs = (args: any[]) => {
             return util.inspect(arg, { colors: true, depth: null });
         }
         return arg;
-    });
+    }).join('\n');
 };
 
 const isDev = env.NODE_ENV !== 'production';
 
 export const logger = {
-    info: (...args: any[]) => {
-        if (isDev) console.log(chalk.blue('[---INFO]---'), ...formatArgs(args));
+    info: (text: string, ...args: any[]) => {
+        if (isDev) {
+            console.log(chalk.blue('[---INFO---]'), chalk.white.bgBlue.bold(` ${text} `));
+            if (args.length) console.log(formatArgs(args));
+        }
     },
-    success: (...args: any[]) => {
-        if (isDev) console.log(chalk.green('[---SUCCESS---]'), ...formatArgs(args));
+    success: (text: string, ...args: any[]) => {
+        if (isDev) {
+            console.log(chalk.green('[---SUCCESS---]'), chalk.black.bgGreen.bold(` ${text} `));
+            if (args.length) console.log(formatArgs(args));
+        }
     },
-    warn: (...args: any[]) => {
-        if (isDev) console.log(chalk.yellow('[---WARN---]'),  ...formatArgs(args));
+    warn: (text: string, ...args: any[]) => {
+        if (isDev) {
+            console.log(chalk.yellow('[---WARN---]'), chalk.black.bgYellow.bold(` ${text} `));
+            if (args.length) console.log(formatArgs(args));
+        }
     },
-    error: (...args: any[]) => {
-        if (isDev) console.log(chalk.red('[---ERROR---]'),  ...formatArgs(args));
+    error: (text: string, ...args: any[]) => {
+        if (isDev) {
+            console.log(chalk.red('[---ERROR---]'), chalk.white.bgRed.bold(` ${text} `));
+            if (args.length) console.log(formatArgs(args));
+        }
     },
 };
