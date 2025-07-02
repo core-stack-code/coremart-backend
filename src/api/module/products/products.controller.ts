@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import { getProductListFilter, getProducts, getSortingAndPagnation } from "./products.service";
+import { getProductBySlug, getProductListFilter, getProducts, getSortingAndPagnation } from "./products.service";
 import { ProductListQuery } from "./products.schemas";
 import { logger } from "../../utils/logger";
 import { successResponse } from "../../utils/response";
-import { getFavoritesFromProducts, ProductWithFav } from "../favorites/favorites.service";
-import { assertAuth } from "../../utils/assertAuth";
+import { getFavoritesByProductId, getFavoritesFromProducts, ProductWithFav } from "../favorites/favorites.service";
+import { reviewListByProductId } from "../reviews/reviews.service";
+import { Types } from "mongoose";
 
 export const getProfuctListController = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -18,15 +19,21 @@ export const getProfuctListController = async (req: Request, res: Response, next
 
         // get data
         const { products, toal_products } = await getProducts(filters, sortAndPage)
-        logger.info('products.length', products.length)
+        logger.info('products', products[0].slug)
 
         let productsWithFav: ProductWithFav[];
 
         if (userId) {
-            productsWithFav = await getFavoritesFromProducts(products,  userId);
+            productsWithFav = (await getFavoritesFromProducts(products,  userId)).map((p) => {
+                return {
+                    ...p,
+                    images: [p.images[0]],
+                }
+            })
         } else {
             productsWithFav = products.map((p) => ({
                 ...p,
+                images: [p.images[0]],
                 isFav: false,
             }));
         }
@@ -42,5 +49,50 @@ export const getProfuctListController = async (req: Request, res: Response, next
     }
     catch (error) {
         next(error)
+    }
+}
+
+export const getProductController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+
+        const slug = req.params.slug;
+        logger.info('product slug:', slug);
+
+        const product = await getProductBySlug(slug);
+        let productWithFav: ProductWithFav
+
+        if(userId) {
+            const isFav = await getFavoritesByProductId(product._id, new Types.ObjectId(userId));
+            productWithFav = {
+                ...product,
+                isFav,
+            };
+        }
+        else {
+            productWithFav = {
+                ...product,
+                isFav: false,
+            };
+        }
+
+        logger.info('product with fav:', productWithFav);
+        const reviews = await reviewListByProductId(product._id);
+
+        successResponse(res, {
+            status: 200,
+            message: 'Product fetched successfully.',
+            data: {
+                reviews,
+                product: {
+                    ...productWithFav,
+                    numReviews: reviews.length === 0 ? 0 : productWithFav.numReviews,
+                    rating: reviews.length === 0 ? 0 : productWithFav.rating,
+                }
+            }
+        });
+    }
+    catch (error) {
+        next(error);
     }
 }

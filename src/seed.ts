@@ -3,6 +3,8 @@ import { Product } from "./api/module/products/products.modal";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
 import { logger } from "./api/utils/logger";
 import { connectDB } from './api/config/database';
+import { slugify } from './api/utils/helper';
+import { IProduct } from './api/module/products/products.types';
 
 const NUMBER_OF_PRODUCTS = 350;
 
@@ -55,9 +57,23 @@ const generateRandomAttributes = (): Record<string, string> => {
     return attributes;
 };
 
+const usedSlugs = new Set<string>();
 
-const generateRandomProduct = () => {
+const generateUniqueSlug = async (base: string): Promise<string> => {
+    let slug = slugify(base);
+    let count = 1;
+    while (usedSlugs.has(slug) || await Product.exists({ slug })) {
+        slug = `${slugify(base)}-${count}`;
+        count++;
+    }
+    usedSlugs.add(slug);
+    return slug;
+};
+
+
+const generateRandomProduct = async () => {
     const name = `${faker.helpers.arrayElement(namePrefixes)} ${faker.helpers.arrayElement(nameSuffixes)}`;
+    const slug = await generateUniqueSlug(name);
 
     const description = `${faker.lorem.paragraph()}
     This ${faker.helpers.arrayElement(styleAdjectives)} outfit is ${faker.helpers.arrayElement(dressFeatures)}.`;
@@ -79,6 +95,7 @@ const generateRandomProduct = () => {
 
     return {
         name,
+        slug ,
         description,
         brand,
         price,
@@ -101,9 +118,16 @@ const seed = async () => {
     try {
         await connectDB()
         await Product.deleteMany({});
+
+        const products: IProduct[] = [];
     
-        const products = Array.from({ length: NUMBER_OF_PRODUCTS }, generateRandomProduct);
+        for (let i = 0; i < NUMBER_OF_PRODUCTS; i++) {
+            const product = await generateRandomProduct();
+            products.push(product);
+        }
+
         await Product.insertMany(products);
+        logger.info(`Seeded ${products.length} products successfully.`);
     }
     catch (error) {
         logger.error('error in seed', error);

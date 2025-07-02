@@ -11,7 +11,8 @@ export const addReviewController = async (req: Request, res: Response, next: Nex
         assertLoggedIn(req.auth);
 
         const payload = req.body
-        const review = await addReview(new Types.ObjectId(req.auth.userId), payload);
+        const userId = new Types.ObjectId(req.auth.userId);
+        const review = await addReview(userId, payload);
         
 
         successResponse(res, {

@@ -3,7 +3,7 @@ import { Review } from "./reviews.modal"
 import { Product } from "../products/products.modal"
 import { AddReviewType, UpdateReviewType } from "./reviews.schema";
 import { CustomError } from "../../utils/response";
-import { de } from "@faker-js/faker/.";
+import { logger } from "../../utils/logger";
 
 export const updateReviewState = async (productId: Types.ObjectId) => {
     const [state] = await Review.aggregate([
@@ -24,6 +24,7 @@ export const updateReviewState = async (productId: Types.ObjectId) => {
     await Product.findByIdAndUpdate(productId, update);
 }
 
+
 export const addReview = async (userId: Types.ObjectId, payload: AddReviewType) => {
     const reviewData  = {
         ...payload,
@@ -36,6 +37,7 @@ export const addReview = async (userId: Types.ObjectId, payload: AddReviewType) 
     return addedReview.toObject();
 }
 
+
 export const updateReview = async (reviewId: Types.ObjectId, payload: UpdateReviewType) => {
     const updatedReview = await Review.findByIdAndUpdate(reviewId, payload, { new: true });
 
@@ -47,6 +49,7 @@ export const updateReview = async (reviewId: Types.ObjectId, payload: UpdateRevi
     return updatedReview.toObject();
 }
 
+
 export const deleteReview = async (reviewId: Types.ObjectId) => {
     const deletedReview = await Review.findByIdAndDelete(reviewId);
 
@@ -56,3 +59,25 @@ export const deleteReview = async (reviewId: Types.ObjectId) => {
 
     await updateReviewState(new Types.ObjectId(deletedReview.productId));
 }
+
+
+export const reviewListByProductId = async (productId: Types.ObjectId) => {
+    const reviews = await Review.find({ productId })
+        .populate({
+            path: 'userId',
+            select: 'name',
+        })
+        .lean();
+
+    if (reviews.length === 0) {
+        await Product.findByIdAndUpdate(productId, { rating: 0, numReviews: 0 });
+    }
+
+    return reviews.map((review) => {
+        const { userId, ...rest } = review;
+        return {
+            ...rest,
+            userName: (userId as any)?.name ?? 'Anonymous',
+        };
+    });
+};

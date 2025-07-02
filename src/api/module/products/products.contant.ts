@@ -22,3 +22,7 @@ export const tagsEnum = ['best-seller', 'new-arrival', 'limited-edition', 'sale'
 
 export const sortByValues = ['name', 'price-ace', 'price-dce', 'rating', 'date'] as const;
 // name : alphabetical order,   popular : based on sold count and rating
+
+
+// ---------- Some helper constants ----------
+export const PRODUCT_LIST_FIELDS = 'name slug description brand sizes price category dressType images';

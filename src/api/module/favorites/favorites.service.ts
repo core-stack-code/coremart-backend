@@ -1,5 +1,6 @@
 import { ProductLean  } from "../products/products.modal";
 import { Favorites } from "./favorites.modal";
+import { Types } from "mongoose";
 
 export type ProductWithFav = ProductLean & { isFav: boolean };
 
@@ -22,3 +23,19 @@ export const getFavoritesFromProducts = async (products: ProductLean[], userId: 
 
     return productsWithFav;
 }
+
+export const getFavoritesByProductId = async (productId: Types.ObjectId, userId: Types.ObjectId): Promise<boolean> => {
+    const favorite = await Favorites.findOne({ productId, userId }).lean();
+    return !!favorite;
+}
+
+
+export const toggleFavorite = async (productId: Types.ObjectId, userId: Types.ObjectId) => {
+    const existing = await Favorites.findOne({ productId, userId });
+
+    if (existing) {
+        await Favorites.deleteOne({ _id: existing._id });
+    } else {
+        await Favorites.create({ productId, userId });
+    }
+};

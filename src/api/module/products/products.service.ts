@@ -1,6 +1,9 @@
 import { RecordType } from "zod";
 import { ProductListQuery } from "./products.schemas";
 import { Product } from "./products.modal";
+import { PRODUCT_LIST_FIELDS } from "./products.contant";
+import { CustomError } from "../../utils/response";
+import { logger } from "../../utils/logger";
 
 export const getProductListFilter = (query: ProductListQuery): Record<string, any> => {
     const filters: Record<string, any> = {};
@@ -59,12 +62,28 @@ export const getProducts = async (filters: Record<string, any>, sortAndPage: Sor
     const { skip, limit, sort } = sortAndPage
 
     const [products, total] = await Promise.all([
-        Product.find(filters).sort(sort).skip(skip).limit(limit).lean(),
+        Product.find(filters).select(PRODUCT_LIST_FIELDS).sort(sort).skip(skip).limit(limit).lean(),
         Product.countDocuments(filters),
     ]);
+
+    if(products.length === 0) {
+        throw new CustomError('No products found', 404);
+    }
 
     return {
         products, 
         toal_products: total
     }
+}
+
+export const getProductBySlug = async (slug: string) => {
+    const product = await Product.findOne({ slug }).lean();
+
+    logger.info('product found:', product);
+
+    if (!product) {
+        throw new CustomError('Product not found', 400);
+    }
+
+    return product;
 }
