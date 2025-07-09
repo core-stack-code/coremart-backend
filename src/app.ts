@@ -1,10 +1,12 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
 import authRoutes from './api/module/auth/auth.routes';
 import productRoutes from './api/module/products/products.routes'
 import reviewRoutes from './api/module/reviews/reviews.routes'
+import favoriteRoutes from './api/module/favorites/favorites.routes';
+import saveForLaterRoutes from './api/module/save-for-later/saveForLater.routes';
 
 import { globalErrorHandler } from './api/middlewares/error.middleware';
 import { authMiddleware } from './api/middlewares/auth.middleware';
@@ -24,6 +26,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes)
 app.use('/api/product', productRoutes)
 app.use('/api/review', reviewRoutes)
+app.use('/api/favorite', favoriteRoutes)
+app.use('/api/save-for-later', saveForLaterRoutes)
 
 // test route
 app.get('/api/test', (req: Request, res: Response) => {
@@ -33,6 +37,14 @@ app.get('/api/test', (req: Request, res: Response) => {
 app.get('/api/protected_test', authMiddleware, (req: Request, res: Response) => {
   res.send({ message: 'This is a protected route, you are authenticated!' });
 })
+
+// 404 handler for undefined routes
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({
+    status: 404,
+    message: 'Route not found.',
+  });
+});
 
 // Global error handler
 app.use(globalErrorHandler);

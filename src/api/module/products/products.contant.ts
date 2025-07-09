@@ -25,4 +25,4 @@ export const sortByValues = ['name', 'price-ace', 'price-dce', 'rating', 'date']
 
 
 // ---------- Some helper constants ----------
-export const PRODUCT_LIST_FIELDS = 'name slug description brand sizes price category dressType images';
+export const PRODUCT_LIST_FIELDS = 'name slug brand price category dressType images';

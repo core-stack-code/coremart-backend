@@ -1,16 +1,21 @@
 import { NextFunction, Request, Response } from "express";
-import { getProductBySlug, getProductListFilter, getProducts, getSortingAndPagnation } from "./products.service";
-import { ProductListQuery } from "./products.schemas";
-import { logger } from "../../utils/logger";
-import { successResponse } from "../../utils/response";
-import { getFavoritesByProductId, getFavoritesFromProducts, ProductWithFav } from "../favorites/favorites.service";
+import { enrichProductList, getProductBySlug, getProductListFilter, getProducts, getRecentlyViewProducts, getSortingAndPagnation, getTrendingProducts } from "./products.service";
 import { reviewListByProductId } from "../reviews/reviews.service";
+
+import { ProductListQuery } from "./products.schemas";
+import { ProductWithFav, SortAndPageType } from "./products.types";
+import { successResponse } from "../../utils/response";
+import { logger } from "../../utils/logger";
+import { addViewToProduct } from "../product-view/productView.service";
+import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { Types } from "mongoose";
+
 
 export const getProfuctListController = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const userId = req.auth?.isGuest ? null : req.auth?.userId;
         const query =  res.locals.query as ProductListQuery;
+
         logger.info('checking in product list api', userId);
 
         // get filters and sorting
@@ -18,25 +23,12 @@ export const getProfuctListController = async (req: Request, res: Response, next
         const sortAndPage = getSortingAndPagnation(query);
 
         // get data
-        const { products, toal_products } = await getProducts(filters, sortAndPage)
+        const { products, toal_products } = await getProducts(filters, sortAndPage, "description sizes")
+
         logger.info('products', products[0].slug)
 
-        let productsWithFav: ProductWithFav[];
-
-        if (userId) {
-            productsWithFav = (await getFavoritesFromProducts(products,  userId)).map((p) => {
-                return {
-                    ...p,
-                    images: [p.images[0]],
-                }
-            })
-        } else {
-            productsWithFav = products.map((p) => ({
-                ...p,
-                images: [p.images[0]],
-                isFav: false,
-            }));
-        }
+        // check isFav and reduce images to one
+        const productsWithFav = await enrichProductList(products, userId)
 
         successResponse(res, {
             status: 200,
@@ -52,29 +44,20 @@ export const getProfuctListController = async (req: Request, res: Response, next
     }
 }
 
+
 export const getProductController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.auth?.isGuest ? null : req.auth?.userId;
 
+        // fecth product by slug
         const slug = req.params.slug;
-        logger.info('product slug:', slug);
-
         const product = await getProductBySlug(slug);
-        let productWithFav: ProductWithFav
+        
+        logger.info('product slug:', slug);
+        addViewToProduct(product._id, userId ? new Types.ObjectId(userId) : undefined);
 
-        if(userId) {
-            const isFav = await getFavoritesByProductId(product._id, new Types.ObjectId(userId));
-            productWithFav = {
-                ...product,
-                isFav,
-            };
-        }
-        else {
-            productWithFav = {
-                ...product,
-                isFav: false,
-            };
-        }
+        // check isFav
+        const productWithFav = await enrichProductList(product, userId, false) as ProductWithFav;
 
         logger.info('product with fav:', productWithFav);
         const reviews = await reviewListByProductId(product._id);
@@ -94,5 +77,110 @@ export const getProductController = async (req: Request, res: Response, next: Ne
     }
     catch (error) {
         next(error);
+    }
+}
+
+
+export const getNewArrivalProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+
+        // default data for new arriavals
+        const sortAndPage: SortAndPageType = {
+            limit: 8,
+            skip: 0,
+            sort: { createdAt: -1 }
+        }
+
+        const { products } = await getProducts({}, sortAndPage, 'createdAt');
+
+        // check isFav and reduce images to one
+        const productsWithFav = await enrichProductList(products, userId)
+
+         successResponse(res, {
+            status: 200,
+            message: 'Product list of new arriavals fetched successfully.',
+            data: {
+                products: productsWithFav,
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+
+export const getBestSellerProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+
+        // default data for new arriavals
+        const sortAndPage: SortAndPageType = {
+            limit: 8,
+            skip: 0,
+            sort: { sold: -1 }
+        }
+
+        const { products } = await getProducts({}, sortAndPage, 'sold');
+
+        // check isFav and reduce images to one
+        const productsWithFav = await enrichProductList(products, userId)
+
+         successResponse(res, {
+            status: 200,
+            message: 'Product list of best seller fetched successfully.',
+            data: {
+                products: productsWithFav,
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+export const getTrandingProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+
+        const products = await getTrendingProducts(8, 30)
+
+        const productsWithFav = await enrichProductList(products, userId)
+
+        successResponse(res, {
+            status: 200,
+            message: 'Product list of tranding fetched successfully.',
+            data: {
+                products: productsWithFav,
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+
+export const getRecentlyViewProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        assertAuth(req.auth);
+        assertLoggedIn(req.auth);
+
+        const userId = req.auth.userId;
+        const products = await getRecentlyViewProducts(userId, 8);
+
+        const productsWithFav = await enrichProductList(products, userId)
+
+        successResponse(res, {
+            status: 200,
+            message: 'Product list of rencently view fetched successfully.',
+            data: {
+                products: productsWithFav,
+            }
+        });
+    }
+    catch (error) {
+        next(error)
     }
 }

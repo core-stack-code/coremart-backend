@@ -1,4 +1,5 @@
 import { dressTypeEnum, sizesEnum, categoryEnum } from "./products.contant";
+import { ProductLean } from "./products.modal";
 
 export type Size = (typeof sizesEnum)[number];
 export type Category = (typeof categoryEnum)[number];
@@ -24,4 +25,12 @@ export interface IProduct {
     attributes: Record<string, string>;
     createdAt?: Date;
     updatedAt?: Date;
+}
+
+export type ProductWithFav = ProductLean & { isFav: boolean };
+
+export type SortAndPageType = {
+    skip: number;
+    limit: number;
+    sort: Record<string, 1 | -1>;
 }

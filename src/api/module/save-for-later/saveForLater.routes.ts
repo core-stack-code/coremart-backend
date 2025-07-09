@@ -1,22 +1,22 @@
 import express from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { validateRequest } from "../../middlewares/validate.middlewate";
-import { toggleFavoriteSchema } from "./favorites.schema";
-import { getFavoritesListController, toggleFavoriteController } from "./favorites.controller";
+import { getSaveForLaterListController, toggleSaveForLaterController } from "./saveForLater.controller";
+import { toggleSaveForLaterSchema } from "./saveForLater.schema";
 
 const router = express.Router();
 
 router.post(
     '/',
     authMiddleware,
-    validateRequest(toggleFavoriteSchema),
-    toggleFavoriteController
+    validateRequest(toggleSaveForLaterSchema),
+    toggleSaveForLaterController
 )
 
 router.get(
     '/',
     authMiddleware,
-    getFavoritesListController
+    getSaveForLaterListController
 )
 
 export default router;

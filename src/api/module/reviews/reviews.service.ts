@@ -61,12 +61,13 @@ export const deleteReview = async (reviewId: Types.ObjectId) => {
 }
 
 
-export const reviewListByProductId = async (productId: Types.ObjectId) => {
+export const reviewListByProductId = async (productId: Types.ObjectId, limit: number = 5) => {
     const reviews = await Review.find({ productId })
         .populate({
             path: 'userId',
             select: 'name',
         })
+        .limit(limit)
         .lean();
 
     if (reviews.length === 0) {
