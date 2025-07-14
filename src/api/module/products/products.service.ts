@@ -5,7 +5,7 @@ import { ProductWithFav, SortAndPageType } from "./products.types";
 
 import { getFavoritesFromProducts } from "../favorites/favorites.service";
 import { CustomError } from "../../utils/response";
-import { logger } from "../../utils/logger";
+import { devLooger } from "../../utils/devLogger";
 import { ProductView } from "../product-view/productView.modal";
 import { Types } from "mongoose";
 
@@ -62,9 +62,6 @@ export const getSortingAndPagnation = (query: ProductListQuery) => {
 export const getProducts = async (filters: Record<string, any>, sortAndPage: SortAndPageType, fieldString: string = '') => {
     const { skip, limit, sort } = sortAndPage
 
-    logger.info('filters:', filters);
-    logger.info('sortAndPage:', sortAndPage);
-
     const [products, total] = await Promise.all([
         Product.find(filters)
             .select(`${PRODUCT_LIST_FIELDS} ${fieldString}`)
@@ -114,8 +111,6 @@ export const enrichProductList = async (
 
 export const getProductBySlug = async (slug: string) => {
     const product = await Product.findOne({ slug }).lean();
-
-    logger.info('product found:', product);
 
     if (!product) {
         throw new CustomError('Product not found', 400);

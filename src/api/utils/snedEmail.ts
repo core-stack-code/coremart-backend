@@ -1,7 +1,7 @@
 import { env } from "../config/env";
 import { Resend } from 'resend';
 import { CustomError } from "./response";
-import { logger } from "./logger";
+import { devLooger } from "./devLogger";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -59,7 +59,7 @@ export const sendEmail = async (
             html
         });
 
-        logger.info("Email response", response);
+        devLooger.info("Email response", response);
         if (!response || !response.data || response.error) {
             throw new CustomError("Failed to send email. Please try again later.", 500);
         }

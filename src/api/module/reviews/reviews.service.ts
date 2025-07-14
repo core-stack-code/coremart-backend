@@ -3,7 +3,6 @@ import { Review } from "./reviews.modal"
 import { Product } from "../products/products.modal"
 import { AddReviewType, UpdateReviewType } from "./reviews.schema";
 import { CustomError } from "../../utils/response";
-import { logger } from "../../utils/logger";
 
 export const updateReviewState = async (productId: Types.ObjectId) => {
     const [state] = await Review.aggregate([

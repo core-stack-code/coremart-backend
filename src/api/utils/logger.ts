@@ -1,41 +1,36 @@
-import chalk from 'chalk';
-import util from 'util';
-import { env } from '../config/env';
+import { createLogger, format, transports } from 'winston';
+import path from 'path';
 
-const formatArgs = (args: any[]) => {
-    return args.map(arg => {
-        if (typeof arg === 'object') {
-            return util.inspect(arg, { colors: true, depth: null });
-        }
-        return arg;
-    }).join('\n');
-};
+const { combine, timestamp, printf, colorize } = format;
 
-const isDev = env.NODE_ENV !== 'production';
+const logFormat = printf(info => {
+    return `[${info.level}] ${info.timestamp} - ${info.message}`;
+});
 
-export const logger = {
-    info: (text: string, ...args: any[]) => {
-        if (isDev) {
-            console.log(chalk.blue('[---INFO---]'), chalk.white.bgBlue.bold(` ${text} `));
-            if (args.length) console.log(formatArgs(args));
-        }
-    },
-    success: (text: string, ...args: any[]) => {
-        if (isDev) {
-            console.log(chalk.green('[---SUCCESS---]'), chalk.black.bgGreen.bold(` ${text} `));
-            if (args.length) console.log(formatArgs(args));
-        }
-    },
-    warn: (text: string, ...args: any[]) => {
-        if (isDev) {
-            console.log(chalk.yellow('[---WARN---]'), chalk.black.bgYellow.bold(` ${text} `));
-            if (args.length) console.log(formatArgs(args));
-        }
-    },
-    error: (text: string, ...args: any[]) => {
-        if (isDev) {
-            console.log(chalk.red('[---ERROR---]'), chalk.white.bgRed.bold(` ${text} `));
-            if (args.length) console.log(formatArgs(args));
-        }
-    },
-};
+export const logger = createLogger({
+    level: 'info',
+    transports: [
+        new transports.Console({
+            format: combine(
+                colorize({ all: true }),
+                timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                logFormat
+            )
+        }),
+        new transports.File({
+            filename: path.join('logs', 'error.log'),
+            level: 'error',
+            format: combine(
+                timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                logFormat
+            )
+        }),
+        new transports.File({
+            filename: path.join('logs', 'combined.log'),
+            format: combine(
+                timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                logFormat
+            )
+        })
+    ]
+});

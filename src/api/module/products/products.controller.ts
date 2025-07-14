@@ -5,7 +5,7 @@ import { reviewListByProductId } from "../reviews/reviews.service";
 import { ProductListQuery } from "./products.schemas";
 import { ProductWithFav, SortAndPageType } from "./products.types";
 import { successResponse } from "../../utils/response";
-import { logger } from "../../utils/logger";
+import { devLooger } from "../../utils/devLogger";
 import { addViewToProduct } from "../product-view/productView.service";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { Types } from "mongoose";
@@ -16,16 +16,12 @@ export const getProfuctListController = async (req: Request, res: Response, next
         const userId = req.auth?.isGuest ? null : req.auth?.userId;
         const query =  res.locals.query as ProductListQuery;
 
-        logger.info('checking in product list api', userId);
-
         // get filters and sorting
         const filters = getProductListFilter(query);
         const sortAndPage = getSortingAndPagnation(query);
 
         // get data
         const { products, toal_products } = await getProducts(filters, sortAndPage, "description sizes")
-
-        logger.info('products', products[0].slug)
 
         // check isFav and reduce images to one
         const productsWithFav = await enrichProductList(products, userId)
@@ -53,13 +49,13 @@ export const getProductController = async (req: Request, res: Response, next: Ne
         const slug = req.params.slug;
         const product = await getProductBySlug(slug);
         
-        logger.info('product slug:', slug);
+        devLooger.info('product slug:', slug);
         addViewToProduct(product._id, userId ? new Types.ObjectId(userId) : undefined);
 
         // check isFav
         const productWithFav = await enrichProductList(product, userId, false) as ProductWithFav;
 
-        logger.info('product with fav:', productWithFav);
+        devLooger.info('product with fav:', productWithFav);
         const reviews = await reviewListByProductId(product._id);
 
         successResponse(res, {

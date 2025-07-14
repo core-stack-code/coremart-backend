@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Product } from "./api/module/products/products.modal";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
-import { logger } from "./api/utils/logger";
+import { devLooger } from "./api/utils/devLogger";
 import { connectDB } from './api/config/database';
 import { slugify } from './api/utils/helper';
 import { IProduct } from './api/module/products/products.types';
@@ -127,10 +127,10 @@ const seed = async () => {
         }
 
         await Product.insertMany(products);
-        logger.info(`Seeded ${products.length} products successfully.`);
+        devLooger.info(`Seeded ${products.length} products successfully.`);
     }
     catch (error) {
-        logger.error('error in seed', error);
+        devLooger.error('error in seed', error);
     }
 }
 

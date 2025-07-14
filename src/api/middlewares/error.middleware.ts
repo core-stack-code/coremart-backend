@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CustomError, errorResponse } from '../utils/response';
+import { devLooger } from '../utils/devLogger';
 import { logger } from '../utils/logger';
 
 export const globalErrorHandler  = (err: any, req: Request, res: Response, next: NextFunction) => {
@@ -19,7 +20,9 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, next:
         message = 'Invalid or expired token.';
     }
 
-    logger.error('Global Error Handler:', {
+    logger.error(`${req.method} ${req.originalUrl} - ${status} - ${message}`);
+
+    devLooger.error('Global Error Handler:', {
         message: err.message,
         code: status,
         stack: err.stack,

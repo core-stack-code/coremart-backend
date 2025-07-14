@@ -1,6 +1,10 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import hpp from 'hpp';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 
 import authRoutes from './api/module/auth/auth.routes';
 import productRoutes from './api/module/products/products.routes'
@@ -14,6 +18,7 @@ import { env } from './api/config/env';
 
 const app: Application = express();
 
+
 // Middleware
 app.use(cors({
   origin: env.CLIENT_DOMAIN_URL,
@@ -22,12 +27,32 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+app.use(morgan('dev'));
+
+
+// Security Middlewares
+app.use(helmet());
+app.use(hpp());
+
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000,
+  max: 150,
+  message: {
+    status: 429,
+    message: 'Too many requests, please try again later.'
+  }
+});
+app.use('/api', apiLimiter);
+
 // api routes
 app.use('/api/auth', authRoutes)
 app.use('/api/product', productRoutes)
 app.use('/api/review', reviewRoutes)
 app.use('/api/favorite', favoriteRoutes)
 app.use('/api/save-for-later', saveForLaterRoutes)
+
 
 // test route
 app.get('/api/test', (req: Request, res: Response) => {
@@ -37,6 +62,7 @@ app.get('/api/test', (req: Request, res: Response) => {
 app.get('/api/protected_test', authMiddleware, (req: Request, res: Response) => {
   res.send({ message: 'This is a protected route, you are authenticated!' });
 })
+
 
 // 404 handler for undefined routes
 app.use((req: Request, res: Response, next: NextFunction) => {

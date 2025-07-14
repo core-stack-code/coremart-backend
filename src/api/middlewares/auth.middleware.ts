@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { CustomError } from "../utils/response";
-import { logger } from "../utils/logger";
+import { devLooger } from "../utils/devLogger";
 import { env } from "../config/env";
 import { verifyJwtToken } from "../utils/jwt";
 import { LoggedInAuth } from "../types/exprses";
@@ -8,7 +8,7 @@ import { LoggedInAuth } from "../types/exprses";
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies['__Host-atkn'] || req.headers.authorization?.split(" ")[1];
-        logger.info('checking in middleware', token)
+        devLooger.info('checking in middleware', token)
 
         if (!token) {
             throw new CustomError("Unauthorized access", 401);
