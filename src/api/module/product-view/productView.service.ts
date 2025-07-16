@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { ProductView } from "./productView.modal";
+import { ProductView } from "./productView.model";
 
 export const addViewToProduct = async (productId: Types.ObjectId, userId?: Types.ObjectId) => {
     const view = new ProductView({

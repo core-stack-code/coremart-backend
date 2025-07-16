@@ -1,5 +1,5 @@
 import { dressTypeEnum, sizesEnum, categoryEnum } from "./products.contant";
-import { ProductLean } from "./products.modal";
+import { ProductLean } from "./products.model";
 
 export type Size = (typeof sizesEnum)[number];
 export type Category = (typeof categoryEnum)[number];

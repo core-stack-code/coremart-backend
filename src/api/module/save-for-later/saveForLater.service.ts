@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { SaveForLater } from "./saveForLater.modal";
+import { SaveForLater } from "./saveForLater.model";
 import { fetchUserSavedProducts } from "../../utils/dbUtils";
 
 

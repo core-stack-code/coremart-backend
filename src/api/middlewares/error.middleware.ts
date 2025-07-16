@@ -25,7 +25,7 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, next:
     devLooger.error('Global Error Handler:', {
         message: err.message,
         code: status,
-        stack: err.stack,
+        // stack: err.stack,
     });
 
     errorResponse(res, { status, message });

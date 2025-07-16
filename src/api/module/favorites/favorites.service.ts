@@ -1,7 +1,7 @@
 import { fetchUserSavedProducts } from "../../utils/dbUtils";
-import { ProductLean  } from "../products/products.modal";
+import { ProductLean  } from "../products/products.model";
 import { ProductWithFav } from "../products/products.types";
-import { Favorites } from "./favorites.modal";
+import { Favorites } from "./favorites.model";
 import { Types } from "mongoose";
 
 export const getFavoritesFromProducts = async (products: ProductLean[], userId: string): Promise<ProductWithFav[]> => {

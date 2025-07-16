@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Product } from "./api/module/products/products.modal";
+import { Product } from "./api/module/products/products.model";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
 import { devLooger } from "./api/utils/devLogger";
 import { connectDB } from './api/config/database';

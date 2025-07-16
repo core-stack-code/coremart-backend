@@ -49,13 +49,11 @@ export const getProductController = async (req: Request, res: Response, next: Ne
         const slug = req.params.slug;
         const product = await getProductBySlug(slug);
         
-        devLooger.info('product slug:', slug);
         addViewToProduct(product._id, userId ? new Types.ObjectId(userId) : undefined);
 
         // check isFav
         const productWithFav = await enrichProductList(product, userId, false) as ProductWithFav;
 
-        devLooger.info('product with fav:', productWithFav);
         const reviews = await reviewListByProductId(product._id);
 
         successResponse(res, {

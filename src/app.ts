@@ -11,6 +11,7 @@ import productRoutes from './api/module/products/products.routes'
 import reviewRoutes from './api/module/reviews/reviews.routes'
 import favoriteRoutes from './api/module/favorites/favorites.routes';
 import saveForLaterRoutes from './api/module/save-for-later/saveForLater.routes';
+import cartRoutes from './api/module/cart/cart.routes';
 
 import { globalErrorHandler } from './api/middlewares/error.middleware';
 import { authMiddleware } from './api/middlewares/auth.middleware';
@@ -52,6 +53,7 @@ app.use('/api/product', productRoutes)
 app.use('/api/review', reviewRoutes)
 app.use('/api/favorite', favoriteRoutes)
 app.use('/api/save-for-later', saveForLaterRoutes)
+app.use('/api/cart', cartRoutes)
 
 
 // test route

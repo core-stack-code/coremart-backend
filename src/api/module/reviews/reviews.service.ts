@@ -1,6 +1,6 @@
 import { Types } from "mongoose"
-import { Review } from "./reviews.modal"
-import { Product } from "../products/products.modal"
+import { Review } from "./reviews.model"
+import { Product } from "../products/products.model"
 import { AddReviewType, UpdateReviewType } from "./reviews.schema";
 import { CustomError } from "../../utils/response";
 

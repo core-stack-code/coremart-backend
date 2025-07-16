@@ -1,4 +1,4 @@
-import { Product, ProductLean } from "./products.modal";
+import { Product, ProductLean } from "./products.model";
 import { ProductListQuery } from "./products.schemas";
 import { PRODUCT_LIST_FIELDS } from "./products.contant";
 import { ProductWithFav, SortAndPageType } from "./products.types";
@@ -6,7 +6,7 @@ import { ProductWithFav, SortAndPageType } from "./products.types";
 import { getFavoritesFromProducts } from "../favorites/favorites.service";
 import { CustomError } from "../../utils/response";
 import { devLooger } from "../../utils/devLogger";
-import { ProductView } from "../product-view/productView.modal";
+import { ProductView } from "../product-view/productView.model";
 import { Types } from "mongoose";
 
 
