@@ -9,7 +9,7 @@ import {
 
 
 const zStringOrArray = z.union([z.string(), z.array(z.string())]).transform((val) =>
-  typeof val === 'string' ? [val] : val
+    typeof val === 'string' ? [val] : val
 );
 
 

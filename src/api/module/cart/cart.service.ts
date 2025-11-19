@@ -1,23 +1,58 @@
 import { Types  } from "mongoose";
-import { Cart, ICart } from "./cart.model";
+import { Cart } from "./cart.model";
 import { CustomError } from "../../utils/response";
-import { devLooger } from "../../utils/devLogger";
+import { CartResponse } from "./cart.types";
 
 
-export const getCart = async (userId: Types.ObjectId): Promise<ICart> => {
-    const userCart = await Cart.findOne({ userId }).lean();
+export const getCart = async (userId: Types.ObjectId): Promise<CartResponse> => {
+    const result = await Cart.aggregate([
+        { $match: { userId } },
+        { $unwind: "$items" },
+        {
+            $lookup: {
+                from: "products",
+                localField: "items.product",
+                foreignField: "_id",
+                as: "product"
+            }
+        },
+        { $unwind: "$product" },
+        {
+            $project: {
+                _id: 0,
+                product: {
+                    _id: "$product._id",
+                    name: "$product.name",
+                    slug: "$product.slug",
+                    category: "$product.category",
+                    price: "$product.price",
+                    image: { $arrayElemAt: ["$product.images", 0] }
+                },
+                quantity: "$items.quantity",
+                itemTotal: { $multiply: ["$items.quantity", "$product.price"] }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                items: { $push: "$$ROOT" },
+                totalPrice: { $sum: "$itemTotal" },
+                totalQuantity: { $sum: "$quantity" },
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                items: 1,
+                totalPrice: 1,
+                totalQuantity: 1
+            }
+        }
+    ]);
 
-    if (!userCart) {
-        return {
-            userId,
-            items: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-    }
-
-    return userCart;
+    return result[0] || { items: [], totalPrice: 0, totalQuantity: 0 };
 };
+
 
 
 export const addToCart = async (userId: Types.ObjectId, productId: Types.ObjectId) => {

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Types } from "mongoose";
 import { enrichProductList, getProductBySlug, getProductListFilter, getProducts, getRecentlyViewProducts, getSortingAndPagnation, getTrendingProducts } from "./products.service";
 import { reviewListByProductId } from "../reviews/reviews.service";
 
@@ -8,7 +9,6 @@ import { successResponse } from "../../utils/response";
 import { devLooger } from "../../utils/devLogger";
 import { addViewToProduct } from "../product-view/productView.service";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
-import { Types } from "mongoose";
 
 
 export const getProfuctListController = async (req: Request, res: Response, next: NextFunction) => {
@@ -49,7 +49,7 @@ export const getProductController = async (req: Request, res: Response, next: Ne
         const slug = req.params.slug;
         const product = await getProductBySlug(slug);
         
-        addViewToProduct(product._id, userId ? new Types.ObjectId(userId) : undefined);
+       await addViewToProduct(product._id, userId ? new Types.ObjectId(userId) : undefined);
 
         // check isFav
         const productWithFav = await enrichProductList(product, userId, false) as ProductWithFav;
@@ -91,7 +91,7 @@ export const getNewArrivalProductsController = async (req: Request, res: Respons
         // check isFav and reduce images to one
         const productsWithFav = await enrichProductList(products, userId)
 
-         successResponse(res, {
+        successResponse(res, {
             status: 200,
             message: 'Product list of new arriavals fetched successfully.',
             data: {
@@ -111,7 +111,7 @@ export const getBestSellerProductsController = async (req: Request, res: Respons
 
         // default data for new arriavals
         const sortAndPage: SortAndPageType = {
-            limit: 8,
+            limit: 8    ,
             skip: 0,
             sort: { sold: -1 }
         }

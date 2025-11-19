@@ -8,6 +8,7 @@ import { CustomError } from "../../utils/response";
 import { devLooger } from "../../utils/devLogger";
 import { ProductView } from "../product-view/productView.model";
 import { Types } from "mongoose";
+import { CartResponse } from "../cart/cart.types";
 
 
 export const getProductListFilter = (query: ProductListQuery): Record<string, any> => {
@@ -210,4 +211,66 @@ export const getRecentlyViewProducts = async (userId: string, limit: number = 8)
     ])
 
     return recentlyViewProducts
+}
+
+
+export const validateProductStocks = async (cart: CartResponse): Promise<boolean> => {
+    if (cart.items.length === 0) {
+        throw new CustomError("Cart is empty", 400);
+    }
+
+    const productIds = cart.items.map(item => item.product._id);
+    
+    const products = await Product
+        .find({ _id: { $in: productIds } })
+        .select('name price stock isActive')
+        .lean();
+    
+
+    const productMap = new Map(
+        products.map((p) => [String(p._id), p])
+    );
+
+    devLooger.info("productMap in validateProductStocks", productMap);
+
+    let computedTotal = 0;
+
+    for (const cartItem of cart.items) {
+        const pid = cartItem.product._id;
+        const dbProduct = productMap.get(String(pid));
+
+        if (!dbProduct || !dbProduct.isActive) {
+            throw new CustomError(`${cartItem.product.name} is not available at this moment`, 400);
+        }
+
+        if (dbProduct.stock < cartItem.quantity) {
+            throw new CustomError(
+                `Right now ${dbProduct.name} is out of stock."`,
+                400
+            );
+        }
+
+        if (dbProduct.price !== cartItem.product.price) {
+            throw new CustomError(
+                `Price updated for "${dbProduct.name}". Please refresh your cart.`,
+                400
+            );
+        }
+
+        computedTotal += dbProduct.price * cartItem.quantity;
+    }
+
+    devLooger.info("total in validateProductStocks", {
+        computedTotal,
+        cartTotal: cart.totalPrice
+    });
+
+    if (computedTotal !== cart.totalPrice) {
+        throw new CustomError(
+            "Cart total mismatch. Prices may have changed. Please refresh the cart.",
+            400
+        );
+    }
+
+    return true;
 }

@@ -2,7 +2,7 @@ import { dressTypeEnum, sizesEnum, categoryEnum } from "./products.contant";
 import { ProductLean } from "./products.model";
 
 export type Size = (typeof sizesEnum)[number];
-export type Category = (typeof categoryEnum)[number];
+    export type Category = (typeof categoryEnum)[number];
 export type DressType = (typeof dressTypeEnum)[number];
 // export type ProductTag = (typeof tagsEnum)[number];
 
@@ -34,3 +34,18 @@ export type SortAndPageType = {
     limit: number;
     sort: Record<string, 1 | -1>;
 }
+
+// type ProductType = {
+//     _id: string,
+//     name: string,
+//     slug: string,
+//     brand: string,
+//     price: number,
+//     category: string,
+//     dressType: string,
+//     images: string[],
+//     createdAt: string,
+//     isFav: boolean,
+//     sold: number
+//     viewCount: number
+// }

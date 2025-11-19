@@ -11,6 +11,9 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string(),
   JWT_REFRESH_SECRET: z.string(),
   CLIENT_DOMAIN_URL: z.string().url(),
+  CASHFREE_APP_ID: z.string(),
+  CASHFREE_SECRET_KEY: z.string(),
+  CASHFREE_API_URL: z.string().url(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

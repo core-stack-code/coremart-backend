@@ -12,6 +12,8 @@ import reviewRoutes from './api/module/reviews/reviews.routes'
 import favoriteRoutes from './api/module/favorites/favorites.routes';
 import saveForLaterRoutes from './api/module/save-for-later/saveForLater.routes';
 import cartRoutes from './api/module/cart/cart.routes';
+import checoutRoutes from './api/module/checkout/checkout.routes'
+import addressRoutes from './api/module/address/address.routes'
 
 import { globalErrorHandler } from './api/middlewares/error.middleware';
 import { authMiddleware } from './api/middlewares/auth.middleware';
@@ -54,6 +56,8 @@ app.use('/api/review', reviewRoutes)
 app.use('/api/favorite', favoriteRoutes)
 app.use('/api/save-for-later', saveForLaterRoutes)
 app.use('/api/cart', cartRoutes)
+app.use('/api/checkout', checoutRoutes)
+app.use('/api/address', addressRoutes)
 
 
 // test route
@@ -70,7 +74,7 @@ app.get('/api/protected_test', authMiddleware, (req: Request, res: Response) => 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.status(404).json({
     status: 404,
-    message: 'Route not found.',
+    message: 'Request not found.',
   });
 });
 
