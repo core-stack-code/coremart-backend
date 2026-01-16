@@ -1,3 +1,4 @@
+
 export type CartItem = {
     product: {
         _id: string;

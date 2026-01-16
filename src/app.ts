@@ -14,10 +14,12 @@ import saveForLaterRoutes from './api/module/save-for-later/saveForLater.routes'
 import cartRoutes from './api/module/cart/cart.routes';
 import checoutRoutes from './api/module/checkout/checkout.routes'
 import addressRoutes from './api/module/address/address.routes'
+import paymentRoutes from './api/module/payment/payment.routes';
 
 import { globalErrorHandler } from './api/middlewares/error.middleware';
 import { authMiddleware } from './api/middlewares/auth.middleware';
 import { env } from './api/config/env';
+import { rawBodyMiddleware } from './api/middlewares/rawBody.middleware';
 
 const app: Application = express();
 
@@ -27,7 +29,17 @@ app.use(cors({
   origin: env.CLIENT_DOMAIN_URL,
   credentials: true
 }));
-app.use(express.json());
+
+// Must be BEFORE express.json()
+app.use(rawBodyMiddleware);
+
+app.use(
+  express.json({
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
 app.use(cookieParser());
 
 app.use(morgan('dev'));
@@ -37,6 +49,7 @@ app.use(morgan('dev'));
 app.use(helmet());
 app.use(hpp());
 
+app.set("trust proxy", 1);
 
 // Rate Limiting
 const apiLimiter = rateLimit({
@@ -58,6 +71,7 @@ app.use('/api/save-for-later', saveForLaterRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/checkout', checoutRoutes)
 app.use('/api/address', addressRoutes)
+app.use('/api/payment', paymentRoutes)
 
 
 // test route

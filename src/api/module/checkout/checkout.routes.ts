@@ -6,6 +6,8 @@ import { checkoutSchema } from "./checkout.schema";
 
 const router = express.Router();
 
-router.post('/', validateRequest(checkoutSchema), authMiddleware, checkoutController);
+router.post('/', validateRequest(checkoutSchema), 
+// authMiddleware, 
+checkoutController);
 
 export default router

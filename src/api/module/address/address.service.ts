@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import Address from "./address.model";
+import Address, { AddressLean, AddressLeanSelected } from "./address.model";
 import { AddressPayload } from "./address.schema";
 import { CustomError } from "../../utils/response";
 import { devLooger } from "../../utils/devLogger";
@@ -46,10 +46,10 @@ export const getAddressCountPerUser = async (userID: Types.ObjectId): Promise<nu
     return count;
 }
 
-export const getAddressById = async (addressId: Types.ObjectId) => {
+export const getAddressById = async (addressId: Types.ObjectId): Promise<AddressLeanSelected> => {
     const address = await Address.findById(addressId)
         .select('-normalized -createdAt -updatedAt')
-        .lean();
+        .lean<AddressLeanSelected>();
 
     if (!address){
         throw new CustomError("Address not found", 404);

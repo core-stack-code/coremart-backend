@@ -56,4 +56,6 @@ export interface AddressLean extends IAddress {
     updatedAt?: Date;
 }
 
+export type AddressLeanSelected = Omit<AddressLean, "normalized" | "createdAt" | "updatedAt">;
+
 export default Address;
