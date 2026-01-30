@@ -5,8 +5,8 @@ import { reviewListByProductId } from "../reviews/reviews.service";
 
 import { ProductListQuery } from "./products.schemas";
 import { ProductWithFav, SortAndPageType } from "./products.types";
-import { successResponse } from "../../utils/response";
-import { devLooger } from "../../utils/devLogger";
+import { AppResponse } from "../../../core/utils/response";
+import { log } from "../../utils/log";
 import { addViewToProduct } from "../product-view/productView.service";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 
@@ -26,8 +26,8 @@ export const getProfuctListController = async (req: Request, res: Response, next
         // check isFav and reduce images to one
         const productsWithFav = await enrichProductList(products, userId)
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product list fetched successfully.',
             data: {
                 products: productsWithFav,
@@ -56,8 +56,8 @@ export const getProductController = async (req: Request, res: Response, next: Ne
 
         const reviews = await reviewListByProductId(product._id);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product fetched successfully.',
             data: {
                 reviews,
@@ -91,8 +91,8 @@ export const getNewArrivalProductsController = async (req: Request, res: Respons
         // check isFav and reduce images to one
         const productsWithFav = await enrichProductList(products, userId)
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product list of new arriavals fetched successfully.',
             data: {
                 products: productsWithFav,
@@ -121,8 +121,8 @@ export const getBestSellerProductsController = async (req: Request, res: Respons
         // check isFav and reduce images to one
         const productsWithFav = await enrichProductList(products, userId)
 
-         successResponse(res, {
-            status: 200,
+         AppResponse(res, 200, {
+            code: "OK",
             message: 'Product list of best seller fetched successfully.',
             data: {
                 products: productsWithFav,
@@ -142,8 +142,8 @@ export const getTrandingProductsController = async (req: Request, res: Response,
 
         const productsWithFav = await enrichProductList(products, userId)
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product list of tranding fetched successfully.',
             data: {
                 products: productsWithFav,
@@ -166,8 +166,8 @@ export const getRecentlyViewProductsController = async (req: Request, res: Respo
 
         const productsWithFav = await enrichProductList(products, userId)
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product list of rencently view fetched successfully.',
             data: {
                 products: productsWithFav,

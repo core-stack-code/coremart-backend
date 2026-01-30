@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
-    "outDir": "./dist",
+    "module": "NodeNext",
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@api/*": ["src/api/*"]
+    }
   },
   "include": ["src", "generated"] 
 }

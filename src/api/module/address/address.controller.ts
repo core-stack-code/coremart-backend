@@ -3,8 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import { AddressPayload } from "./address.schema";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { addAddressService, getAddressCountPerUser } from "./address.service";
-import { CustomError, successResponse } from "../../utils/response";
-import { devLooger } from "../../utils/devLogger";
+import { AppError, AppResponse } from "../../../core/utils/response";
+import { log } from "../../utils/log";
 
 export const addAddressController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -17,14 +17,14 @@ export const addAddressController = async (req: Request, res: Response, next: Ne
         const addressCount = await getAddressCountPerUser(userID)
 
         if (addressCount >= 5) {
-            throw new CustomError("You have reach the limit to store address", 409);
+            throw new AppError(409, "CONFLICT","You have reach the limit to store address");
         }
 
         const address = await addAddressService(userID, payload);
 
-        successResponse(res, {
+        AppResponse(res, 200, {
             message: "Address added successfully",
-            status: 200,
+            code: "OK",
             data: address
         })
     }

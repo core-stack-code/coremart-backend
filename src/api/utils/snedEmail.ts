@@ -1,7 +1,7 @@
 import { env } from "../config/env";
 import { Resend } from 'resend';
-import { CustomError } from "./response";
-import { devLooger } from "./devLogger";
+import { AppError } from "../../core/utils/response";
+import { log } from "./log";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -25,7 +25,7 @@ export const prepareHtml = (
 
     const purpose = purposeMap[emailType];
     if (!purpose) {
-        throw new CustomError("Invalid email type provided.", 500);
+        throw new AppError(500, "INTERNAL_SERVER_ERROR", "Invalid email type provided.");
     }
 
     return `
@@ -59,14 +59,15 @@ export const sendEmail = async (
             html
         });
 
-        devLooger.info("Email response", response);
+        log.info("Email response", response);
         if (!response || !response.data || response.error) {
-            throw new CustomError("Failed to send email. Please try again later.", 500);
+            throw new AppError(500, "INTERNAL_SERVER_ERROR", "Failed to send email. Please try again later.");
         }
     } catch (error: any) {
-        throw new CustomError(
+        throw new AppError(
+            error?.statusCode || 500,
+            "INTERNAL_SERVER_ERROR",
             error?.message || "Something went wrong while sending email.",
-            error?.statusCode || 500
         );
     }
 };

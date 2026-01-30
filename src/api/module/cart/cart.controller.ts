@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { addToCart, clearCart, deleteItemFromCart, getCart, removFromCart } from "./cart.service";
 import { Types } from "mongoose";
-import { successResponse } from "../../utils/response";
+import { AppResponse } from "../../../core/utils/response";
 
 export const getCartController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -11,8 +11,8 @@ export const getCartController = async (req: Request, res: Response, next: NextF
 
         const cart = await getCart(new Types.ObjectId(req.auth.userId));
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+           code: "OK",
             message: 'Cart fetched successfully.',
             data: {
                 cart
@@ -35,8 +35,8 @@ export const addToCartController = async (req: Request, res: Response, next: Nex
 
         await addToCart(userId, productId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product add to cart successfully.',
         });
     }
@@ -56,8 +56,8 @@ export const removFromCartController = async (req: Request, res: Response, next:
 
         await removFromCart(userId, productId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product remove from cart successfully.',
         });
     }
@@ -77,8 +77,8 @@ export const deleteItemFromCartController = async (req: Request, res: Response, 
 
         await deleteItemFromCart(userId, productId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Product deleted from cart successfully.',
         });
     }
@@ -97,8 +97,8 @@ export const clearCartController = async (req: Request, res: Response, next: Nex
 
         await clearCart(userId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Cart clear successfully.',
         });
     }

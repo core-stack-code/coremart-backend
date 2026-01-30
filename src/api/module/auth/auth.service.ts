@@ -3,7 +3,7 @@ import Auth from "./auth.model";
 import { env } from "../../config/env";
 import { SignupPayload } from "./auth.schemas";
 import { generateOTP } from "../../utils/helper";
-import { CustomError } from "../../utils/response";
+import { AppError } from "../../../core/utils/response";
 import { generateJwtToken } from "../../utils/jwt";
 
 type OtpContext = 'VERIFY_EMAIL' | 'FORGOT_PASSWORD';
@@ -13,7 +13,7 @@ export const checkAndRegisterUser = async (userData: SignupPayload) => {
 
     if (existedUser) {
         if (existedUser.isVerified) {
-            throw new CustomError('User already exists and is verified', 400);
+            throw new AppError(400, "BAD_REQUEST", "User already exists and is verified");
         }
 
         return existedUser;
@@ -30,7 +30,7 @@ export const generateOrUpdateOtp = async (userId: unknown, context: OtpContext):
 
     if (!auth) {
         if (context === 'FORGOT_PASSWORD') {
-            throw new CustomError("User not found.", 404);
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "User not found.");
         }
 
         const newAuth = new Auth({
@@ -43,7 +43,7 @@ export const generateOrUpdateOtp = async (userId: unknown, context: OtpContext):
     }
 
     if (auth.resendCount <= 0) {
-        throw new CustomError("You have reached the maximum resend limit.", 403);
+        throw new AppError(403, "FORBIDDEN", "You have reached the maximum resend limit.");
     }
 
     auth.otpCode = otp;
@@ -64,11 +64,11 @@ export const verifyOtp = async (userId: unknown, otp: number, markUserVerified: 
 
     const now = Date.now();
     if (!auth.expiresAt || now > auth.expiresAt.getTime()) {
-        throw new CustomError("Session has expired.", 401);
+        throw new AppError(401, "UNAUTHORIZED", "Session has expired.");
     }
 
     if (auth.otpCode !== otp) {
-        throw new CustomError("Incorrect otp.", 401);
+        throw new AppError(401, "UNAUTHORIZED", "Incorrect otp.");
     }
 
     auth.otpCode = null;
@@ -90,7 +90,7 @@ export const verifyOtp = async (userId: unknown, otp: number, markUserVerified: 
 export const checkCredential = async (password: string, user: IUser) => {
     const isPasswordMatch = await user.comparePassword(password)
     if(!isPasswordMatch){
-        throw new CustomError("Invalid user credentials.", 400)
+        throw new AppError(400, "BAD_REQUEST", "Invalid user credentials.");
     }
 
     return true

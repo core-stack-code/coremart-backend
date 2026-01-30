@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { Types } from "mongoose";
 import { getFavoritesList, toggleFavorite } from "./favorites.service";
-import { successResponse } from "../../utils/response";
+import { AppResponse } from "../../../core/utils/response";
 
 export const toggleFavoriteController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -14,8 +14,8 @@ export const toggleFavoriteController = async (req: Request, res: Response, next
 
         await toggleFavorite(productId, userId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Favorite updated successfully.',
             data: null
         });
@@ -33,8 +33,8 @@ export const getFavoritesListController = async (req: Request, res: Response, ne
         const userId = new Types.ObjectId(req.auth.userId);
         const favorites = await getFavoritesList(userId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Favorites list fetched successfully.',
             data: {
                 favorites

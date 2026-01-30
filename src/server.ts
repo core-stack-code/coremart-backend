@@ -1,23 +1,21 @@
-import app from './app';
-import { connectDB, disconnectDB } from './api/config/database';
-import { env } from './api/config/env';
+import App from './app';
+import { disconnectDB } from './api/config/database';
+import { disconnectPrisma } from './api/config/prisma';
 import { logger } from './api/utils/logger';
-import { connectPrisma, disconnectPrisma } from './api/config/prisma';
 
-const PORT = Number(env.PORT) || 5000;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    await connectPrisma();
-    app.listen(PORT, () => {
-      logger.info(`Server running... at ${PORT}`);
-    });
-  } 
-  catch (error) {
-    logger.error('Failed to start server:', error);
-  }
-};
+// const startServer = async () => {
+//   try {
+//     await connectDB();
+//     await connectPrisma();
+//     app.listen(PORT, () => {
+//       logger.info(`Server running... at ${PORT}`);
+//     });
+//   } 
+//   catch (error) {
+//     logger.error('Failed to start server:', error);
+//   }
+// };
 
 const serverShutdown = async (signal: string) => {
   logger.info(`${signal} received. Shutting down gracefully...`);
@@ -29,4 +27,11 @@ const serverShutdown = async (signal: string) => {
 process.on('SIGINT', () => serverShutdown('SIGINT'));
 process.on('SIGTERM', () => serverShutdown('SIGTERM'));
 
-startServer();
+// startServer();
+
+
+const appServer = new App();
+const server = appServer.app;
+
+
+export default server;

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError, ZodType } from 'zod';
-import { errorResponse } from '../utils/response';
-import { devLooger } from '../utils/devLogger';
+import { errorResponse } from '../../core/utils/response';
+import { log } from '../utils/log';
 
 export const validateRequest = (schema: ZodType<any>) => {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -11,7 +11,7 @@ export const validateRequest = (schema: ZodType<any>) => {
         } 
         catch (error) {
             if (error instanceof ZodError) {
-                devLooger.info('in validation middleware', error.issues[0].message)
+                log.info('in validation middleware', error.issues[0].message)
                 if( error.issues[0].code === 'invalid_type' || 
                     error.issues[0].code === 'unrecognized_keys'
                 ){

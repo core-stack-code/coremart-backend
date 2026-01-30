@@ -4,8 +4,8 @@ import { PRODUCT_LIST_FIELDS } from "./products.contant";
 import { ProductWithFav, SortAndPageType } from "./products.types";
 
 import { getFavoritesFromProducts } from "../favorites/favorites.service";
-import { CustomError } from "../../utils/response";
-import { devLooger } from "../../utils/devLogger";
+import { AppError } from "../../../core/utils/response";
+import { log } from "../../utils/log";
 import { ProductView } from "../product-view/productView.model";
 import { Types } from "mongoose";
 import { CartResponse } from "../cart/cart.types";
@@ -74,7 +74,7 @@ export const getProducts = async (filters: Record<string, any>, sortAndPage: Sor
     ]);
 
     if(products.length === 0) {
-        throw new CustomError('No products found', 404);
+        throw new AppError(404, "RESOURCE_NOT_FOUND", "No products found");
     }
 
     return {
@@ -114,7 +114,7 @@ export const getProductBySlug = async (slug: string) => {
     const product = await Product.findOne({ slug }).lean();
 
     if (!product) {
-        throw new CustomError('Product not found', 400);
+        throw new AppError(404, "RESOURCE_NOT_FOUND", "Product not found");
     }
 
     return product;
@@ -216,7 +216,7 @@ export const getRecentlyViewProducts = async (userId: string, limit: number = 8)
 
 export const validateProductStocks = async (cart: CartResponse): Promise<boolean> => {
     if (cart.items.length === 0) {
-        throw new CustomError("Cart is empty", 400);
+        throw new AppError(400, "BAD_REQUEST", "Cart is empty");
     }
 
     const productIds = cart.items.map(item => item.product._id);
@@ -231,7 +231,7 @@ export const validateProductStocks = async (cart: CartResponse): Promise<boolean
         products.map((p) => [String(p._id), p])
     );
 
-    devLooger.info("productMap in validateProductStocks", productMap);
+    log.info("productMap in validateProductStocks", productMap);
 
     let computedTotal = 0;
 
@@ -240,35 +240,35 @@ export const validateProductStocks = async (cart: CartResponse): Promise<boolean
         const dbProduct = productMap.get(String(pid));
 
         if (!dbProduct || !dbProduct.isActive) {
-            throw new CustomError(`${cartItem.product.name} is not available at this moment`, 400);
+            throw new AppError(400, "BAD_REQUEST", `${cartItem.product.name} is not available at this moment`);
         }
 
         if (dbProduct.stock < cartItem.quantity) {
-            throw new CustomError(
-                `Right now ${dbProduct.name} is out of stock."`,
-                400
+            throw new AppError(
+                400, "BAD_REQUEST",
+                `Right now ${dbProduct.name} is out of stock."`
             );
         }
 
         if (dbProduct.price !== cartItem.product.price) {
-            throw new CustomError(
-                `Price updated for "${dbProduct.name}". Please refresh your cart.`,
-                400
+            throw new AppError(
+                400, "BAD_REQUEST",
+                `Price updated for "${dbProduct.name}". Please refresh your cart.`
             );
         }
 
         computedTotal += dbProduct.price * cartItem.quantity;
     }
 
-    devLooger.info("total in validateProductStocks", {
+    log.info("total in validateProductStocks", {
         computedTotal,
         cartTotal: cart.totalPrice
     });
 
     if (computedTotal !== cart.totalPrice) {
-        throw new CustomError(
-            "Cart total mismatch. Prices may have changed. Please refresh the cart.",
-            400
+        throw new AppError(
+            400, "BAD_REQUEST",
+            "Cart total mismatch. Prices may have changed. Please refresh the cart."
         );
     }
 

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { Types } from "mongoose";
-import { successResponse } from "../../utils/response";
+import { AppResponse } from "../../../core/utils/response";
 import { getSaveForLaterList, toggleSaveForLater } from "./saveForLater.service";
 
 export const toggleSaveForLaterController = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,8 +14,8 @@ export const toggleSaveForLaterController = async (req: Request, res: Response, 
 
         await toggleSaveForLater(productId, userId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Save for later updated successfully.',
             data: null
         });
@@ -33,8 +33,8 @@ export const getSaveForLaterListController = async (req: Request, res: Response,
         const userId = new Types.ObjectId(req.auth.userId);
         const saveForLater = await getSaveForLaterList(userId);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Save For Later list fetched successfully.',
             data: {
                 saveForLater

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 import { addReview, deleteReview, updateReview, updateReviewState } from "./reviews.service";
 import { Types } from "mongoose";
-import { successResponse } from "../../utils/response";
+import { AppResponse } from "../../../core/utils/response";
 
 
 export const addReviewController = async (req: Request, res: Response, next: NextFunction) => {
@@ -15,8 +15,8 @@ export const addReviewController = async (req: Request, res: Response, next: Nex
         const review = await addReview(userId, payload);
         
 
-        successResponse(res, {
-            status: 201,
+        AppResponse(res, 201, {
+            code: "CREATED",
             message: 'Review added succesfully.',
             data: { review }
         });
@@ -31,8 +31,8 @@ export const updateReviewController = async (req: Request, res: Response, next: 
         const reviewId = new Types.ObjectId(req.params.reviewId);
         const review = await updateReview(reviewId, req.body);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Review state updated successfully.',
             data: { review }
         });
@@ -48,8 +48,8 @@ export const deleteReviewController = async (req: Request, res: Response, next: 
         await deleteReview(reviewId);
 
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Review deleted successfully.',
             data: null
         });

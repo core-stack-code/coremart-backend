@@ -1,6 +1,6 @@
 import { Types  } from "mongoose";
 import { Cart } from "./cart.model";
-import { CustomError } from "../../utils/response";
+import { AppError } from "../../../core/utils/response";
 import { CartResponse } from "./cart.types";
 
 
@@ -85,7 +85,7 @@ export const removFromCart = async (userId: Types.ObjectId, productId: Types.Obj
     );
 
     if (userCart.modifiedCount  === 0) {
-        throw new CustomError('Product not found in cart to remove', 404);
+        throw new AppError(404, "RESOURCE_NOT_FOUND", "Product not found in cart to remove");
     }
 
     await Cart.updateOne(

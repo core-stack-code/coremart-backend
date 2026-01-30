@@ -6,9 +6,9 @@ import { validateProductStocks } from "../products/products.service";
 import { createOrder } from "../order/order.service";
 
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
-import { successResponse } from "../../utils/response";
+import { AppResponse } from "../../../core/utils/response";
 import { CheckoutPayload } from "./checkout.schema";
-import { devLooger } from "../../utils/devLogger";
+import { log } from "../../utils/log";
 import { cashfreeCreateOrder } from "../payment/payment.service";
 
 
@@ -24,21 +24,21 @@ export const checkoutController = async (req: Request, res: Response, next: Next
         const userId = new Types.ObjectId("6831d8c6b6181a5ec08620dc");
 
         const address = await getAddressById(addressId);
-        // devLooger.info("address", address);
+        // log.info("address", address);
 
         const cart = await getCart(userId);
-        // devLooger.info("cart", cart);
+        // log.info("cart", cart);
 
         const check = await validateProductStocks(cart)
-        devLooger.info("stock validation", check);
+        log.info("stock validation", check);
 
         const order = await createOrder(userId, cart, address);
-        // devLooger.info("order created", order);
+        // log.info("order created", order);
 
         const response = await cashfreeCreateOrder(order);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Checkout successful.',
             data: {
                 response,

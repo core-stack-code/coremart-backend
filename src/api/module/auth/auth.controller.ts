@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { checkAndRegisterUser, checkCredential, findUserWithEmail, generateAuthTokens, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
-import { CustomError, successResponse } from "../../utils/response";
+import { AppError, AppResponse } from "../../../core/utils/response";
 import { sendEmail } from "../../utils/snedEmail";
 
 export const signUpController = async (req: Request, res: Response, next: NextFunction) => {
@@ -13,8 +13,8 @@ export const signUpController = async (req: Request, res: Response, next: NextFu
             otp
         }, "VERIFY_EMAIL");
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Success',
         });
     } 
@@ -29,13 +29,13 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
         const user = await findUserWithEmail(email)
 
         if(!user){
-            throw new CustomError("Email is not register.", 401)
+            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
         }
 
         const isVerified = await verifyOtp(user._id, otp, true)
 
         if(!isVerified){
-            throw new CustomError("Verification faild, please try agin.", 500)
+            throw new AppError(500, "INTERNAL_SERVER_ERROR", "Verification failed, please try again.");
         }
 
         const { accessToken, refreshToken } = await generateAuthTokens(user, isRememberMe)
@@ -59,8 +59,8 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
         });
 
         if(req.clinetType === 'web'){
-            successResponse(res, {
-                status: 200,
+            AppResponse(res, 200, {
+                code: "OK",
                 message: 'User verified successfully.',
                 data: {
                     user: {
@@ -72,8 +72,8 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             return;
         }
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'User verified successfully.',
             data: {
                 atk: accessToken,
@@ -97,7 +97,7 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         const user = await findUserWithEmail(email)
 
         if(!user || !user.isVerified){
-            throw new CustomError("Email is not register.", 401)
+            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
         }
 
         await checkCredential(password, user)
@@ -123,8 +123,8 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         });
 
         if(req.clinetType === 'web'){
-            successResponse(res, {
-                status: 200,
+            AppResponse(res, 200, {
+                code: "OK",
                 message: "Success",
                 data: {
                     user: {
@@ -136,8 +136,8 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             return;
         }
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: "Success",
             data: {
                 atk: accessToken,
@@ -160,7 +160,7 @@ export const forgotPasswordController = async (req: Request, res: Response, next
         const user = await findUserWithEmail(email)
 
         if(!user || !user.isVerified){
-            throw new CustomError("Email is not register.", 401)
+            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
         }
 
         const otp = await generateOrUpdateOtp(user._id, "FORGOT_PASSWORD");
@@ -170,8 +170,8 @@ export const forgotPasswordController = async (req: Request, res: Response, next
             otp
         }, "FORGOT_PASSWORD");
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Success',
         });        
     }
@@ -186,17 +186,17 @@ export const verifyForgotPasswordController = async (req: Request, res: Response
         const user = await findUserWithEmail(email);
 
         if (!user || !user.isVerified) {
-            throw new CustomError("Email is not registered or not verified.", 400);
+            throw new AppError(401, "UNAUTHORIZED", "Email is not registered or not verified.");
         }
 
         const isVerified = await verifyOtp(user._id, otp, false);
 
         if (!isVerified) {
-            throw new CustomError("Verification failed, please try again.", 400);
+            throw new AppError(500, "INTERNAL_SERVER_ERROR", "Verification failed, please try again.");
         }
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'OTP verified successfully. You may now reset your password.',
         });
     } 
@@ -211,15 +211,15 @@ export const resetPasswordController = async (req: Request, res: Response, next:
         const user = await findUserWithEmail(email);
 
         if (!user || !user.isVerified) {
-            throw new CustomError("Email is not registered or not verified.", 400);
+            throw new AppError(401, "UNAUTHORIZED", "Email is not registered or not verified.");
         }
 
         user.password = password;
         await user.save();
         await resetAuthData(user._id);
 
-        successResponse(res, {
-            status: 200,
+        AppResponse(res, 200, {
+            code: "OK",
             message: 'Password reset successfully.',
         });
     } 

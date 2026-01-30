@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { CustomError } from "../../utils/response";
+import { AppError } from "../../../core/utils/response";
 import { verifyCashfreeSignature } from "./payment.utils";
-import { devLooger } from "../../utils/devLogger";
+import { log } from "../../utils/log";
 
 
 export const cashfreeWebhookController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const rawBody = (req as any).rawBody;
-        devLooger.info('in webhook controller', {
+        log.info('in webhook controller', {
             body: req.body,
             headers: req.headers,
             rawBody: rawBody
@@ -15,19 +15,19 @@ export const cashfreeWebhookController = async (req: Request, res: Response, nex
 
         const signature = req.headers["x-webhook-signature"];
         const timestamp = req.headers["x-webhook-timestamp"];
-        devLooger.info("webhook signature", signature);
+        log.info("webhook signature", signature);
 
         if (!signature || typeof signature !== "string" || !timestamp || typeof timestamp !== "string") {
-            throw new CustomError("Missing webhook signature", 400)
+            throw new AppError(400, "BAD_REQUEST", "Missing webhook signature");
         }
         
         const isValid = verifyCashfreeSignature(rawBody, signature, timestamp);
         
         if (!isValid) {
-            throw new CustomError("Invalid webhook signature", 400)
+            throw new AppError(400, "BAD_REQUEST", "Invalid webhook signature");
         }
 
-        devLooger.info('in webhook', req.body)
+        log.info('in webhook', req.body)
 
     }
     catch (error) {

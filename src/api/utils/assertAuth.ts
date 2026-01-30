@@ -1,19 +1,19 @@
 import { AuthType, LoggedInAuth } from "../types/exprses";
-import { CustomError } from "./response";
-import { devLooger } from "./devLogger";
+import { AppError } from "../../core/utils/response";
+import { log } from "./log";
 
 // this aseert functions make type safe to use auth object in the controller and services
 
 export function assertAuth(auth: AuthType | undefined): asserts auth is AuthType {
     if (!auth) {
-        devLooger.error('Authentication middleware not applied or failed.');
-        throw new CustomError('Internal server error.', 500)
+        log.error('Authentication middleware not applied or failed.');
+        throw new AppError(500, "INTERNAL_SERVER_ERROR", "Internal server error.");
     }
 }
 
 export function assertLoggedIn(auth: AuthType): asserts auth is LoggedInAuth {
     if (auth.isGuest) {
-        devLooger.error('This action requires a logged-in user.');
-        throw new CustomError('Internal server error.', 500)
+        log.error('This action requires a logged-in user.');
+        throw new AppError(500, "INTERNAL_SERVER_ERROR", "Internal server error.");
     }
 }

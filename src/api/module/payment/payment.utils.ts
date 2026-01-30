@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { env } from "../../config/env";
-import { devLooger } from "../../utils/devLogger";
+import { log } from "../../utils/log";
 
 const secret = env.CASHFREE_API_SECRET;
 
@@ -12,8 +12,8 @@ export const verifyCashfreeSignature = (rawBody: any, signature: string, timesta
         .update(message)
         .digest("base64");
 
-    devLooger.info("expected signature", expectedSignature);
-    devLooger.info("signature", signature);
+    log.info("expected signature", expectedSignature);
+    log.info("signature", signature);
 
     return expectedSignature === signature;
 };

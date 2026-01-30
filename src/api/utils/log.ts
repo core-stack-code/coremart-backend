@@ -13,7 +13,7 @@ const formatArgs = (args: any[]) => {
 
 const isDev = env.NODE_ENV !== 'production';
 
-export const devLooger = {
+export const log = {
     info: (text: string, ...args: any[]) => {
         if (isDev) {
             console.log(chalk.blue('[---INFO---]'), chalk.white.bgBlue.bold(` ${text} `));

@@ -1,98 +1,97 @@
-import express, { Application, NextFunction, Request, Response } from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import hpp from 'hpp';
-import rateLimit from 'express-rate-limit';
-import morgan from 'morgan';
+import express, { Application } from "express";
+import cors from "cors";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import hpp from "hpp";
 
-import authRoutes from './api/module/auth/auth.routes';
-import productRoutes from './api/module/products/products.routes'
-import reviewRoutes from './api/module/reviews/reviews.routes'
-import favoriteRoutes from './api/module/favorites/favorites.routes';
-import saveForLaterRoutes from './api/module/save-for-later/saveForLater.routes';
-import cartRoutes from './api/module/cart/cart.routes';
-import checoutRoutes from './api/module/checkout/checkout.routes'
-import addressRoutes from './api/module/address/address.routes'
-import paymentRoutes from './api/module/payment/payment.routes';
+import appRoutes from "./core/router/appRoutes";
+import { env } from "./api/config/env";
+import { apiLimiter } from "./core/lib/rateLimit";
+import { globalErrorHandler } from "./api/middlewares/error.middleware";
+import { rawBodyMiddleware } from "./api/middlewares/rawBody.middleware";
+import { log } from "./api/utils/log";
+import { AppError } from "./core/utils/response";
+import { connectDB } from "./api/config/database";
+import { connectPrisma } from "./api/config/prisma";
+import { logger } from "./api/utils/logger";
+import { appConfig } from "./api/config/app.config";
 
-import { globalErrorHandler } from './api/middlewares/error.middleware';
-import { authMiddleware } from './api/middlewares/auth.middleware';
-import { env } from './api/config/env';
-import { rawBodyMiddleware } from './api/middlewares/rawBody.middleware';
+class App {
+    public app: Application;
 
-const app: Application = express();
+    constructor() {
+        this.app = express();
+        this.setUpMiddleware();
+        this.setUpRoutes();
+        this.setErrorHandler();
+        this.start();
+    }
 
+    private setUpMiddleware(): void {
+        this.app.use(cors({
+            origin: function (origin, callback) {
+                if (!origin) return callback(null, true);
+                
+                if (origin === env.CLIENT_DOMAIN_URL) {
+                    callback(null, true);
+                } else {
+                    log.error('Blocked origin:', origin);
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
+            credentials: true
+        }));
 
-// Middleware
-app.use(cors({
-  origin: env.CLIENT_DOMAIN_URL,
-  credentials: true
-}));
+        this.app.use(rawBodyMiddleware);
+        this.app.use(express.json({
+            verify: (req: any, res, buf) => {
+                req.rawBody = buf.toString();
+            },
+        }));
+        this.app.use(express.json());
+        
+        this.app.use(cookieParser());
+        this.app.use(morgan('dev'));
+        this.app.use(helmet());
+        this.app.use(hpp());
+        this.app.use('/api', apiLimiter);
+    }
 
-// Must be BEFORE express.json()
-app.use(rawBodyMiddleware);
+    private setUpRoutes(): void {
+        appRoutes(this.app);
+    }
 
-app.use(
-  express.json({
-    verify: (req: any, res, buf) => {
-      req.rawBody = buf.toString();
-    },
-  })
-);
-app.use(cookieParser());
+    private setErrorHandler(): void {
+        this.app.use((_req, res, next) => {
+            next(new AppError(404, "RESOURCE_NOT_FOUND", "Request not found."));
+        });
+        
+        // Global error handler
+        this.app.use(globalErrorHandler);
+    }
 
-app.use(morgan('dev'));
+    private async initializeDatabase(): Promise<void> {
+        await connectDB();
+        await connectPrisma();
+    }
 
+    private async initializeApp(): Promise<void> {
+        const PORT = appConfig.port;
+        this.app.listen(PORT, () => {
+            logger.info(`Server running... at ${PORT}`);
+        });
+    }
 
-// Security Middlewares
-app.use(helmet());
-app.use(hpp());
+    private async start(): Promise<void> {
+        try {
+            await this.initializeDatabase();
+            await this.initializeApp();
+        }
+        catch (error) {
+            logger.error('Failed to start server:', error);
+        }
+    }
+}
 
-app.set("trust proxy", 1);
-
-// Rate Limiting
-const apiLimiter = rateLimit({
-  windowMs: 30 * 60 * 1000,
-  max: 150,
-  message: {
-    status: 429,
-    message: 'Too many requests, please try again later.'
-  }
-});
-app.use('/api', apiLimiter);
-
-// api routes
-app.use('/api/auth', authRoutes)
-app.use('/api/product', productRoutes)
-app.use('/api/review', reviewRoutes)
-app.use('/api/favorite', favoriteRoutes)
-app.use('/api/save-for-later', saveForLaterRoutes)
-app.use('/api/cart', cartRoutes)
-app.use('/api/checkout', checoutRoutes)
-app.use('/api/address', addressRoutes)
-app.use('/api/payment', paymentRoutes)
-
-
-// test route
-app.get('/api/test', (req: Request, res: Response) => {
-  res.json({ message: 'I am just a guy who is hero for fun!'});
-});
-
-app.get('/api/protected_test', authMiddleware, (req: Request, res: Response) => {
-  res.send({ message: 'This is a protected route, you are authenticated!' });
-})
-
-
-// 404 handler for undefined routes
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.status(404).json({
-    status: 404,
-    message: 'Request not found.',
-  });
-});
-
-// Global error handler
-app.use(globalErrorHandler);
-
-export default app;
+export default App;

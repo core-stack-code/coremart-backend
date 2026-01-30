@@ -2,7 +2,7 @@ import { Types } from "mongoose"
 import { Review } from "./reviews.model"
 import { Product } from "../products/products.model"
 import { AddReviewType, UpdateReviewType } from "./reviews.schema";
-import { CustomError } from "../../utils/response";
+import { AppError } from "../../../core/utils/response";
 
 export const updateReviewState = async (productId: Types.ObjectId) => {
     const [state] = await Review.aggregate([
@@ -41,7 +41,7 @@ export const updateReview = async (reviewId: Types.ObjectId, payload: UpdateRevi
     const updatedReview = await Review.findByIdAndUpdate(reviewId, payload, { new: true });
 
     if (!updatedReview) {
-        throw new CustomError("Review not found", 404);
+        throw new AppError(404, "RESOURCE_NOT_FOUND", "Review not found");
     }
 
     await updateReviewState(new Types.ObjectId(updatedReview.productId));
@@ -53,7 +53,7 @@ export const deleteReview = async (reviewId: Types.ObjectId) => {
     const deletedReview = await Review.findByIdAndDelete(reviewId);
 
     if (!deletedReview) {
-        throw new CustomError("Review not found", 404);
+        throw new AppError(404, "RESOURCE_NOT_FOUND", "Review not found");
     }
 
     await updateReviewState(new Types.ObjectId(deletedReview.productId));

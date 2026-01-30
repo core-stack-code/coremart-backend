@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
 import Address, { AddressLean, AddressLeanSelected } from "./address.model";
 import { AddressPayload } from "./address.schema";
-import { CustomError } from "../../utils/response";
-import { devLooger } from "../../utils/devLogger";
+import { AppError } from "../../../core/utils/response";
+import { log } from "../../utils/log";
 
 const normalize = (text: string) => text.trim().toLowerCase();
 
@@ -25,10 +25,10 @@ export const addAddressService = async (userID: Types.ObjectId, payload: Address
         "normalized.country": normalized.country,
     });
 
-    devLooger.info('exists in add address', exists)
+    log.info('exists in add address', exists)
 
     if (exists) {
-        throw new CustomError("Address already exists", 409);
+        throw new AppError(409, "CONFLICT","Address already exists");
     }
 
     const address = new Address({
@@ -52,7 +52,7 @@ export const getAddressById = async (addressId: Types.ObjectId): Promise<Address
         .lean<AddressLeanSelected>();
 
     if (!address){
-        throw new CustomError("Address not found", 404);
+        throw new AppError(404, "RESOURCE_NOT_FOUND","Address not found");
     }
     return address;
 }
