@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String         @id @db.Uuid
+  email           String         @unique
+  name            String?
+  isEmailVerified Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  oauths          OAuthAccount[]
+  sessions        Session[]
+}
+
+model OAuthAccount {
+  id                String        @id @db.Uuid
+  userId            String        @db.Uuid
+  user              User          @relation(fields: [userId], references: [id])
+  provider          OAuthProvider
+  emailFromProvider String
+  providerAccountId String
+  createdAt         DateTime      @default(now())
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+}
+
+model Session {
+  id               String     @id @db.Uuid
+  userId           String     @db.Uuid
+  user             User       @relation(fields: [userId], references: [id])
+  refreshTokenHash String
+  deviceType       DeviceType
+  deviceName       String?
+  ipAddress        String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime   @default(now())
+}
+
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+}
