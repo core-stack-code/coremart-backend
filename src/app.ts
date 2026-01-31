@@ -6,16 +6,16 @@ import helmet from "helmet";
 import hpp from "hpp";
 
 import appRoutes from "./core/router/appRoutes";
-import { env } from "./api/config/env";
+import { env } from "./core/config/env";
 import { apiLimiter } from "./core/lib/rateLimit";
 import { globalErrorHandler } from "./api/middlewares/error.middleware";
 import { rawBodyMiddleware } from "./api/middlewares/rawBody.middleware";
 import { log } from "./api/utils/log";
 import { AppError } from "./core/utils/response";
-import { connectDB } from "./api/config/database";
-import { connectPrisma } from "./api/config/prisma";
+import { connectDB } from "./core/config/database";
+import { connectPrisma } from "./core/config/prisma";
 import { logger } from "./api/utils/logger";
-import { appConfig } from "./api/config/app.config";
+import { appConfig } from "./core/config/app.config";
 
 class App {
     public app: Application;
@@ -50,6 +50,7 @@ class App {
             },
         }));
         this.app.use(express.json());
+        this.app.set("trust proxy", true);
         
         this.app.use(cookieParser());
         this.app.use(morgan('dev'));

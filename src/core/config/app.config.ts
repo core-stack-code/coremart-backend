@@ -7,7 +7,7 @@ interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-    port: Number(env.PORT) || 4000,
+    port: env.PORT,
     baseUrl: "/api",
     version: "v1",
 };

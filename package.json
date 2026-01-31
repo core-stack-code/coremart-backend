@@ -1,12 +1,13 @@
 {
   "name": "coremart-server",
   "version": "1.0.0",
+  "type": "module",
   "main": "server.js",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch --clear-screen=false src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "ts-node -r tsconfig-paths/register src/seed.ts"
+    "seed": "tsx src/seed.ts"
   },
   "author": "",
   "license": "ISC",
@@ -14,7 +15,7 @@
     "@faker-js/faker": "^9.8.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
-    "axios": "^1.11.0",
+    "axios": "^1.13.4",
     "bcrypt": "^5.1.1",
     "chalk": "^4.1.2",
     "cookie-parser": "^1.4.7",
@@ -28,9 +29,12 @@
     "libphonenumber-js": "^1.12.26",
     "mongoose": "^8.14.1",
     "morgan": "^1.10.0",
+    "qs": "^6.14.1",
     "resend": "^4.5.1",
+    "ua-parser-js": "^2.0.8",
+    "uuid": "^13.0.0",
     "winston": "^3.17.0",
-    "zod": "^3.24.3"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -45,6 +49,7 @@
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.8.3"
   }
 }

@@ -1,4 +1,4 @@
-import { AuthType, LoggedInAuth } from "../types/exprses";
+import { AuthType, LoggedInAuth } from "../../core/types/exprses";
 import { AppError } from "../../core/utils/response";
 import { log } from "./log";
 

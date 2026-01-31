@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "NodeNext",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@mod/*": ["src/api/module/*"],
+      "@api/*": ["src/api/*"],
+      "@core/*": ["src/core/*"],
       "@/*": ["src/*"],
-      "@api/*": ["src/api/*"]
     }
   },
-  "include": ["src", "generated"] 
+  "include": ["src", "generated"]     // Which folders TypeScript should compile
 }

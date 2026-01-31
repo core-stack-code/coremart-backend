@@ -1,10 +1,10 @@
 import User, { IUser } from "../users/user.model";
 import Auth from "./auth.model";
-import { env } from "../../config/env";
+import { env } from "../../../core/config/env";
 import { SignupPayload } from "./auth.schemas";
 import { generateOTP } from "../../utils/helper";
 import { AppError } from "../../../core/utils/response";
-import { generateJwtToken } from "../../utils/jwt";
+import { generateJwtToken } from "../../../core/lib/jwt";
 
 type OtpContext = 'VERIFY_EMAIL' | 'FORGOT_PASSWORD';
 
@@ -106,7 +106,7 @@ export const resetAuthData = async (userId: unknown) => {
     await auth.save();
 }
 
-export const generateAuthTokens = async (user: IUser, isRememberMe: boolean) => {
+export const generateAuthTokens1 = async (user: IUser, isRememberMe: boolean) => {
     const accessToken = generateJwtToken({
         sub: user._id,
         email: user.email,

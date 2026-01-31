@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../core/utils/response";
 import { log } from "../utils/log";
-import { env } from "../config/env";
-import { verifyJwtToken } from "../utils/jwt";
-import { LoggedInAuth } from "../types/exprses";
+import { env } from "../../core/config/env";
+import { verifyJwtToken } from "../../core/lib/jwt";
+import { LoggedInAuth } from "../../core/types/exprses";
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {

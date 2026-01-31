@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { env } from "../../config/env";
+import { env } from "../../../core/config/env";
 import { log } from "../../utils/log";
 
 const secret = env.CASHFREE_API_SECRET;

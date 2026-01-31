@@ -1,4 +1,4 @@
-import { env } from "../config/env";
+import { env } from "../../core/config/env";
 import { Resend } from 'resend';
 import { AppError } from "../../core/utils/response";
 import { log } from "./log";

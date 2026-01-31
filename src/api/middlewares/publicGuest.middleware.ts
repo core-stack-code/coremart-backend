@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { verifyJwtToken } from "../utils/jwt";
-import { env } from "../config/env";
-import { AuthType } from "../types/exprses";
+import { verifyJwtToken } from "../../core/lib/jwt";
+import { env } from "../../core/config/env";
+import { AuthType } from "../../core/types/exprses";
 
 export const publicGuestMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {

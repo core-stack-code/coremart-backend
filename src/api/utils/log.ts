@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import util from 'util';
-import { env } from '../config/env';
+import { env } from '../../core/config/env';
 
 const formatArgs = (args: any[]) => {
     return args.map(arg => {

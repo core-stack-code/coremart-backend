@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { checkAndRegisterUser, checkCredential, findUserWithEmail, generateAuthTokens, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
+import { checkAndRegisterUser, checkCredential, findUserWithEmail, generateAuthTokens1, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
 import { AppError, AppResponse } from "../../../core/utils/response";
 import { sendEmail } from "../../utils/snedEmail";
 
@@ -38,7 +38,7 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             throw new AppError(500, "INTERNAL_SERVER_ERROR", "Verification failed, please try again.");
         }
 
-        const { accessToken, refreshToken } = await generateAuthTokens(user, isRememberMe)
+        const { accessToken, refreshToken } = await generateAuthTokens1(user, isRememberMe)
 
         // cookie name for access token
         res.cookie('__Host-atkn', accessToken, {
@@ -102,7 +102,7 @@ export const loginController = async (req: Request, res: Response, next: NextFun
 
         await checkCredential(password, user)
 
-        const { accessToken, refreshToken } = await generateAuthTokens(user, isRememberMe)
+        const { accessToken, refreshToken } = await generateAuthTokens1(user, isRememberMe)
 
         // cookie name for access token
         res.cookie('__Host-atkn', accessToken, {

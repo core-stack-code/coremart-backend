@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { Product } from "./api/module/products/products.model";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
 import { log } from "./api/utils/log";
-import { connectDB } from './api/config/database';
+import { connectDB } from './core/config/database';
 import { slugify } from './api/utils/helper';
 import { IProduct } from './api/module/products/products.types';
 

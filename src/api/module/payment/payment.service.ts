@@ -1,5 +1,5 @@
 import axios from "axios";
-import { env } from "../../config/env";
+import { env } from "../../../core/config/env";
 import { OrderLean } from "../order/order.model";
 
 const CASHFREE_API_KEY = env.CASHFREE_API_KEY;

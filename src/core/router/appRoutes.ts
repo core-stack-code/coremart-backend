@@ -11,7 +11,8 @@ import addressRoutes from '@api/module/address/address.routes'
 import paymentRoutes from '@api/module/payment/payment.routes';
 
 import { authMiddleware } from "@/api/middlewares/auth.middleware";
-import { appConfig } from "@/api/config/app.config";
+import { appConfig } from "@/core/config/app.config";
+import oauthRouter from "@mod/oauth/oauth.routes";
 
 
 const { baseUrl, version } = appConfig;
@@ -28,6 +29,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/checkout`, checoutRoutes)
     app.use(`${baseRouteUrl}/address`, addressRoutes)
     app.use(`${baseRouteUrl}/payment`, paymentRoutes)
+    app.use(`${baseRouteUrl}/oauth`, oauthRouter)
 
     // test routes
     app.get(`${baseRouteUrl}/test`, (req: Request, res: Response) => {

@@ -11,44 +11,44 @@ import {
 } from './auth.controller';
 import { detectClient } from '../../middlewares/detectClient.middleware';
 
-const router = express.Router();
+const authRouter = express.Router();
 
-router.post(
+authRouter.post(
     '/signup',
     validateRequest(signupSchema),
     signUpController
 );
 
-router.post(
+authRouter.post(
     '/verify',
     detectClient,
     validateRequest(verifySchema),
     verifyUserController
 );
 
-router.post(
+authRouter.post(
     '/login',
     detectClient,
     validateRequest(loginSchema),
     loginController
 );
 
-router.post(
+authRouter.post(
     '/forgot_password',
     validateRequest(forgotPasswordSchema),
     forgotPasswordController
 )
 
-router.post(
+authRouter.post(
     '/verify_forgot_password',
     validateRequest(verifySchema), 
     verifyForgotPasswordController
 );
 
-router.post(
+authRouter.post(
     '/reset_password',
     validateRequest(resetPasswordSchema),
     resetPasswordController
 );
 
-export default router;
+export default authRouter;

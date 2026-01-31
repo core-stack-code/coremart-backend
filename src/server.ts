@@ -1,6 +1,6 @@
 import App from './app';
-import { disconnectDB } from './api/config/database';
-import { disconnectPrisma } from './api/config/prisma';
+import { disconnectDB } from './core/config/database';
+import { disconnectPrisma } from './core/config/prisma';
 import { logger } from './api/utils/logger';
 
 
