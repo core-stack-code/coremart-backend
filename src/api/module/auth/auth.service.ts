@@ -1,28 +1,89 @@
 import User, { IUser } from "../users/user.model";
 import Auth from "./auth.model";
 import { env } from "../../../core/config/env";
-import { SignupPayload } from "./auth.schemas";
+import { LoginPayload, SignupPayload } from "./auth.schemas";
 import { generateOTP } from "../../utils/helper";
 import { AppError } from "../../../core/utils/response";
 import { generateJwtToken } from "../../../core/lib/jwt";
+import { userRepository } from "@mod/users/user.repository";
+import { passwordService } from "@mod/password/password.service";
+import { DeviceInfo, TokensResponse } from "@core/types/common";
+import { sessionService } from "@mod/session/session.service";
+import { passwordRepository } from "@mod/password/password.repository";
+import { getUuid } from "@core/utils/db.helper";
+
+
+class AuthService {
+    public async handleLogin(
+        payload: LoginPayload, 
+        deviceInfo: DeviceInfo
+    ): Promise<TokensResponse>  {
+        const user = await userRepository.findByEmail(payload.email);
+
+        if (!user) {
+            throw new AppError(400, "BAD_REQUEST", "Invalid user credentials.");
+        }
+
+        await passwordService.validatePassword(user.id, payload.password);
+
+        return await sessionService.createSession(user.id, deviceInfo);
+    }
+
+
+    public async handleSignup(
+        payload: SignupPayload, 
+        deviceInfo: DeviceInfo
+    ): Promise<TokensResponse> {
+        const existedUser = await userRepository.findByEmail(payload.email);
+        let userId: string;
+
+        if (existedUser) {
+            userId = existedUser.id; 
+            const passwordCredential = await passwordRepository.findByUserId(existedUser.id);
+
+            if (passwordCredential) {
+                throw new AppError(400, "BAD_REQUEST", "User already exists.");
+            }
+        }
+        else {
+            const newUser = await userRepository.create({
+                id: getUuid(),
+                name: payload.name,
+                email: payload.email,
+                isEmailVerified: false,
+            });
+    
+            userId = newUser.id;
+        }
+
+        await passwordService.addPasswrod(userId, payload.password);
+
+        return await sessionService.createSession(userId, deviceInfo);
+    }
+
+
+    public async handleSetPassword(password: string, userId: string): Promise<void> {
+        const passwordCredential = await passwordRepository.findByUserId(userId);
+
+        if (passwordCredential) {
+            throw new AppError(400, "BAD_REQUEST", "Password is already set.");
+        }
+
+        await passwordService.addPasswrod(userId, password);
+    }
+}
+
+export const authService = new AuthService();
+
+
+
+
+
+
+
 
 type OtpContext = 'VERIFY_EMAIL' | 'FORGOT_PASSWORD';
 
-export const checkAndRegisterUser = async (userData: SignupPayload) => {
-    const existedUser = await User.findOne({ email: userData.email })
-
-    if (existedUser) {
-        if (existedUser.isVerified) {
-            throw new AppError(400, "BAD_REQUEST", "User already exists and is verified");
-        }
-
-        return existedUser;
-    }
-
-    const user = new User(userData);
-    await user.save();
-    return user;
-}
 
 export const generateOrUpdateOtp = async (userId: unknown, context: OtpContext): Promise<number> => {
     const otp = generateOTP();
@@ -87,14 +148,6 @@ export const verifyOtp = async (userId: unknown, otp: number, markUserVerified: 
     return true;
 };
 
-export const checkCredential = async (password: string, user: IUser) => {
-    const isPasswordMatch = await user.comparePassword(password)
-    if(!isPasswordMatch){
-        throw new AppError(400, "BAD_REQUEST", "Invalid user credentials.");
-    }
-
-    return true
-}
 
 export const resetAuthData = async (userId: unknown) => {
     const auth = await Auth.findOne({ userId });

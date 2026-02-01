@@ -9,6 +9,13 @@ class UserRepository {
         return user;
     }
 
+    public async findById(id: string) {
+        const user = await prisma.user.findUnique({
+            where: { id },
+        });
+        return user;
+    }
+
     public async create(data: {
         id: string;
         name?: string;

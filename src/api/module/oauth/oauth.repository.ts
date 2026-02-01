@@ -4,10 +4,7 @@ import { OAuthProvider } from "generated/prisma/enums";
 
 class OAuthRepository {
     public async findOauth(provider: OAuthProvider, providerAccountId: string) {
-        // TODO: make this unique in prisma schema
-        // @@unique([provider, providerAccountId])
-        // providerAccountId String        @unique
-        const oauth = await prisma.oAuthAccount.findFirst({
+        const oauth = await prisma.oAuthAccount.findUnique({
             where: { providerAccountId, provider },
         });
         return oauth;

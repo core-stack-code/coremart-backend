@@ -7,21 +7,37 @@ const passwordSchema = z.string()
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^a-zA-Z0-9]/, 'Password must contain at least one special character')
 
+
+export const loginZodSchema = z.object({
+    email: z.email('Invalid email address'),
+    password: passwordSchema
+})
+
+
+export const signupZodSchema = z.object({
+    name: z.string().min(2, 'Name is required'),
+    email: z.email('Invalid email address'),
+    password: passwordSchema,
+})
+
+
+export const setPasswordZodSchema = z.object({
+    password: passwordSchema,
+});
+
+
+export type LoginPayload = z.infer<typeof loginZodSchema>;
+export type SignupPayload = z.infer<typeof signupZodSchema>;
+export type SetPasswordPayload = z.infer<typeof setPasswordZodSchema>;
+
+
+
+
+// old schemas to be removed after refactoring
+
 const emailPasswordSchema = z.object({
     email: z.email('Invalid email address'),
     password: passwordSchema
-}).strict();
-
-
-
-export const signupSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    email: z.email('Invalid email address'),
-    password: passwordSchema,
-}).strict();
-  
-export const loginSchema = emailPasswordSchema.extend({
-    isRememberMe: z.boolean().optional(),
 }).strict();
 
 export const verifySchema = z.object({
@@ -36,8 +52,6 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = emailPasswordSchema;
 
-export type SignupPayload = z.infer<typeof signupSchema>;
-export type LoginPayload = z.infer<typeof loginSchema>;
 export type VerifyPayload = z.infer<typeof verifySchema>;
 export type ForgotPasswordPayload = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordPayload = z.infer<typeof resetPasswordSchema>;

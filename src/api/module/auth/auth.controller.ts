@@ -1,27 +1,109 @@
 import { NextFunction, Request, Response } from "express";
-import { checkAndRegisterUser, checkCredential, findUserWithEmail, generateAuthTokens1, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
+import { authService, findUserWithEmail, generateAuthTokens1, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
 import { AppError, AppResponse } from "../../../core/utils/response";
 import { sendEmail } from "../../utils/snedEmail";
+import { LoginPayload, SetPasswordPayload, SignupPayload } from "./auth.schemas";
+import { applyAuthCookies } from "@core/utils/cookies.helper";
+import { AUTH_CONFIG } from "@core/constants/authConfig";
+import { sessionService } from "@mod/session/session.service";
 
-export const signUpController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const user = await checkAndRegisterUser(req.body);
-        const otp = await generateOrUpdateOtp(user._id, "VERIFY_EMAIL");
 
-        await sendEmail(user.email, 'Your Verification Code', {
-            name: user.name,
-            otp
-        }, "VERIFY_EMAIL");
+class AuthController {
+    public async login(req: Request, res: Response) {
+        const payload = req.body as LoginPayload;
+        const clienetType = req.clinetType;
+
+        const { accessToken, refreshToken } = await authService.handleLogin(payload, {
+            ip: req.ip,
+            userAgent: req.headers['user-agent'] || "",
+        });
+
+        // Set cookies
+        applyAuthCookies(res, { accessToken, refreshToken });
+
+        const responseData = clienetType === "web" 
+            ? null
+            : { accessToken, refreshToken };
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Success',
+            message: "Login successful",
+            data: responseData,
         });
-    } 
-    catch (error) {
-        next(error); 
+    }
+
+
+    public async signup(req: Request, res: Response) {
+        const payload = req.body as SignupPayload;
+        const clienetType = req.clinetType;
+
+        const { accessToken, refreshToken } = await authService.handleSignup(payload, {
+            ip: req.ip,
+            userAgent: req.headers['user-agent'] || "",
+        });
+
+        // Set cookies
+        applyAuthCookies(res, { accessToken, refreshToken });
+
+        const responseData = clienetType === "web" 
+            ? null
+            : { accessToken, refreshToken };
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Signup successful",
+            data: responseData,
+        });
+    }
+
+
+    public async setPassword(req: Request, res: Response) {
+        const payload = req.body as SetPasswordPayload;
+        const userId = req.user!.id;
+
+        await authService.handleSetPassword(payload.password, userId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Password set successfully",
+        });
+    }
+
+
+    public async logout(req: Request, res: Response) {
+        const refreshToken = req.cookies[AUTH_CONFIG.cookieName.refreshToken];
+
+        if (!refreshToken || typeof refreshToken !== "string") {
+            throw new AppError(400, "BAD_REQUEST", "Refresh token is missing.");
+        }
+
+        await sessionService.revokeByRefreshToken(refreshToken as string);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Logout successful",
+        });
+    }
+
+
+    public async logoutAll(req: Request, res: Response) {
+        const userId = req.user!.id;
+
+        await sessionService.revokeAllSession(userId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "All sessions logged out successfully",
+        });
     }
 }
+
+export const authController = new AuthController();
+
+
+
+
+
 
 export const verifyUserController = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -85,69 +167,6 @@ export const verifyUserController = async (req: Request, res: Response, next: Ne
             }
         });
 
-    }
-    catch(error){
-        next(error);
-    }
-}
-
-export const loginController = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const { email, password, isRememberMe } = req.body
-        const user = await findUserWithEmail(email)
-
-        if(!user || !user.isVerified){
-            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
-        }
-
-        await checkCredential(password, user)
-
-        const { accessToken, refreshToken } = await generateAuthTokens1(user, isRememberMe)
-
-        // cookie name for access token
-        res.cookie('__Host-atkn', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            path: '/',
-            maxAge: isRememberMe ? (30 * 24 * 60 * 60 * 1000) : (60 *60 * 1000) // 60 minutes or 30 days
-        });
-
-        // cookie name for refresh token
-        res.cookie('__Secure-rtkn', refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            path: '/',
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        });
-
-        if(req.clinetType === 'web'){
-            AppResponse(res, 200, {
-                code: "OK",
-                message: "Success",
-                data: {
-                    user: {
-                        name: user.name,
-                        email: user.email,
-                    }
-                }
-            })
-            return;
-        }
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Success",
-            data: {
-                atk: accessToken,
-                rtk: refreshToken,
-                user: {
-                    name: user.name,
-                    email: user.email,
-                }
-            }
-        })
     }
     catch(error){
         next(error);

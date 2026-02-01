@@ -1,17 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../../core/utils/response";
-import { log } from "../utils/log";
-import { env } from "../../core/config/env";
-import { verifyJwtToken } from "../../core/lib/jwt";
-import { LoggedInAuth } from "../../core/types/exprses";
+import { env } from "@core/config/env";
+import { verifyJwtToken } from "@core/lib/jwt";
+import { AppError } from "@core/utils/response";
+import { AUTH_CONFIG } from "@core/constants/authConfig";
+import { userRepository } from "@mod/users/user.repository";
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+
+export const authMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies['__Host-atkn'] || req.headers.authorization?.split(" ")[1];
-        log.info('checking in middleware', 1)
+        const token = 
+            req.cookies[AUTH_CONFIG.cookieName.accessToken] 
+            || req.headers.authorization?.split(" ")[1];
 
         if (!token) {
-            throw new AppError(401, "UNAUTHORIZED", "Unauthorized access");
+            throw new AppError(401, "UNAUTHORIZED", "Unauthorized access. Token required.");
         }
 
         const decode = verifyJwtToken(token, env.JWT_ACCESS_SECRET)
@@ -19,13 +21,17 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             throw new AppError(401, "UNAUTHORIZED", "Session has expire");
         }
 
-        const auth: LoggedInAuth = {
-            userId: decode.sub as string,
-            email: decode.email,
-            isGuest: false
+        const user = await userRepository.findById(decode.sub as string);
+
+        if (!user) {
+            throw new AppError(401, "UNAUTHORIZED", "User not found.");
         }
-        
-        req.auth = auth
+
+        if (!user.isEmailVerified) {
+            throw new AppError(401, "UNAUTHORIZED", "User is not verified.");
+        }
+
+        req.user = user;
         next();
     } catch (error) {
         next(error);

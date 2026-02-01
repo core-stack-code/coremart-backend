@@ -14,4 +14,14 @@ oauthRouter.get(
     asyncWrapper(oauthController.googleCallback)
 );
 
+oauthRouter.get(
+    '/github',
+    oauthController.githubRedirect
+);
+
+oauthRouter.get(
+    '/github/callback',
+    asyncWrapper(oauthController.githubCallback)
+);
+
 export default oauthRouter;

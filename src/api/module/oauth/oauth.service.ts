@@ -1,4 +1,3 @@
-import axios from "axios";
 import crypto from "crypto";
 import QueryString from "qs";
 
@@ -7,9 +6,11 @@ import { userRepository } from "@mod/users/user.repository";
 import { sessionService } from "@mod/session/session.service";
 
 import { env } from "@core/config/env";
-import { DeviceInfo } from "@core/types/common";
-import { exchangeCode, fetchProfile, GOOGLE_OAUTH, GoogleUserInfoResponse } from "./oauth.utils";
+import { DeviceInfo, TokensResponse } from "@core/types/common";
+import { exchangeGitHubCode, exchangeGoogleCode, fetchGithubProfile, fetchGoogleProfile, GITHUB_OAUTH, GOOGLE_OAUTH, GoogleUserInfoResponse, OauthLoginData } from "./oauth.utils";
 import { getUuid } from "@core/utils/db.helper";
+import { OAuthProvider } from "generated/prisma/enums";
+import { log } from "@api/utils/log";
 
 
 class OAuthService {
@@ -33,18 +34,51 @@ class OAuthService {
     }
 
 
-    public async handleGoogleCallback(code: string): Promise<GoogleUserInfoResponse> {
-        const tokens = await exchangeCode(code);
-        const profile = await fetchProfile(tokens.access_token);
+    public async handleGoogleCallback(code: string): Promise<OauthLoginData> {
+        const tokens = await exchangeGoogleCode(code);
+        const profile = await fetchGoogleProfile(tokens.access_token);
 
+        return {
+            email: profile.email,
+            name: profile.name,
+            oauthProviderId: profile.sub,
+            isEmailVerified: profile.email_verified,
+        };
+    }
+
+
+    public getGitHubAuthUrl(): { url: string; state: string } {
+        const state = crypto.randomBytes(16).toString("hex");
+
+        const query = QueryString.stringify({
+            client_id: env.GITHUB_CLIENT_ID,
+            redirect_uri: env.GITHUB_REDIRECT_URI,
+            scope: "read:user user:email",
+            state,
+        });
+
+        return {
+            url: `${GITHUB_OAUTH.authUrl}?${query}`,
+            state,
+        }
+    }
+
+    
+    public async handleGitHubCallback(code: string): Promise<OauthLoginData> {
+        const tokenRes = await exchangeGitHubCode(code);
+        const profile = await fetchGithubProfile(tokenRes.access_token);
+       
         return profile;
     }
-    
 
-    public async loginWithGoogleOAuth(userInfo: GoogleUserInfoResponse, deviceInfo: DeviceInfo) {
-        const { email, name, email_verified, sub } = userInfo;
 
-        const existingOauth = await oauthRepository.findOauth("GOOGLE", sub);
+    public async loginWithOAuth(
+        userInfo: OauthLoginData & { provider: OAuthProvider }, 
+        deviceInfo: DeviceInfo
+    ): Promise<TokensResponse> {
+        const { email, name, isEmailVerified, oauthProviderId, provider } = userInfo;
+
+        const existingOauth = await oauthRepository.findOauth(provider, oauthProviderId);
 
         if (existingOauth) {
             // User already exists, create session
@@ -59,7 +93,7 @@ class OAuthService {
                 id: getUuid(),
                 name,
                 email,
-                isEmailVerified: email_verified,
+                isEmailVerified,
             });
             userId = newUser.id;
         }
@@ -69,8 +103,8 @@ class OAuthService {
 
         await oauthRepository.create(userId, {
             id: getUuid(),
-            provider: "GOOGLE",
-            providerAccountId: sub,
+            provider,
+            providerAccountId: oauthProviderId,
             email,
         });
 

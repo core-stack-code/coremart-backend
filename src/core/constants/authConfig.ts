@@ -1,3 +1,9 @@
+import { ClientType } from "@core/types/common";
+
+export const CLIENT_MAP: Record<string, ClientType> = {
+    'W-95W11L': 'web',
+    'M-23JCR7': 'mobile',
+}
 
 export const AUTH_CONFIG = {
     age: {

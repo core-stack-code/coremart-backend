@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id              String         @id @db.Uuid
-  email           String         @unique
-  name            String?
-  isEmailVerified Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  oauths          OAuthAccount[]
-  sessions        Session[]
+  id                  String              @id @db.Uuid
+  email               String              @unique
+  name                String?
+  isEmailVerified     Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  oauths              OAuthAccount[]
+  sessions            Session[]
+  passwordCredentials PasswordCredential?
 }
 
 model OAuthAccount {
@@ -24,8 +25,10 @@ model OAuthAccount {
   user              User          @relation(fields: [userId], references: [id])
   provider          OAuthProvider
   emailFromProvider String
-  providerAccountId String
+  providerAccountId String        @unique
   createdAt         DateTime      @default(now())
+
+  @@unique([provider, providerAccountId])
 }
 
 enum OAuthProvider {
@@ -33,17 +36,26 @@ enum OAuthProvider {
   GITHUB
 }
 
+model PasswordCredential {
+  userId          String   @id @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash    String
+  passwordVersion Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model Session {
-  id               String     @id @db.Uuid
-  userId           String     @db.Uuid
-  user             User       @relation(fields: [userId], references: [id])
-  refreshTokenHash String
-  deviceType       DeviceType
-  deviceName       String?
-  ipAddress        String
-  expiresAt        DateTime
-  revokedAt        DateTime?
-  createdAt        DateTime   @default(now())
+  id           String     @id @db.Uuid
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id])
+  refreshToken String
+  deviceType   DeviceType
+  deviceName   String?
+  ipAddress    String
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime   @default(now())
 }
 
 enum DeviceType {
