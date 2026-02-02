@@ -7,14 +7,14 @@ import { log } from "../utils/log";
 
 export const detectClient = (req: Request, _res: Response, next: NextFunction) => {
     const header = req.headers["x-app-client"] as ClientType;
-    const clinetType = CLIENT_MAP[header];
+    const clientType = CLIENT_MAP[header];
 
-    log.info('clinetType', clinetType)
+    log.info('clientType', clientType)
 
-    if (!clinetType) {
+    if (!clientType) {
         throw new AppError(400, "BAD_REQUEST" ,"Invalid or missing identifier");
     }
 
-    req.clinetType = clinetType;
+    req.clientType = clientType;
     next();
 }

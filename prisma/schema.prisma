@@ -30,6 +30,7 @@ model OAuthAccount {
   createdAt         DateTime      @default(now())
 
   @@unique([provider, providerAccountId])
+  @@index([userId, provider])
 }
 
 enum OAuthProvider {
@@ -50,13 +51,16 @@ model Session {
   id           String     @id @db.Uuid
   userId       String     @db.Uuid
   user         User       @relation(fields: [userId], references: [id])
-  refreshToken String
+  refreshToken String     @unique
   deviceType   DeviceType
   deviceName   String?
   ipAddress    String
   expiresAt    DateTime
   revokedAt    DateTime?
   createdAt    DateTime   @default(now())
+
+  @@index([userId, revokedAt])
+  @@index([userId, createdAt])
 }
 
 enum DeviceType {
@@ -77,10 +81,11 @@ model OtpSession {
   isUsed       Boolean        @default(false)
   createdAt    DateTime       @default(now())
 
-  @@index([userId, sessionType])
+  @@index([userId, sessionType, isUsed])
+  @@index([userId, sessionType, otpExpiresAt])
 }
 
 enum OtpSessionType {
   EMAIL_VERIFICATION
-  FORGOT_PASSWORD
+  PASSWORD_RESET
 }

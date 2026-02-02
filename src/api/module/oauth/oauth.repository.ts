@@ -1,11 +1,33 @@
 import { prisma } from "@core/config/prisma";
+import { OAuthAccount } from "generated/prisma/client";
 import { OAuthProvider } from "generated/prisma/enums";
 
 
 class OAuthRepository {
-    public async findOauth(provider: OAuthProvider, providerAccountId: string) {
+    public async findOauth(
+        provider: OAuthProvider,
+        providerAccountId: string
+    ): Promise<Pick<OAuthAccount, 'id' | 'userId'> | null> {
         const oauth = await prisma.oAuthAccount.findUnique({
-            where: { providerAccountId, provider },
+            where: { 
+                providerAccountId, 
+                provider
+            },
+            select: { id: true, userId: true  },
+        });
+        return oauth;
+    }
+
+    public async findByUserAndProvider(
+        userId: string,
+        provider: OAuthProvider
+    ): Promise<Pick<OAuthAccount, 'id'> | null> {
+        const oauth = await prisma.oAuthAccount.findFirst({
+            where: {
+                userId,
+                provider,
+            },
+            select: { id: true }, 
         });
         return oauth;
     }
@@ -16,7 +38,7 @@ class OAuthRepository {
         providerAccountId: string;
         email: string;
     }) {
-        const oauth = await prisma.oAuthAccount.create({
+        await prisma.oAuthAccount.create({
             data: {
                 userId,
                 id: data.id,
@@ -24,8 +46,8 @@ class OAuthRepository {
                 providerAccountId: data.providerAccountId,
                 emailFromProvider: data.email,
             },
+            select: null,
         });
-        return oauth;
     }
 }
 

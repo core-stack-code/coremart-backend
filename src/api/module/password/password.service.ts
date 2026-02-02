@@ -5,39 +5,11 @@ import { AppError } from "@core/utils/response";
 
 
 class PasswordService {
-    async validatePassword(userId: string, password: string): Promise<void> {
-        const passwordCredential = await passwordRepository.findByUserId(userId);
-
-        if (!passwordCredential) {
-            throw new AppError(
-                401, 
-                "UNAUTHORIZED", 
-                "You have not set a password. Login using other methods."
-            );
-        }
-
-        const isValidPassword = await comparePassword(password, passwordCredential.passwordHash);
+    async validatePassword(password: string, oldPasswordHash: string): Promise<void> {
+        const isValidPassword = await comparePassword(password, oldPasswordHash);
 
         if (!isValidPassword) {
             throw new AppError(401, "UNAUTHORIZED", "Invalid password.");
-        }
-    }
-
-    public async validateSamePassword(userId: string, password: string): Promise<void> {
-        const passwordCredential = await passwordRepository.findByUserId(userId);
-
-        if (!passwordCredential) {
-            throw new AppError(
-                401, 
-                "UNAUTHORIZED", 
-                "You have not set a password. Login using other methods."
-            );
-        }
-
-        const isSamePassword = await comparePassword(password, passwordCredential.passwordHash);
-
-        if (isSamePassword) {
-            throw new AppError(400, "BAD_REQUEST", "New password must be different from the old password.");
         }
     }
 
@@ -56,6 +28,32 @@ class PasswordService {
         await passwordRepository.updateByUserId(
             userId, newPasswordHash, tx
         );
+    }
+
+    public async findPasswordByUserId(userId: string) {
+        const passwordCredential = await passwordRepository.findByUserId(userId);
+                    
+        if (!passwordCredential) {
+            throw new AppError(
+                401, 
+                "UNAUTHORIZED", 
+                "You have not set a password. Login using other methods."
+            );
+        }
+
+        return passwordCredential;
+    }
+
+    public async isSamePassword(password: string, oldPasswordHash: string): Promise<void> {
+        const isSamePassword = await comparePassword(password, oldPasswordHash);
+
+        if (isSamePassword) {
+            throw new AppError(
+                400, 
+                "BAD_REQUEST", 
+                "New password must be different from the old password."
+            );
+        }
     }
 }
 

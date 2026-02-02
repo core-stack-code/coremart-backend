@@ -1,9 +1,18 @@
 import { Request, Response } from "express";
 import { authService } from "./auth.service";
 import { sessionService } from "@mod/session/session.service";
+import { otpService } from "./otp.service";
 
+import { 
+    ChangePasswordPayload,
+    GenerateOtpPayload,
+    LoginPayload,
+    ResendOtpPayload,
+    SetPasswordPayload,
+    SignupPayload,
+    VerifyOtpPayload
+} from "./auth.schemas";
 import { AppError, AppResponse } from "@core/utils/response";
-import { GenerateOtpPayload, LoginPayload, ResendOtpPayload, SetPasswordPayload, SignupPayload, VerifyOtpPayload } from "./auth.schemas";
 import { applyAuthCookies, clearAuthCookies } from "@core/utils/cookies.helper";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 
@@ -11,7 +20,7 @@ import { AUTH_CONFIG } from "@core/constants/authConfig";
 class AuthController {
     public async login(req: Request, res: Response) {
         const payload = req.body as LoginPayload;
-        const clienetType = req.clinetType;
+        const clientType = req.clientType;
 
         const { accessToken, refreshToken } = await authService.handleLogin(payload, {
             ip: req.ip,
@@ -21,7 +30,7 @@ class AuthController {
         // Set cookies
         applyAuthCookies(res, { accessToken, refreshToken });
 
-        const responseData = clienetType === "web" 
+        const responseData = clientType === "web" 
             ? null
             : { accessToken, refreshToken };
 
@@ -35,7 +44,7 @@ class AuthController {
 
     public async signup(req: Request, res: Response) {
         const payload = req.body as SignupPayload;
-        const clienetType = req.clinetType;
+        const clientType = req.clientType;
 
         const { accessToken, refreshToken } = await authService.handleSignup(payload, {
             ip: req.ip,
@@ -45,7 +54,7 @@ class AuthController {
         // Set cookies
         applyAuthCookies(res, { accessToken, refreshToken });
 
-        const responseData = clienetType === "web" 
+        const responseData = clientType === "web" 
             ? null
             : { accessToken, refreshToken };
 
@@ -66,6 +75,22 @@ class AuthController {
         AppResponse(res, 200, {
             code: "OK",
             message: "Password set successfully",
+        });
+    }
+
+
+    public async changePassword(req: Request, res: Response) {
+        const user = req.user!;
+        const payload = req.body as ChangePasswordPayload;
+
+        await authService.handleChangePassword(user.id, payload);
+
+        await sessionService.revokeAllSession(user.id);
+        clearAuthCookies(res);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Password changed successfully",
         });
     }
 
@@ -106,7 +131,7 @@ class AuthController {
         const user = req.user!;
         const payload = req.body as GenerateOtpPayload;
 
-        await authService.handleGenerateOtp(user, payload.sessionType);
+        await otpService.handleGenerateOtp(user, payload.sessionType);
 
         AppResponse(res, 200, {
             code: "OK",
@@ -119,9 +144,10 @@ class AuthController {
         const user = req.user!;
         const payload = req.body as VerifyOtpPayload;
 
-        await authService.handleVerifyOtp(user, payload);
+        await otpService.handleVerifyOtp(user, payload);
 
         if (payload.sessionType === "PASSWORD_RESET") {
+            await sessionService.revokeAllSession(user.id);
             clearAuthCookies(res);
         }
 
@@ -136,11 +162,39 @@ class AuthController {
         const user = req.user!;
         const payload = req.body as ResendOtpPayload;
 
-        await authService.handleResendOtp(user, payload.sessionType);
+        await otpService.handleResendOtp(user, payload.sessionType);
 
         AppResponse(res, 200, {
             code: "OK",
             message: "OTP resent successfully",
+        });
+    }
+
+
+    public async refreshTokens(req: Request, res: Response) {
+        const refreshToken = req.cookies[AUTH_CONFIG.cookieName.refreshToken];
+        const clientType = req.clientType;
+
+        if (!refreshToken || typeof refreshToken !== "string") {
+            throw new AppError(400, "BAD_REQUEST", "Refresh token is missing.");
+        }
+
+        const { 
+            accessToken, 
+            refreshToken: newRefreshToken 
+        } = await sessionService.refreshSession(refreshToken);
+
+        // Set cookies
+        applyAuthCookies(res, { accessToken, refreshToken: newRefreshToken });
+
+        const responseData = clientType === "web" 
+            ? null
+            : { accessToken, refreshToken: newRefreshToken };
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Tokens refreshed successfully",
+            data: responseData,
         });
     }
 };

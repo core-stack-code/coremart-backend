@@ -41,9 +41,33 @@ export const resendOtpZodSchema = z.object({
     sessionType: z.enum(otpSessionEnum),
 });
 
+export const changePasswordZodSchema = z.object({
+    currentPassword: passwordSchema,
+    newPassword: passwordSchema,
+    confirmNewPassword: passwordSchema,
+})
+.superRefine((data, ctx) => {
+    if (data.currentPassword === data.newPassword) {
+        ctx.addIssue({
+            path: ["newPassword"],
+            code: "custom",
+            message: "New password must be different from current password.",
+        });
+    }
+
+    if (data.newPassword !== data.confirmNewPassword) {
+        ctx.addIssue({
+            path: ["confirmNewPassword"],
+            code: "custom",
+            message: "Passwords do not match.",
+        });
+    }
+});
+
 export type LoginPayload = z.infer<typeof loginZodSchema>;
 export type SignupPayload = z.infer<typeof signupZodSchema>;
 export type SetPasswordPayload = z.infer<typeof setPasswordZodSchema>;
 export type GenerateOtpPayload = z.infer<typeof generateOtpZodSchema>;
 export type VerifyOtpPayload = z.infer<typeof verifyOtpZodSchema>;
 export type ResendOtpPayload = z.infer<typeof resendOtpZodSchema>;
+export type ChangePasswordPayload = z.infer<typeof changePasswordZodSchema>;

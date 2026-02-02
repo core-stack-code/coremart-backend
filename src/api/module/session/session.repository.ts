@@ -41,8 +41,12 @@ class SessionRepository {
     }
 
 
-    public async revokeOldest(userId: string, tx: PrismaTx = prisma) {
-        const oldestSession = await tx.session.findFirst({
+    public async revokeOverflow(
+        userId: string,
+        keep: number,
+        tx: PrismaTx = prisma
+    ) {
+        const sessionsToRevoke = await tx.session.findMany({
             where: {
                 userId,
                 revokedAt: null,
@@ -53,14 +57,20 @@ class SessionRepository {
             orderBy: {
                 createdAt: "asc",
             },
+            skip: keep,
+            select: { id: true },
         });
 
-        if (oldestSession) {
-            await tx.session.update({
-                where: { id: oldestSession.id },
-                data: { revokedAt: new Date() },
-            });
-        }
+        if (sessionsToRevoke.length === 0) return;
+
+        await tx.session.updateMany({
+            where: {
+                id: { in: sessionsToRevoke.map(s => s.id) },
+            },
+            data: {
+                revokedAt: new Date(),
+            },
+        });
     }
 
     public async findByRefreshToken(refreshToken: string, tx: PrismaTx = prisma) {

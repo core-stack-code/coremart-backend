@@ -6,7 +6,8 @@ import { env } from "@core/config/env";
 import { getExpiryTime, getUuid } from "@core/utils/db.helper";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
-import { generateJwtToken } from "@core/lib/jwt";
+import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
+import { AppError } from "@core/utils/response";
 
 
 class SessionService {
@@ -16,11 +17,11 @@ class SessionService {
         const tokens = sessionService.generateTokens(userId);
 
         await prisma.$transaction(async (tx) => {
-            const sessoinCount = await sessionRepository.countActive(userId, tx);
-
-            if (sessoinCount >= MAX_SESSION_PER_USER) {
-                await sessionRepository.revokeOldest(userId, tx);
-            }
+            await sessionRepository.revokeOverflow(
+                userId,
+                MAX_SESSION_PER_USER - 1,
+                tx
+            );
 
             await sessionRepository.create({
                 id: getUuid(),
@@ -58,9 +59,37 @@ class SessionService {
         });
     }
 
-
     public async revokeAllSession(userId: string) {
        await sessionRepository.revokeAllByUserId(userId);
+    }
+
+    public async refreshSession(oldRefreshToken: string): Promise<TokensResponse> {
+        return await prisma.$transaction(async (tx) => {
+            const session = await sessionRepository.findByRefreshToken(oldRefreshToken, tx);
+
+            if (!session) {
+                throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+            }
+
+            const isValidToken = verifyJwtToken(
+                oldRefreshToken,
+                env.JWT_REFRESH_SECRET
+            );
+
+            if (!isValidToken) {
+                throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+            }
+
+            const accessToken = generateJwtToken({
+                sub: session.userId,
+            }, env.JWT_ACCESS_SECRET, AUTH_CONFIG.jwtExpiry.accessToken);
+
+
+            return {
+                accessToken,
+                refreshToken: oldRefreshToken,
+            }
+        });
     }
 }
 

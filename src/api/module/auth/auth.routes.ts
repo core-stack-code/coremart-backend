@@ -1,6 +1,7 @@
 import express from 'express';
 import { authController } from './auth.controller';
 import { 
+    changePasswordZodSchema,
     generateOtpZodSchema,
     loginZodSchema,
     resendOtpZodSchema,
@@ -36,6 +37,19 @@ authRouter.post(
     validationMiddleware.validateRequest(setPasswordZodSchema),
     asyncWrapper(authController.setPassword)
 );
+
+authRouter.post(
+    '/change-password',
+    authMiddleware(),
+    validationMiddleware.validateRequest(changePasswordZodSchema),
+    asyncWrapper(authController.changePassword)
+)
+
+authRouter.post(
+    '/refresh-token',
+    detectClient,
+    asyncWrapper(authController.refreshTokens)
+)
 
 authRouter.post(
     '/logout',

@@ -4,7 +4,7 @@ import { User } from "generated/prisma/client";
 
 declare module "express-serve-static-core" {
     interface Request {
-      clinetType?: ClientType;
+      clientType?: ClientType;
       localsQuery?: any;
       user?: User;
     }
