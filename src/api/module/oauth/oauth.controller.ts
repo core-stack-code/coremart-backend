@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { AppError, AppResponse } from "@core/utils/response";
 import { oauthService } from "./oauth.service";
 import { applyAuthCookies } from "@core/utils/cookies.helper";
-import { log } from "@api/utils/log";
 import { STATE_COOKIE_CONFIG } from "./oauth.utils";
 
 
@@ -82,6 +81,7 @@ class OauthController {
         return res.redirect(url)
     }
 
+    
     public async githubCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
@@ -121,7 +121,6 @@ class OauthController {
             message: "GitHub OAuth successful.",
         });
     }
-
 }
 
 export const oauthController = new OauthController();

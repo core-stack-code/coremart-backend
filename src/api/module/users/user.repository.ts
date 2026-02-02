@@ -1,4 +1,5 @@
-import { prisma } from "@/core/config/prisma";
+import { prisma, PrismaTx } from "@/core/config/prisma";
+import { User } from "generated/prisma/client";
 
 
 class UserRepository {
@@ -31,6 +32,13 @@ class UserRepository {
             }
         });
         return user;
+    }
+
+    public async updateById(id: string, data: Partial<User>, tx: PrismaTx = prisma) {
+        await tx.user.update({
+            where: { id },
+            data,
+        });
     }
 }
 

@@ -17,6 +17,7 @@ model User {
   oauths              OAuthAccount[]
   sessions            Session[]
   passwordCredentials PasswordCredential?
+  otpSessions         OtpSession[]
 }
 
 model OAuthAccount {
@@ -62,4 +63,24 @@ enum DeviceType {
   DESKTOP
   MOBILE
   TABLET
+}
+
+model OtpSession {
+  id           String         @id @db.Uuid
+  userId       String         @db.Uuid
+  user         User           @relation(fields: [userId], references: [id])
+  sessionType  OtpSessionType
+  otpHash      String
+  otpExpiresAt DateTime
+  resendCount  Int            @default(0)
+  lastResendAt DateTime?
+  isUsed       Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+
+  @@index([userId, sessionType])
+}
+
+enum OtpSessionType {
+  EMAIL_VERIFICATION
+  FORGOT_PASSWORD
 }

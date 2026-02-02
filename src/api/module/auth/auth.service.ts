@@ -1,16 +1,20 @@
-import User, { IUser } from "../users/user.model";
-import Auth from "./auth.model";
-import { env } from "../../../core/config/env";
-import { LoginPayload, SignupPayload } from "./auth.schemas";
-import { generateOTP } from "../../utils/helper";
-import { AppError } from "../../../core/utils/response";
-import { generateJwtToken } from "../../../core/lib/jwt";
-import { userRepository } from "@mod/users/user.repository";
-import { passwordService } from "@mod/password/password.service";
-import { DeviceInfo, TokensResponse } from "@core/types/common";
+import { prisma } from "@core/config/prisma";
+import { OtpSessionType, User } from "generated/prisma/client";
+
 import { sessionService } from "@mod/session/session.service";
+import { passwordService } from "@mod/password/password.service";
+import { userRepository } from "@mod/users/user.repository";
 import { passwordRepository } from "@mod/password/password.repository";
-import { getUuid } from "@core/utils/db.helper";
+import { otpSessionRepository } from "@mod/otp-session/otpSession.repository";
+
+import { sendEmail } from "@core/lib/snedEmail";
+import { AppError } from "@core/utils/response";
+import { compareOtpHash, genrateOtpHash } from "@core/lib/crypto";
+import { OTP_CONFIG } from "@core/constants/authConfig";
+import { DeviceInfo, TokensResponse } from "@core/types/common";
+import { getExpiryTime, getUuid } from "@core/utils/db.helper";
+import { LoginPayload, SignupPayload, VerifyOtpPayload } from "./auth.schemas";
+import { log } from "@api/utils/log";
 
 
 class AuthService {
@@ -56,7 +60,7 @@ class AuthService {
             userId = newUser.id;
         }
 
-        await passwordService.addPasswrod(userId, payload.password);
+        await passwordService.addPassword(userId, payload.password);
 
         return await sessionService.createSession(userId, deviceInfo);
     }
@@ -69,106 +73,219 @@ class AuthService {
             throw new AppError(400, "BAD_REQUEST", "Password is already set.");
         }
 
-        await passwordService.addPasswrod(userId, password);
+        await passwordService.addPassword(userId, password);
+    }
+
+
+    public async handleGenerateOtp(user: User, sessionType: OtpSessionType): Promise<void> {
+        if (sessionType === "EMAIL_VERIFICATION" && user.isEmailVerified) {
+            throw new AppError(400, "BAD_REQUEST", "Email is already verified.");
+        }
+
+        if (sessionType === "PASSWORD_RESET") {
+            const passwordCredential = await passwordRepository.findByUserId(user.id);
+
+            if (!passwordCredential) {
+                throw new AppError(
+                    400,
+                    "BAD_REQUEST",
+                    "You have not set a password. Cannot reset password."
+                );
+            }
+        }
+
+        const now = new Date();
+        const windowStart = new Date(
+            now.getTime() - OTP_CONFIG.newOtpIntervalMs
+        );
+
+        const resentCunt = await otpSessionRepository.countRecentByUserAndType(
+            user.id,
+            sessionType,
+            windowStart
+        );
+
+        if (resentCunt >= OTP_CONFIG.maxAttempts) {
+            throw new AppError(
+                429, 
+                "TOO_MANY_REQUESTS",
+                "Too many OTP requests. Please try again later."
+            );
+        }
+
+        const { otp, hash } = genrateOtpHash()
+
+        log.info("generated otp", otp);
+
+        await prisma.$transaction(async (tx) => {
+            await otpSessionRepository.invalidateActiveByUserAndType(
+                user.id,
+                sessionType,
+                now, 
+                tx
+            );
+
+            await otpSessionRepository.create({
+                id: getUuid(),
+                userId: user.id,
+                sessionType,
+                otpHash: hash,
+                expiresAt: getExpiryTime(OTP_CONFIG.otpExpiry),
+                lastResendAt: now
+            }, tx);
+        });
+
+
+        await sendEmail(
+            user.email, 
+            { otp, name: user.name || "User" }, 
+            sessionType
+        )
+    }
+
+
+    public async handleVerifyOtp(
+        user: User, 
+        payload: VerifyOtpPayload
+    ): Promise<void> {
+        if (payload.sessionType === "EMAIL_VERIFICATION" && user.isEmailVerified) {
+            throw new AppError(400, "BAD_REQUEST", "Email is already verified.");
+        }
+
+        if (payload.sessionType === "PASSWORD_RESET" && !payload.newPassword) {
+            throw new AppError(400, "BAD_REQUEST", "New password is required for password reset.");
+        }
+
+        const otpSession = await otpSessionRepository.findActiveByUserAndType(
+            user.id,
+            payload.sessionType
+        );
+
+        if (!otpSession) {
+            // No active OTP session found.
+            log.info("No active OTP session found for user:", user.id);
+            throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
+        }
+        
+        if (otpSession.sessionType !== payload.sessionType) {
+            // OTP session type mismatch.
+            log.info("OTP session type mismatch for user:", user.id);
+            throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
+        }
+
+        if (payload.sessionType === "PASSWORD_RESET") {
+            await passwordService.validateSamePassword(
+                user.id, 
+                payload.newPassword!
+            );
+        }
+
+        if (otpSession.otpExpiresAt.getTime() < new Date().getTime()) {
+            // OTP has expired.
+            log.info("OTP has expired for user:", user.id);
+            throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
+        }
+
+        const isValidOtp = compareOtpHash(
+            payload.otp, 
+            otpSession.otpHash
+        );
+
+        if (!isValidOtp) {
+            // Invalid OTP
+            log.info("Invalid OTP provided by user:", user.id);
+            throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await otpSessionRepository.updateById(otpSession.id, { isUsed: true }, tx);
+
+            if (payload.sessionType === "EMAIL_VERIFICATION") {
+                await userRepository.updateById(user.id, { isEmailVerified: true }, tx);
+            }
+            else if (payload.sessionType === "PASSWORD_RESET") {
+                await passwordService.updatePassword(
+                    user.id, 
+                    payload.newPassword!, 
+                    tx
+                );
+            }
+        });
+    }
+
+
+    public async handleResendOtp(user: User, sessionType: OtpSessionType): Promise<void> {
+        if (sessionType === "EMAIL_VERIFICATION" && user.isEmailVerified) {
+            throw new AppError(400, "BAD_REQUEST", "Email is already verified.");
+        }
+
+        if (sessionType === "PASSWORD_RESET") {
+            const passwordCredential = await passwordRepository.findByUserId(user.id);
+
+            if (!passwordCredential) {
+                throw new AppError(
+                    400,
+                    "BAD_REQUEST",
+                    "You have not set a password. Cannot reset password."
+                );
+            }
+        }
+
+        const otpSession = await otpSessionRepository.findActiveByUserAndType(
+            user.id,
+            sessionType
+        );
+
+        if (!otpSession) {
+            throw new AppError(
+                400,
+                "BAD_REQUEST",
+                "No active OTP found. Please generate a new OTP."
+            );
+        }
+
+        const now = new Date();
+
+        if (
+            otpSession.lastResendAt &&
+            now.getTime() - otpSession.lastResendAt.getTime() <
+            OTP_CONFIG.resendCooldownMs
+        ) {
+            throw new AppError(
+                429,
+                "TOO_MANY_REQUESTS",
+                "Please wait before resending OTP."
+            );
+        }
+
+        if (otpSession.resendCount >= OTP_CONFIG.maxAttempts) {
+            throw new AppError(
+                429,
+                "TOO_MANY_REQUESTS",
+                "Maximum OTP resend attempts reached."
+            );
+        }
+
+        const { otp, hash } = genrateOtpHash();
+
+        log.info("resent otp", otp);
+
+        await otpSessionRepository.updateById(
+            otpSession.id,
+            {
+                otpHash: hash,
+                otpExpiresAt: getExpiryTime(OTP_CONFIG.otpExpiry),
+                resendCount: { increment: 1 },
+                lastResendAt: now
+            }
+        );
+
+        await sendEmail(
+            user.email,
+            { otp, name: user.name || "User" },
+            sessionType
+        );
     }
 }
 
 export const authService = new AuthService();
-
-
-
-
-
-
-
-
-type OtpContext = 'VERIFY_EMAIL' | 'FORGOT_PASSWORD';
-
-
-export const generateOrUpdateOtp = async (userId: unknown, context: OtpContext): Promise<number> => {
-    const otp = generateOTP();
-    const auth = await Auth.findOne({ userId });
-
-    if (!auth) {
-        if (context === 'FORGOT_PASSWORD') {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "User not found.");
-        }
-
-        const newAuth = new Auth({
-            userId,
-            otpCode: otp,
-            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        });
-        await newAuth.save();
-        return otp;
-    }
-
-    if (auth.resendCount <= 0) {
-        throw new AppError(403, "FORBIDDEN", "You have reached the maximum resend limit.");
-    }
-
-    auth.otpCode = otp;
-    auth.expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    auth.resendCount -= 1;
-    await auth.save();
-
-    return otp;
-};
-
-export const findUserWithEmail = async (email: string) => {
-    return await User.findOne({ email })
-}
-
-export const verifyOtp = async (userId: unknown, otp: number, markUserVerified: boolean = false): Promise<boolean> => {
-    const auth = await Auth.findOne({ userId });
-    if (!auth) return false;
-
-    const now = Date.now();
-    if (!auth.expiresAt || now > auth.expiresAt.getTime()) {
-        throw new AppError(401, "UNAUTHORIZED", "Session has expired.");
-    }
-
-    if (auth.otpCode !== otp) {
-        throw new AppError(401, "UNAUTHORIZED", "Incorrect otp.");
-    }
-
-    auth.otpCode = null;
-    auth.expiresAt = null;
-    auth.resendCount = 3;
-    await auth.save();
-
-    if (markUserVerified) {
-        const user = await User.findById(userId);
-        if (!user) return false;
-
-        user.isVerified = true;
-        await user.save();
-    }
-
-    return true;
-};
-
-
-export const resetAuthData = async (userId: unknown) => {
-    const auth = await Auth.findOne({ userId });
-    if (!auth) return;
-
-    auth.otpCode = null;
-    auth.expiresAt = null;
-    auth.resendCount = 3;
-    await auth.save();
-}
-
-export const generateAuthTokens1 = async (user: IUser, isRememberMe: boolean) => {
-    const accessToken = generateJwtToken({
-        sub: user._id,
-        email: user.email,
-    }, env.JWT_ACCESS_SECRET, isRememberMe ? '30d': '1h');
-
-    const refreshToken = generateJwtToken({
-        sub: user._id,
-        email: user.email,
-    }, env.JWT_REFRESH_SECRET, '30d');
-
-    return { accessToken, refreshToken };
-}

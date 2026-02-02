@@ -19,3 +19,10 @@ export const AUTH_CONFIG = {
         refreshToken: '30d',
     }
 } as const;
+
+export const OTP_CONFIG = {
+    maxAttempts: 3,
+    otpExpiry: 5 * 60, // 5 minutes
+    resendCooldownMs: 2 * 60 * 1000, // 2 minutes
+    newOtpIntervalMs: 5 * 60 * 1000, // 5 minutes
+} as const;

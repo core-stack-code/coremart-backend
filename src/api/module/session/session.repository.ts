@@ -1,8 +1,6 @@
-import { prisma } from "@core/config/prisma";
-import { Prisma } from "generated/prisma/client";
+import { prisma, PrismaTx } from "@core/config/prisma";
 import { DeviceType } from "generated/prisma/enums";
 
-type PrismaTx = Prisma.TransactionClient;
 
 class SessionRepository {
     public async countActive(userId: string, tx: PrismaTx = prisma) {

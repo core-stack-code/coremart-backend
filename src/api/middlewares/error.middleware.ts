@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError, errorResponse } from '../../core/utils/response';
+import { HttpStatusType } from '@/core/constants/httpStatusCode';
+import { clearAuthCookies } from '@core/utils/cookies.helper';
+import { AppError, errorResponse } from '@core/utils/response';
+
 import { log } from '../utils/log';
 import { logger } from '../utils/logger';
-import { HttpStatusType } from '@/core/constants/httpStatusCode';
 
-export const globalErrorHandler  = (err: any, req: Request, res: Response, next: NextFunction) => {
-    let status = 500;
-    let message = 'Internal Server Error';
+
+export const globalErrorHandler  = (err: any, req: Request, res: Response, _next: NextFunction) => {
+    let status: number = 500;
+    let message: string = 'Internal Server Error';
     let code: HttpStatusType = 'INTERNAL_SERVER_ERROR';
 
     if (err instanceof AppError) {
@@ -38,6 +41,10 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, next:
         status: status,
         // stack: err.stack,
     });
+
+    if (status === 401) {
+        clearAuthCookies(res);
+    }
 
     errorResponse(res, status, { code, message });
 };

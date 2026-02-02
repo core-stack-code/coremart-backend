@@ -1,5 +1,5 @@
-import crypto from "crypto";
 import QueryString from "qs";
+import { OAuthProvider } from "generated/prisma/enums";
 
 import { oauthRepository } from "./oauth.repository";
 import { userRepository } from "@mod/users/user.repository";
@@ -7,15 +7,14 @@ import { sessionService } from "@mod/session/session.service";
 
 import { env } from "@core/config/env";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
-import { exchangeGitHubCode, exchangeGoogleCode, fetchGithubProfile, fetchGoogleProfile, GITHUB_OAUTH, GOOGLE_OAUTH, GoogleUserInfoResponse, OauthLoginData } from "./oauth.utils";
+import { exchangeGitHubCode, exchangeGoogleCode, fetchGithubProfile, fetchGoogleProfile, GITHUB_OAUTH, GOOGLE_OAUTH, OauthLoginData } from "./oauth.utils";
 import { getUuid } from "@core/utils/db.helper";
-import { OAuthProvider } from "generated/prisma/enums";
-import { log } from "@api/utils/log";
+import { getState } from "@core/lib/crypto";
 
 
 class OAuthService {
     public getGoogleAuthUrl(): { url: string; state: string } {
-        const state = crypto.randomBytes(16).toString("hex");
+        const state = getState();
 
         const query = QueryString.stringify({
             client_id: env.GOOGLE_CLIENT_ID,
@@ -48,7 +47,7 @@ class OAuthService {
 
 
     public getGitHubAuthUrl(): { url: string; state: string } {
-        const state = crypto.randomBytes(16).toString("hex");
+        const state = getState();
 
         const query = QueryString.stringify({
             client_id: env.GITHUB_CLIENT_ID,

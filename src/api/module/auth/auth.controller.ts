@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-import { authService, findUserWithEmail, generateAuthTokens1, generateOrUpdateOtp, resetAuthData, verifyOtp } from "./auth.service";
-import { AppError, AppResponse } from "../../../core/utils/response";
-import { sendEmail } from "../../utils/snedEmail";
-import { LoginPayload, SetPasswordPayload, SignupPayload } from "./auth.schemas";
-import { applyAuthCookies } from "@core/utils/cookies.helper";
-import { AUTH_CONFIG } from "@core/constants/authConfig";
+import { Request, Response } from "express";
+import { authService } from "./auth.service";
 import { sessionService } from "@mod/session/session.service";
+
+import { AppError, AppResponse } from "@core/utils/response";
+import { GenerateOtpPayload, LoginPayload, ResendOtpPayload, SetPasswordPayload, SignupPayload, VerifyOtpPayload } from "./auth.schemas";
+import { applyAuthCookies, clearAuthCookies } from "@core/utils/cookies.helper";
+import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 
 class AuthController {
@@ -79,6 +79,8 @@ class AuthController {
 
         await sessionService.revokeByRefreshToken(refreshToken as string);
 
+        clearAuthCookies(res);
+
         AppResponse(res, 200, {
             code: "OK",
             message: "Logout successful",
@@ -91,158 +93,56 @@ class AuthController {
 
         await sessionService.revokeAllSession(userId);
 
+        clearAuthCookies(res);
+
         AppResponse(res, 200, {
             code: "OK",
             message: "All sessions logged out successfully",
         });
     }
-}
-
-export const authController = new AuthController();
 
 
+    public async generateOtp(req: Request, res: Response) {
+        const user = req.user!;
+        const payload = req.body as GenerateOtpPayload;
 
+        await authService.handleGenerateOtp(user, payload.sessionType);
 
-
-
-export const verifyUserController = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const { otp, email, isRememberMe } = req.body
-        const user = await findUserWithEmail(email)
-
-        if(!user){
-            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
-        }
-
-        const isVerified = await verifyOtp(user._id, otp, true)
-
-        if(!isVerified){
-            throw new AppError(500, "INTERNAL_SERVER_ERROR", "Verification failed, please try again.");
-        }
-
-        const { accessToken, refreshToken } = await generateAuthTokens1(user, isRememberMe)
-
-        // cookie name for access token
-        res.cookie('__Host-atkn', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            path: '/',
-            maxAge: isRememberMe ? (30 * 24 * 60 * 60 * 1000) : (60 *60 * 1000) // 60 minutes or 30 days
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "OTP generated and sent successfully",
         });
+    }
 
-        // cookie name for refresh token
-        res.cookie('__Secure-rtkn', refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            path: '/',
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        });
 
-        if(req.clinetType === 'web'){
-            AppResponse(res, 200, {
-                code: "OK",
-                message: 'User verified successfully.',
-                data: {
-                    user: {
-                        name: user.name,
-                        email: user.email,
-                    }
-                }
-            });
-            return;
+    public async verifyOtp(req: Request, res: Response) {
+        const user = req.user!;
+        const payload = req.body as VerifyOtpPayload;
+
+        await authService.handleVerifyOtp(user, payload);
+
+        if (payload.sessionType === "PASSWORD_RESET") {
+            clearAuthCookies(res);
         }
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'User verified successfully.',
-            data: {
-                atk: accessToken,
-                rtk: refreshToken,
-                user: {
-                    name: user.name,
-                    email: user.email,
-                }
-            }
+            message: "OTP verified successfully",
         });
-
     }
-    catch(error){
-        next(error);
-    }
-}
 
-export const forgotPasswordController = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const { email } = req.body
-        const user = await findUserWithEmail(email)
 
-        if(!user || !user.isVerified){
-            throw new AppError(401, "UNAUTHORIZED", "Email is not registered.");
-        }
+    public async resentOtp(req: Request, res: Response) {
+        const user = req.user!;
+        const payload = req.body as ResendOtpPayload;
 
-        const otp = await generateOrUpdateOtp(user._id, "FORGOT_PASSWORD");
-
-        await sendEmail(user.email, 'Your Verification Code', {
-            name: user.name,
-            otp
-        }, "FORGOT_PASSWORD");
+        await authService.handleResendOtp(user, payload.sessionType);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Success',
-        });        
-    }
-    catch(error){
-        next(error);
-    }
-}
-
-export const verifyForgotPasswordController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { otp, email } = req.body;
-        const user = await findUserWithEmail(email);
-
-        if (!user || !user.isVerified) {
-            throw new AppError(401, "UNAUTHORIZED", "Email is not registered or not verified.");
-        }
-
-        const isVerified = await verifyOtp(user._id, otp, false);
-
-        if (!isVerified) {
-            throw new AppError(500, "INTERNAL_SERVER_ERROR", "Verification failed, please try again.");
-        }
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: 'OTP verified successfully. You may now reset your password.',
+            message: "OTP resent successfully",
         });
-    } 
-    catch (error) {
-        next(error);
     }
 };
 
-export const resetPasswordController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { email, password } = req.body;
-        const user = await findUserWithEmail(email);
-
-        if (!user || !user.isVerified) {
-            throw new AppError(401, "UNAUTHORIZED", "Email is not registered or not verified.");
-        }
-
-        user.password = password;
-        await user.save();
-        await resetAuthData(user._id);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: 'Password reset successfully.',
-        });
-    } 
-    catch (error) {
-        next(error);
-    }
-}
+export const authController = new AuthController();

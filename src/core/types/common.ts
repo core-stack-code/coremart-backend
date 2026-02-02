@@ -1,6 +1,5 @@
 export type ClientType = 'web' | 'mobile';
 
-
 export type DeviceInfo = {
     ip?: string;
     userAgent?: string;

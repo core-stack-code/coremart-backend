@@ -1,16 +1,18 @@
 import express from 'express';
-import { forgotPasswordSchema, loginZodSchema, resetPasswordSchema, setPasswordZodSchema, signupZodSchema, verifySchema } from './auth.schemas';
-import { validateRequest, validationMiddleware } from '../../middlewares/validate.middlewate';
+import { authController } from './auth.controller';
 import { 
-    authController,
-    forgotPasswordController,
-    resetPasswordController,
-    verifyForgotPasswordController,
-    verifyUserController 
-} from './auth.controller';
-import { detectClient } from '../../middlewares/detectClient.middleware';
+    generateOtpZodSchema,
+    loginZodSchema,
+    resendOtpZodSchema,
+    setPasswordZodSchema,
+    signupZodSchema,
+    verifyOtpZodSchema
+} from './auth.schemas';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
+
 import { authMiddleware } from '@api/middlewares/auth.middleware';
+import { validationMiddleware } from '@api/middlewares/validate.middlewate';
+import { detectClient } from '@api/middlewares/detectClient.middleware';
 
 const authRouter = express.Router();
 
@@ -30,49 +32,42 @@ authRouter.post(
 
 authRouter.post(
     '/set-password',
-    authMiddleware,
+    authMiddleware(),
     validationMiddleware.validateRequest(setPasswordZodSchema),
     asyncWrapper(authController.setPassword)
 );
 
 authRouter.post(
     '/logout',
-    authMiddleware,
+    authMiddleware(),
     asyncWrapper(authController.logout)
 )
 
 authRouter.post(
     '/logout-all',
-    authMiddleware,
+    authMiddleware(),
     asyncWrapper(authController.logoutAll)
 )
 
-
-// old routes to be removed after refactoring
 authRouter.post(
-    '/verify',
-    detectClient,
-    validateRequest(verifySchema),
-    verifyUserController
-);
-
-
-authRouter.post(
-    '/forgot_password',
-    validateRequest(forgotPasswordSchema),
-    forgotPasswordController
+    '/otp/generate',
+    authMiddleware({ requireEmailVerified: false }),
+    validationMiddleware.validateRequest(generateOtpZodSchema),
+    asyncWrapper(authController.generateOtp)
 )
 
 authRouter.post(
-    '/verify_forgot_password',
-    validateRequest(verifySchema), 
-    verifyForgotPasswordController
-);
+    '/otp/verify',
+    authMiddleware({ requireEmailVerified: false }),
+    validationMiddleware.validateRequest(verifyOtpZodSchema),
+    asyncWrapper(authController.verifyOtp)
+)
 
 authRouter.post(
-    '/reset_password',
-    validateRequest(resetPasswordSchema),
-    resetPasswordController
-);
+    '/otp/resend',
+    authMiddleware({ requireEmailVerified: false }),
+    validationMiddleware.validateRequest(resendOtpZodSchema),
+    asyncWrapper(authController.resentOtp)
+)
 
 export default authRouter;

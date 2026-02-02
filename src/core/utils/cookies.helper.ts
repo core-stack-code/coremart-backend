@@ -43,3 +43,8 @@ export const applyAuthCookies = (
         maxAge: AUTH_CONFIG.age.refreshToken * 1000,
     });
 }
+
+export const clearAuthCookies = (res: Response) => {
+    res.clearCookie(AUTH_CONFIG.cookieName.accessToken, {...getCookiesConfig()});
+    res.clearCookie(AUTH_CONFIG.cookieName.refreshToken, {...getCookiesConfig()});
+}

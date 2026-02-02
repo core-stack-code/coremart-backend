@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg  } from "@prisma/adapter-pg";
-import { PrismaClient } from "generated/prisma/client";
+import { PrismaClient, Prisma } from "generated/prisma/client";
 import { logger } from "@api/utils/logger";
 import { env } from "./env";
 
@@ -10,7 +10,12 @@ const connectionString = `${env.DATABASE_URL}`
 const adapter = new PrismaPg({ connectionString })
 const prisma = new PrismaClient({ adapter })
 
-export const connectPrisma = async () => {
+type PrismaTx = Prisma.TransactionClient;
+
+
+
+
+const connectPrisma = async () => {
     try {
         await prisma.$connect();
         logger.info("Prisma connected successfully");
@@ -20,7 +25,7 @@ export const connectPrisma = async () => {
     }
 };
 
-export const disconnectPrisma = async () => {
+const disconnectPrisma = async () => {
     try {
         await prisma.$disconnect();
         logger.info('Prisma disconnected');
@@ -29,4 +34,5 @@ export const disconnectPrisma = async () => {
     }
 };
 
-export { prisma }
+
+export { prisma, PrismaTx, connectPrisma, disconnectPrisma }

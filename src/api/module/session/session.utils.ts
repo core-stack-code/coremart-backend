@@ -8,12 +8,6 @@ export const MAX_SESSION_PER_USER = 5;
 
 
 // ---------- Helpers ----------
-export const getTokenExpiryDate = (expiresInSeconds: number): Date => {
-    const now = new Date();
-    return new Date(now.getTime() + expiresInSeconds * 1000);
-}
-
-
 export const getDeviceInfo = (userAgent?: string): { deviceName?: string, deviceType?: DeviceType } => {
     if (!userAgent) return { deviceName: undefined, deviceType: undefined };
 

@@ -1,9 +1,9 @@
 import { prisma } from "@core/config/prisma";
 import { sessionRepository } from "./session.repository";
-import { getDeviceInfo, getTokenExpiryDate, MAX_SESSION_PER_USER } from "./session.utils";
+import { getDeviceInfo, MAX_SESSION_PER_USER } from "./session.utils";
 
 import { env } from "@core/config/env";
-import { getUuid } from "@core/utils/db.helper";
+import { getExpiryTime, getUuid } from "@core/utils/db.helper";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 import { generateJwtToken } from "@core/lib/jwt";
@@ -11,7 +11,7 @@ import { generateJwtToken } from "@core/lib/jwt";
 
 class SessionService {
     public async createSession(userId: string, deviceInfo: DeviceInfo): Promise<TokensResponse> {
-        const expiresAt = getTokenExpiryDate(AUTH_CONFIG.age.refreshToken);
+        const expiresAt = getExpiryTime(AUTH_CONFIG.age.refreshToken);
         const { deviceName, deviceType } = getDeviceInfo(deviceInfo.userAgent);
         const tokens = sessionService.generateTokens(userId);
 

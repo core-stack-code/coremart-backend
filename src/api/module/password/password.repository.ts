@@ -1,4 +1,4 @@
-import { prisma } from "@core/config/prisma";
+import { prisma, PrismaTx } from "@core/config/prisma";
 
 class PasswordRepository {
     public async findByUserId(userId: string) {
@@ -16,6 +16,16 @@ class PasswordRepository {
                 userId: data.userId,
                 passwordHash: data.passwordHash,
             }
+        });
+    }
+
+    public async updateByUserId(userId: string, newPassword: string, tx: PrismaTx = prisma) {
+        await tx.passwordCredential.update({
+            where: { userId },
+            data: { 
+                passwordHash: newPassword,
+                passwordVersion: { increment: 1 },
+            },
         });
     }
 }
