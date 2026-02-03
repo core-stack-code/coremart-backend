@@ -22,10 +22,15 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
         code = "BAD_REQUEST"
         message = 'Invalid input data';
     }
-    else if (err.name === 'MongoServerError' && err.code === 11000) {
+    else if (err.code === "P2002" || (err.name === 'MongoServerError' && err.code === 11000)) {
         status = 409;
         code = "CONFLICT"
-        message = 'Duplicate field value entered.';
+        message = 'Data already exists.';
+    }
+    else if (err.code === "P2025") {
+        status = 404;
+        code = "RESOURCE_NOT_FOUND"
+        message = 'Resource not found.';
     }
     else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
         status = 401;
@@ -41,6 +46,8 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
         status: status,
         // stack: err.stack,
     });
+
+    log.error('Error data:', err.code);
 
     if (status === 401) {
         clearAuthCookies(res);

@@ -1,18 +1,19 @@
 import { Application, Request, Response } from "express";
 
-import authRoutes from '@api/module/auth/auth.routes';
-import productRoutes from '@api/module/products/products.routes'
-import reviewRoutes from '@api/module/reviews/reviews.routes'
-import favoriteRoutes from '@api/module/favorites/favorites.routes';
-import saveForLaterRoutes from '@api/module/save-for-later/saveForLater.routes';
-import cartRoutes from '@api/module/cart/cart.routes';
-import checoutRoutes from '@api/module/checkout/checkout.routes'
-import addressRoutes from '@api/module/address/address.routes'
-import paymentRoutes from '@api/module/payment/payment.routes';
-
-import { authMiddleware } from "@/api/middlewares/auth.middleware";
-import { appConfig } from "@/core/config/app.config";
+import authRoutes from '@mod/auth/auth.routes';
+import productRoutes from '@mod/products/products.routes'
+import reviewRoutes from '@mod/reviews/reviews.routes'
+import favoriteRoutes from '@mod/favorites/favorites.routes';
+import saveForLaterRoutes from '@mod/save-for-later/saveForLater.routes';
+import cartRoutes from '@mod/cart/cart.routes';
+import checoutRoutes from '@mod/checkout/checkout.routes'
+import addressRoutes from '@mod/address/address.routes'
+import paymentRoutes from '@mod/payment/payment.routes';
 import oauthRouter from "@mod/oauth/oauth.routes";
+import attributesRouter from "@mod/attributes/attributes.routes";
+
+import { authMiddleware } from "@api/middlewares/auth.middleware";
+import { appConfig } from "@/core/config/app.config";
 
 
 const { baseUrl, version } = appConfig;
@@ -21,6 +22,10 @@ const baseRouteUrl = `${baseUrl}/${version}`;
 
 export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/auth`, authRoutes)
+    app.use(`${baseRouteUrl}/oauth`, oauthRouter)
+    app.use(`${baseRouteUrl}/attributes`, attributesRouter);
+
+    // old routes
     app.use(`${baseRouteUrl}/product`, productRoutes)
     app.use(`${baseRouteUrl}/review`, reviewRoutes)
     app.use(`${baseRouteUrl}/favorite`, favoriteRoutes)
@@ -29,14 +34,13 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/checkout`, checoutRoutes)
     app.use(`${baseRouteUrl}/address`, addressRoutes)
     app.use(`${baseRouteUrl}/payment`, paymentRoutes)
-    app.use(`${baseRouteUrl}/oauth`, oauthRouter)
 
     // test routes
     app.get(`${baseRouteUrl}/test`, (req: Request, res: Response) => {
         res.json({ message: 'I am just a guy who is hero for fun!'});
     });
 
-    app.get(`${baseRouteUrl}/protected_test`, authMiddleware, (req: Request, res: Response) => {
+    app.get(`${baseRouteUrl}/protected_test`, authMiddleware(), (req: Request, res: Response) => {
         res.send({ message: 'This is a protected route, you are authenticated!' });
     })
 }

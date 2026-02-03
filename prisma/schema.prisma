@@ -89,3 +89,117 @@ enum OtpSessionType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
 }
+
+model Product {
+  id                String            @id @db.Uuid
+  name              String
+  slug              String            @unique
+  description       String?
+  status            ProductStatus     @default(DRAFT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  variants          Variant[]
+  productCategories ProductCategory[]
+  brandId           String?           @db.Uuid
+  brand             Brand?            @relation(fields: [brandId], references: [id])
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model Variant {
+  id         String   @id @db.Uuid
+  productId  String   @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id])
+  sizeId     String   @db.Uuid
+  size       Size     @relation(fields: [sizeId], references: [id])
+  colorId    String   @db.Uuid
+  color      Color    @relation(fields: [colorId], references: [id])
+  materialId String   @db.Uuid
+  material   Material @relation(fields: [materialId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sku        SKU?
+
+  @@unique([productId, sizeId, colorId, materialId])
+}
+
+model Size {
+  id        String    @id @db.Uuid
+  name      String    @unique
+  type      SizeType
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  variants  Variant[]
+}
+
+enum SizeType {
+  ALPHA
+  NUMERIC
+  FREE
+}
+
+model Color {
+  id        String    @id @db.Uuid
+  name      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  variants  Variant[]
+}
+
+model Material {
+  id        String    @id @db.Uuid
+  name      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  variants  Variant[]
+}
+
+model SKU {
+  id        String   @id @db.Uuid
+  variantId String   @unique @db.Uuid
+  variant   Variant  @relation(fields: [variantId], references: [id])
+  skuCode   String   @unique
+  price     Float
+  stock     Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id                String            @id @db.Uuid
+  name              String            @unique
+  slug              String            @unique
+  parentId          String?           @db.Uuid
+  parent            Category?         @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children          Category[]        @relation("CategoryToCategory")
+  isActive          Boolean           @default(true)
+  sortOrder         Int               @default(0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  productCategories ProductCategory[]
+}
+
+model ProductCategory {
+  productId  String   @db.Uuid
+  categoryId String   @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+model Brand {
+  id        String    @id @db.Uuid
+  name      String    @unique
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}

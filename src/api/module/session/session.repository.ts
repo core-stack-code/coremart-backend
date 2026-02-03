@@ -36,7 +36,8 @@ class SessionRepository {
                 ipAddress: data.ip,
                 revokedAt: null,
                 deviceName: data.deviceName || null,
-            }
+            },
+            select: null,
         });
     }
 

@@ -39,7 +39,7 @@ router.get(
 
 router.get(
     '/recently-view',
-    authMiddleware,
+    authMiddleware(),
     getRecentlyViewProductsController
 )
 

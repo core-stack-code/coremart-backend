@@ -37,8 +37,8 @@ class OtpSessionRepository {
         expiresAt: Date;
         lastResendAt?: Date;
     }, tx: PrismaTx = prisma
-    ): Promise<OtpSession> {
-        const otpSession = await tx.otpSession.create({
+    ): Promise<void> {
+        await tx.otpSession.create({
             data: {
                 id: data.id,
                 userId: data.userId,
@@ -46,9 +46,9 @@ class OtpSessionRepository {
                 otpHash: data.otpHash,
                 otpExpiresAt: data.expiresAt,
                 lastResendAt: data.lastResendAt || new Date(),           
-            }
+            },
+            select: null,
         });
-        return otpSession;
     }
 
     public async updateById(id: string, data: OtpSessionUpdateInput, tx: PrismaTx = prisma) {

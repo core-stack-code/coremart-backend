@@ -5,15 +5,24 @@ import { reviewListByProductId } from "../reviews/reviews.service";
 
 import { ProductListQuery } from "./products.schemas";
 import { ProductWithFav, SortAndPageType } from "./products.types";
-import { AppResponse } from "../../../core/utils/response";
-import { log } from "../../utils/log";
+import { AppResponse } from "@core/utils/response";
 import { addViewToProduct } from "../product-view/productView.service";
-import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
 
+class ProductController {
+
+}
+
+export const productController = new ProductController();
+
+
+
+
+
+// ------------------------------------- Old code ---------------------------------- //
 
 export const getProfuctListController = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+        const userId = ""
         const query =  res.locals.query as ProductListQuery;
 
         // get filters and sorting
@@ -43,7 +52,7 @@ export const getProfuctListController = async (req: Request, res: Response, next
 
 export const getProductController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+        const userId = ""
 
         // fecth product by slug
         const slug = req.params.slug;
@@ -77,7 +86,7 @@ export const getProductController = async (req: Request, res: Response, next: Ne
 
 export const getNewArrivalProductsController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+        const userId = ""
 
         // default data for new arriavals
         const sortAndPage: SortAndPageType = {
@@ -107,7 +116,7 @@ export const getNewArrivalProductsController = async (req: Request, res: Respons
 
 export const getBestSellerProductsController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+        const userId = ""
 
         // default data for new arriavals
         const sortAndPage: SortAndPageType = {
@@ -136,7 +145,7 @@ export const getBestSellerProductsController = async (req: Request, res: Respons
 
 export const getTrandingProductsController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.auth?.isGuest ? null : req.auth?.userId;
+        const userId = ""
 
         const products = await getTrendingProducts(8, 30)
 
@@ -158,10 +167,7 @@ export const getTrandingProductsController = async (req: Request, res: Response,
 
 export const getRecentlyViewProductsController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
-
-        const userId = req.auth.userId;
+        const userId = ""
         const products = await getRecentlyViewProducts(userId, 8);
 
         const productsWithFav = await enrichProductList(products, userId)
