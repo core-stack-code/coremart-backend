@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
 import { getCart } from "../cart/cart.service";
 import { getAddressById } from "../address/address.service";
-import { validateProductStocks } from "../products/products.service";
+import { validateProductStocks } from "../product/product.service";
 import { createOrder } from "../order/order.service";
 
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";

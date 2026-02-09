@@ -94,7 +94,7 @@ model Product {
   id                String            @id @db.Uuid
   name              String
   slug              String            @unique
-  description       String?
+  description       String
   status            ProductStatus     @default(DRAFT)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt

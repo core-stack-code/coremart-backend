@@ -1,6 +1,6 @@
 import { fetchUserSavedProducts } from "../../utils/dbUtils";
-import { ProductLean  } from "../products/products.model";
-import { ProductWithFav } from "../products/products.types";
+import { ProductLean  } from "../product/products.model";
+import { ProductWithFav } from "../product/products.types";
 import { Favorites } from "./favorites.model";
 import { Types } from "mongoose";
 

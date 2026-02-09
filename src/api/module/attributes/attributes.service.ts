@@ -16,11 +16,25 @@ class AttributesService {
     }
 
     public async handleAttributeList() {
-        const sizes = await attributesRepository.getActiveSizes();
-        const colors = await attributesRepository.getActiveColors();
-        const materials = await attributesRepository.getActiveMaterials();
+        const [ sizes, colors, materials ] = await Promise.all([
+            attributesRepository.getActiveSizeList(),
+            attributesRepository.getActiveColorList(),
+            attributesRepository.getActiveMaterialList(),
+        ]);
 
         return { sizes, colors, materials }
+    }
+
+    public async checkAttributes(sizeId: string, colorId: string, materialId: string) {
+        const [ size, color, material ] = await Promise.all([
+            attributesRepository.getActiveSize(sizeId),
+            attributesRepository.getActiveColor(colorId),
+            attributesRepository.getActiveMaterial(materialId),
+        ]);
+
+        if (!size || !color || !material) {
+            throw new Error("Invalid variant attributes");
+        }
     }
 
     public async handleCreateSize(payload: SizeAttributeInput) {

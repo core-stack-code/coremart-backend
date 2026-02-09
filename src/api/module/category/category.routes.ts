@@ -5,6 +5,16 @@ import { categoryController } from "./category.controller";
 
 const categoryRouter = express.Router();
 
+// public api
+
+categoryRouter.get(
+    "/",
+    categoryController.getCategoryTree
+);
+
+
+// admin api
+
 categoryRouter.post(
     "/",
     validationMiddleware.validateRequest(createCategorySchema),
@@ -15,11 +25,6 @@ categoryRouter.patch(
     "/:id",
     validationMiddleware.validateRequest(updateCategorySchema),
     categoryController.updateCategory
-);
-
-categoryRouter.get(
-    "/",
-    categoryController.getCategoryTree
 );
 
 categoryRouter.get(

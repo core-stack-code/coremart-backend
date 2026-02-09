@@ -4,8 +4,8 @@ import authRoutes from '@mod/auth/auth.routes';
 import oauthRouter from "@mod/oauth/oauth.routes";
 import attributesRouter from "@mod/attributes/attributes.routes";
 import categoryRouter from "@mod/category/category.routes";
+import productRouter from "@mod/product/product.routes";
 
-import productRoutes from '@mod/products/products.routes'
 import reviewRoutes from '@mod/reviews/reviews.routes'
 import favoriteRoutes from '@mod/favorites/favorites.routes';
 import saveForLaterRoutes from '@mod/save-for-later/saveForLater.routes';
@@ -27,9 +27,9 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/oauth`, oauthRouter)
     app.use(`${baseRouteUrl}/attributes`, attributesRouter);
     app.use(`${baseRouteUrl}/category`, categoryRouter);
+    app.use(`${baseRouteUrl}/product`, productRouter);
 
     // old routes
-    app.use(`${baseRouteUrl}/product`, productRoutes)
     app.use(`${baseRouteUrl}/review`, reviewRoutes)
     app.use(`${baseRouteUrl}/favorite`, favoriteRoutes)
     app.use(`${baseRouteUrl}/save-for-later`, saveForLaterRoutes)

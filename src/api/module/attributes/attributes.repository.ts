@@ -1,12 +1,15 @@
-import { prisma, PrismaTx } from "@core/config/prisma";
+import { prisma } from "@core/config/prisma";
 import { Size, Color, Material } from "generated/prisma/client";
 import { SizeType } from "generated/prisma/enums";
 import { getUuid } from "@core/utils/db.helper";
 
 
 class AttributesRepository {
-    public async sizeList(tx: PrismaTx = prisma) {
-        return await tx.size.findMany({ 
+
+    // -------------------- Size --------------------
+
+    public async sizeList() {
+        return await prisma.size.findMany({ 
             select: {
                 id: true,
                 isActive: true,
@@ -16,28 +19,8 @@ class AttributesRepository {
         });
     }
 
-    public async colorList(tx: PrismaTx = prisma) {
-        return await tx.color.findMany({ 
-            select: {
-                id: true,
-                isActive: true,
-                name: true,
-            } 
-        });
-    }
-
-    public async materialList(tx: PrismaTx = prisma) {
-        return await tx.material.findMany({ 
-            select: {
-                id: true,
-                isActive: true,
-                name: true,
-            } 
-        });
-    }
-
-    public async getActiveSizes(tx: PrismaTx = prisma) {
-        return await tx.size.findMany({
+    public async getActiveSizeList() {
+        return await prisma.size.findMany({
             where: { isActive: true },
             select: {
                 id: true,
@@ -47,31 +30,17 @@ class AttributesRepository {
         });
     }
 
-    public async getActiveColors(tx: PrismaTx = prisma) {
-        return await tx.color.findMany({
-            where: { isActive: true },
-            select: {
-                id: true,
-                name: true,
-            }
-        });
-    }
-
-    public async getActiveMaterials(tx: PrismaTx = prisma) {
-        return await tx.material.findMany({
-            where: { isActive: true },
-            select: {
-                id: true,
-                name: true,
-            }
+    public async getActiveSize(sizeId: string) {
+        return await prisma.size.findUnique({
+            where: { id: sizeId, isActive: true },
         });
     }
 
     public async createSize(data: {
         name: string;
         type: SizeType;
-    }, tx: PrismaTx = prisma): Promise<Size> {
-        return await tx.size.create({
+    }): Promise<Size> {
+        return await prisma.size.create({
             data: {
                 id: getUuid(),
                 name: data.name,
@@ -86,26 +55,54 @@ class AttributesRepository {
         data: {
             name?: string;
             type?: SizeType;
-        },
-        tx: PrismaTx = prisma
+        }
     ): Promise<Size> {
-        return await tx.size.update({
+        return await prisma.size.update({
             where: { id },
             data,
         });
     }
 
-    public async deactivateSize(id: string, tx: PrismaTx = prisma): Promise<Size> {
-        return await tx.size.update({
+    public async deactivateSize(id: string): Promise<Size> {
+        return await prisma.size.update({
             where: { id },
             data: { isActive: false },
         });
     }
 
+
+    // -------------------- Color --------------------
+
+    public async colorList() {
+        return await prisma.color.findMany({ 
+            select: {
+                id: true,
+                isActive: true,
+                name: true,
+            } 
+        });
+    }
+
+    public async getActiveColorList() {
+        return await prisma.color.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                name: true,
+            }
+        });
+    }
+
+    public async getActiveColor(colorId: string) {
+        return await prisma.color.findUnique({
+            where: { id: colorId, isActive: true },
+        });
+    }
+
     public async createColor(data: {
         name: string;
-    }, tx: PrismaTx = prisma): Promise<Color> {
-        return await tx.color.create({
+    }): Promise<Color> {
+        return await prisma.color.create({
             data: {
                 id: getUuid(),
                 name: data.name,
@@ -118,26 +115,55 @@ class AttributesRepository {
         id: string,
         data: {
             name?: string;
-        },
-        tx: PrismaTx = prisma
+        }
     ): Promise<Color> {
-        return await tx.color.update({
+        return await prisma.color.update({
             where: { id },
             data,
         });
     }
 
-    public async deactivateColor(id: string, tx: PrismaTx = prisma): Promise<Color> {
-        return await tx.color.update({
+    public async deactivateColor(id: string): Promise<Color> {
+        return await prisma.color.update({
             where: { id },
             data: { isActive: false },
         });
     }
 
+
+    // -------------------- Material --------------------
+
+    public async materialList() {
+        return await prisma.material.findMany({ 
+            select: {
+                id: true,
+                isActive: true,
+                name: true,
+            } 
+        });
+    }
+
+
+    public async getActiveMaterialList() {
+        return await prisma.material.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                name: true,
+            }
+        });
+    }
+
+    public async getActiveMaterial(materialId: string) {
+        return await prisma.material.findUnique({
+            where: { id: materialId, isActive: true },
+        });
+    }
+
     public async createMaterial(data: {
         name: string;
-    }, tx: PrismaTx = prisma): Promise<Material> {
-        return await tx.material.create({
+    }): Promise<Material> {
+        return await prisma.material.create({
             data: {
                 id: getUuid(),
                 name: data.name,
@@ -150,17 +176,16 @@ class AttributesRepository {
         id: string,
         data: {
             name?: string;
-        },
-        tx: PrismaTx = prisma
+        }
     ): Promise<Material> {
-        return await tx.material.update({
+        return await prisma.material.update({
             where: { id },
             data,
         });
     }
 
-    public async deactivateMaterial(id: string, tx: PrismaTx = prisma): Promise<Material> {
-        return await tx.material.update({
+    public async deactivateMaterial(id: string): Promise<Material> {
+        return await prisma.material.update({
             where: { id },
             data: { isActive: false },
         });
