@@ -1,6 +1,10 @@
 import { Application, Request, Response } from "express";
 
 import authRoutes from '@mod/auth/auth.routes';
+import oauthRouter from "@mod/oauth/oauth.routes";
+import attributesRouter from "@mod/attributes/attributes.routes";
+import categoryRouter from "@mod/category/category.routes";
+
 import productRoutes from '@mod/products/products.routes'
 import reviewRoutes from '@mod/reviews/reviews.routes'
 import favoriteRoutes from '@mod/favorites/favorites.routes';
@@ -9,8 +13,6 @@ import cartRoutes from '@mod/cart/cart.routes';
 import checoutRoutes from '@mod/checkout/checkout.routes'
 import addressRoutes from '@mod/address/address.routes'
 import paymentRoutes from '@mod/payment/payment.routes';
-import oauthRouter from "@mod/oauth/oauth.routes";
-import attributesRouter from "@mod/attributes/attributes.routes";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { appConfig } from "@/core/config/app.config";
@@ -24,6 +26,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/auth`, authRoutes)
     app.use(`${baseRouteUrl}/oauth`, oauthRouter)
     app.use(`${baseRouteUrl}/attributes`, attributesRouter);
+    app.use(`${baseRouteUrl}/category`, categoryRouter);
 
     // old routes
     app.use(`${baseRouteUrl}/product`, productRoutes)

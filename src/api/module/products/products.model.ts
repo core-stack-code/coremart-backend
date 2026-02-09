@@ -1,7 +1,7 @@
 import { Document, Schema, Types, model } from 'mongoose';
-import { IProduct } from './products.types'; 
-import { slugify } from '../../utils/helper';
+import { IProduct } from './products.types';
 import { categoryEnum, dressTypeEnum, sizesEnum } from './products.contant';
+import { slugify } from '@core/utils/db.helper';
 
 
 const productSchema = new Schema<IProduct>({

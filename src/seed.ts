@@ -3,8 +3,8 @@ import { Product } from "./api/module/products/products.model";
 import { sizesEnum, categoryEnum, dressTypeEnum } from "./api/module/products/products.contant";
 import { log } from "./api/utils/log";
 import { connectDB } from './core/config/database';
-import { slugify } from './api/utils/helper';
 import { IProduct } from './api/module/products/products.types';
+import { slugify } from 'node_modules/zod/v4/core/util.cjs';
 
 const NUMBER_OF_PRODUCTS = 350;
 
