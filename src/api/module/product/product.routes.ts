@@ -1,7 +1,9 @@
 import express from 'express'
 import { productController } from './product.controller'
-import { createProductSchema, createProductVariants, updateProductSchema } from './product.validator'
+import { createProductSchema, updateProductSchema } from './product.validator'
 import { validationMiddleware } from '@api/middlewares/validate.middlewate'
+import { createProductCategorySchema } from '@mod/product-category/productCategory.validator'
+import { productCategoryController } from '@mod/product-category/productCategory.controller'
 
 const productRouter = express.Router()
 
@@ -28,19 +30,14 @@ productRouter.get(
 )
 
 productRouter.post(
-    '/:productId/variants',
-    validationMiddleware.validateRequest(createProductVariants),
-    productController.createVariants
-)
-
-productRouter.get(
-    '/:productId/variants',
-    productController.getVariants
+    '/:productId/category',
+    validationMiddleware.validateRequest(createProductCategorySchema),
+    productCategoryController.createProductCategory
 )
 
 productRouter.delete(
-    '/variants/:variantId',
-    productController.deleteVariant
+    "/:productId/category/:categoryId",
+    productCategoryController.deleteProductCategory
 )
 
 export default productRouter;

@@ -11,9 +11,6 @@ export type UpdateProductInput = {
 
 
 class ProductRepository {
-
-    // -------------------- Product --------------------
-
     public create = async (data: {
         name: string;
         slug: string;
@@ -55,51 +52,6 @@ class ProductRepository {
         return await prisma.product.findUnique({
             where: { id },
             select: { id: true },
-        });
-    }
-
-
-    // -------------------- Variants --------------------
-
-    public async createVariant(data: {
-        productId: string;
-        sizeId: string;
-        colorId: string;
-        materialId: string;
-    }) {
-        await prisma.variant.create({
-            data: {
-                id: getUuid(),
-                productId: data.productId,
-                sizeId: data.sizeId,
-                colorId: data.colorId,
-                materialId: data.materialId,
-            },
-            select: null,
-        });
-    }
-
-    public async getVariants(productId: string) {
-        return await prisma.product.findUnique({
-            where: { id: productId },
-            select: {
-                id: true,
-                name: true,
-                variants: {
-                    select: {
-                        id: true,
-                        size: { select: { id: true, name: true } },
-                        color: { select: { id: true, name: true } },
-                        material: { select: { id: true, name: true } },
-                    },
-                },
-            },
-        });
-    }
-
-    public async deleteVariant(variantId: string) {
-        await prisma.variant.delete({
-            where: { id: variantId },
         });
     }
 }

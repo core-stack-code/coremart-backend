@@ -41,13 +41,5 @@ export const updateProductSchema = z.object({
 });
 
 
-export const createProductVariants = z.object({
-    sizeId: z.string().trim(),
-    colorId: z.string().trim(),
-    materialId: z.string().trim(),
-});
-
-
 export type CreateProductPayload = z.infer<typeof createProductSchema>;
 export type UpdateProductPayload = z.infer<typeof updateProductSchema>;
-export type CreateProductVariantPayload = z.infer<typeof createProductVariants>;

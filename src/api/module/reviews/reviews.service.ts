@@ -1,6 +1,5 @@
 import { Types } from "mongoose"
 import { Review } from "./reviews.model"
-import { Product } from "../product/products.model"
 import { AddReviewType, UpdateReviewType } from "./reviews.schema";
 import { AppError } from "../../../core/utils/response";
 
@@ -19,8 +18,6 @@ export const updateReviewState = async (productId: Types.ObjectId) => {
     const update = state
         ? { numReviews: state.numReviews, rating: state.avgReview }
         : { numReviews: 0, rating: 0 };
-
-    await Product.findByIdAndUpdate(productId, update);
 }
 
 
@@ -68,10 +65,6 @@ export const reviewListByProductId = async (productId: Types.ObjectId, limit: nu
         })
         .limit(limit)
         .lean();
-
-    if (reviews.length === 0) {
-        await Product.findByIdAndUpdate(productId, { rating: 0, numReviews: 0 });
-    }
 
     return reviews.map((review) => {
         const { userId, ...rest } = review;

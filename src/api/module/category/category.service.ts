@@ -10,25 +10,8 @@ class CategoryService {
         let slug: string;
 
         if (payload.parentId) {
-            const parentCategory = await categoryRepository.findByID(payload.parentId);
-
-            if (!parentCategory) {
-                throw new AppError(
-                    404,
-                    "RESOURCE_NOT_FOUND",
-                    "You're referencing a category that doesn't exist.",
-                )
-            }
-
-            if (!parentCategory.isActive) {
-                throw new AppError(
-                    409,
-                    "CONFLICT",
-                    "You can't add a sub-category to an inactive category.",
-                )
-            }
-
-            slug = parentCategory.slug + "-" + slugify(payload.name);
+            const parentCategorySlug = await this.checkCategoryActive(payload.parentId);
+            slug = parentCategorySlug + "-" + slugify(payload.name);
         } else {
             slug = slugify(payload.name);
         }
@@ -60,17 +43,7 @@ class CategoryService {
             // resolve the new parent slug if parent changes.
             let newParentSlug: string | null = category.parent?.slug ?? null;
             if (isParentChanging && payload.parentId !== null) {
-                const parentCategory = await categoryRepository.findByID(payload.parentId!);
-
-                if (!parentCategory) {
-                    throw new AppError(404, "RESOURCE_NOT_FOUND", "Parent category not found.");
-                }
-
-                if (!parentCategory.isActive) {
-                    throw new AppError(409, "CONFLICT", "Cannot assign to inactive parent category.");
-                }
-
-                newParentSlug = parentCategory.slug;
+                newParentSlug = await this.checkCategoryActive(payload.parentId!);
             }
 
             // get descendants and prevent circular parent links.
@@ -153,6 +126,20 @@ class CategoryService {
         }
 
         await categoryRepository.toggleActive(id, category.isActive);
+    }
+
+    public checkCategoryActive = async (categoryId: string): Promise<string> => {
+        const category = await categoryRepository.findByID(categoryId);
+
+        if (!category) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Category not found.");
+        }
+
+        if (!category.isActive) {
+            throw new AppError(409, "CONFLICT", "Cannot assign to inactive category.");
+        }
+
+        return category.slug;
     }
 }
 

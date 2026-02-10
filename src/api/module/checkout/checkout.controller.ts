@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
 import { getCart } from "../cart/cart.service";
 import { getAddressById } from "../address/address.service";
-import { validateProductStocks } from "../product/product.service";
 import { createOrder } from "../order/order.service";
 
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
@@ -29,8 +28,8 @@ export const checkoutController = async (req: Request, res: Response, next: Next
         const cart = await getCart(userId);
         // log.info("cart", cart);
 
-        const check = await validateProductStocks(cart)
-        log.info("stock validation", check);
+        // const check = await validateProductStocks(cart)
+        // log.info("stock validation", check);
 
         const order = await createOrder(userId, cart, address);
         // log.info("order created", order);

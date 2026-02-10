@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { productService } from "./product.service";
-import { CreateProductPayload, CreateProductVariantPayload, UpdateProductPayload } from "./product.validator";
+import { CreateProductPayload, UpdateProductPayload } from "./product.validator";
 import { AppResponse } from "@core/utils/response";
 
 
@@ -49,41 +49,6 @@ class ProductController {
             code: "OK",
             message: "Product fetched successfully.",
             data: product,
-        });
-    }
-
-    public async createVariants(req: Request, res: Response) {
-        const productId = req.params.productId as string;
-        const payload = req.body as CreateProductVariantPayload;
-
-        await productService.handleCreateVariants(productId, payload);
-
-        AppResponse(res, 201, {
-            code: "CREATED",
-            message: "Product variant created successfully.",
-        });
-    }
-
-    public async getVariants(req: Request, res: Response) {
-        const productId = req.params.productId as string;
-
-        const productVariants = await productService.productVariants(productId);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Product variants fetched successfully.",
-            data: productVariants,
-        });
-    }
-
-    public async deleteVariant(req: Request, res: Response) {
-        const variantId = req.params.variantId as string;
-
-        await productService.handleDeleteVariant(variantId);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Product variant deleted successfully.",
         });
     }
 }
