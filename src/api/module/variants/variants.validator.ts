@@ -4,6 +4,11 @@ export const createProductVariantSchema = z.object({
     sizeId: z.string().trim(),
     colorId: z.string().trim(),
     materialId: z.string().trim(),
+    imageUrl: z.string().trim().min(1, "Image URL must be provided").optional(),
+});
+
+export const variantImageSchema = z.object({
+    imageUrl: z.string().trim().min(1, "Image URL must be provided").nullable(),
 });
 
 export const createProductSkuSchema = z.object({
@@ -21,5 +26,6 @@ export const updateProductSkuSchema = z.object({
 });
 
 export type CreateProductVariantPayload = z.infer<typeof createProductVariantSchema>;
+export type VariantImagePayload = z.infer<typeof variantImageSchema>;
 export type CreateProductSkuPayload = z.infer<typeof createProductSkuSchema>;
 export type UpdateProductSkuPayload = z.infer<typeof updateProductSkuSchema>;

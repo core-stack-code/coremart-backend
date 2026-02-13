@@ -3,11 +3,12 @@ import { getUuid } from "@core/utils/db.helper";
 
 
 class VariantsRepository {
-     public async createVariant(data: {
+    public async createVariant(data: {
         productId: string;
         sizeId: string;
         colorId: string;
         materialId: string;
+        imageUrl?: string;
     }) {
         await prisma.variant.create({
             data: {
@@ -16,8 +17,16 @@ class VariantsRepository {
                 sizeId: data.sizeId,
                 colorId: data.colorId,
                 materialId: data.materialId,
+                imageUrl: data.imageUrl,
             },
             select: null,
+        });
+    }
+
+    public async updateVariantImage(variantId: string, imageUrl: string | null) {
+        await prisma.variant.update({
+            where: { id: variantId },
+            data: { imageUrl },
         });
     }
 
@@ -33,6 +42,7 @@ class VariantsRepository {
                         size: { select: { id: true, name: true } },
                         color: { select: { id: true, name: true } },
                         material: { select: { id: true, name: true } },
+                        imageUrl: true,
                         sku: {
                             select: {
                                 id: true,

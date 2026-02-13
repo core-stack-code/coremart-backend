@@ -23,7 +23,16 @@ class ProductCategoryService {
 
     public async getProductsByCategory(categoryId: string) {
         const resut = await productCategoryRepository.findProductsByCategory(categoryId);
-        return resut.map(item => item.product);
+        
+        return resut.map(item => {
+            const { productImages, ...rest } = item.product;
+            return {
+                ...rest,
+                thumbnail: productImages.length > 0 
+                    ? productImages[0] 
+                    : null
+            };
+        });
     }
 }
 

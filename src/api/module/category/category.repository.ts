@@ -1,12 +1,39 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
-import { Category } from "generated/prisma/client";
+import { Category, CategoryImageType } from "generated/prisma/client";
 
-export type CategoryListItem = {
+export type CategoryTreeItem = {
     id: string;
     name: string;
     slug: string;
     parentId: string | null;
+    imageUrl: {
+        url: string;
+        altText: string | null;
+    } | null;
+}
+
+export type CategoryTreeNode = CategoryTreeItem & {
+    children: CategoryTreeNode[];
+}
+
+export type CategoryListItem = Omit<CategoryTreeItem, "imageUrl"> & {
+    isActive: boolean;
+    categoryImages: {
+        url: string,
+        altText: string | null,
+        type: CategoryImageType,
+        createdAt: Date, 
+    }[]
+    createdAt: Date,
+    updatedAt: Date,
+}
+
+
+export type CategoryImageInput = {
+    url: string;
+    altText?: string;
+    type: CategoryImageType;
 }
 
 
@@ -33,15 +60,42 @@ class CategoryRepository {
         name: string;
         parentId?: string;
         slug: string;
-    }) => {
-        return await prisma.category.create({
+    }, tx: PrismaTx = prisma) => {
+        return await tx.category.create({
             data: {
                 id: getUuid(),
                 slug: data.slug,
                 name: data.name,
                 parentId: data.parentId || null,
             },
-            select: null,
+            select: { id: true },
+        });
+    }
+
+    public addImages = async (
+        categoryId: string, 
+        images: CategoryImageInput[],
+        tx: PrismaTx = prisma
+    ) => {
+        await tx.categoryImage.createMany({
+            data: images.map((img) => ({
+                id: getUuid(),
+                categoryId,
+                ...img
+            })),
+        });
+    }
+
+    public deleteImages = async (
+        categoryId: string,
+        type: CategoryImageType,
+        tx: PrismaTx = prisma
+    ) => {
+        await tx.categoryImage.deleteMany({
+            where: {
+                categoryId,
+                type,
+            },
         });
     }
 
@@ -95,6 +149,14 @@ class CategoryRepository {
                 slug: true,
                 parentId: true,
                 isActive: true,
+                categoryImages: {
+                    select: {
+                        url: true,
+                        altText: true,
+                        type: true,
+                        createdAt: true,
+                    }
+                },
                 createdAt: true,
                 updatedAt: true,
             },
@@ -113,6 +175,14 @@ class CategoryRepository {
                 name: true,
                 slug: true,
                 parentId: true,
+                categoryImages: {
+                    where: { type: "IMAGE" },
+                    select: {
+                        url: true,
+                        altText: true,
+                    },
+                    take: 1,
+                }
             },
             orderBy: [
                 { parentId: 'asc' },
@@ -133,7 +203,7 @@ class CategoryRepository {
     public toggleActive = async (id: string, isActive: boolean) => {
         await prisma.category.update({
             where: { id },
-            data: { isActive: !isActive },
+            data: { isActive: isActive },
             select: null,
         });
     }

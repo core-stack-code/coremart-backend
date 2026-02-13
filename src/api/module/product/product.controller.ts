@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { productService } from "./product.service";
-import { CreateProductPayload, UpdateProductPayload } from "./product.validator";
+import { CreateProductPayload, ProductListQuery, UpdateProductPayload } from "./product.validator";
 import { AppResponse } from "@core/utils/response";
 
 
@@ -8,12 +8,11 @@ class ProductController {
     public async createProduct(req: Request, res: Response) {
         const payload = req.body as CreateProductPayload;
 
-        const product = await productService.handleCreate(payload);
+        await productService.handleCreate(payload);
 
         AppResponse(res, 201, {
             code: "CREATED",
             message: "Product created successfully.",
-            data: product,
         });
     }
 
@@ -21,17 +20,18 @@ class ProductController {
         const payload = req.body as UpdateProductPayload;
         const productId = req.params.productId as string;
 
-        const product = await productService.handleUpdate(productId, payload);
+        await productService.handleUpdate(productId, payload);
 
         AppResponse(res, 200, {
             code: "OK",
             message: "Product updated successfully.",
-            data: product,
         });
     }
 
-    public async getProductList(_req: Request, res: Response) {
-        const products = await productService.getProductList();
+    public async getProductList(req: Request, res: Response) {
+        const query = req.localsQuery as ProductListQuery;
+        
+        const products = await productService.getProductList(query);
 
         AppResponse(res, 200, {
             code: "OK",

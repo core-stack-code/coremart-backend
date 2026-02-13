@@ -24,6 +24,10 @@ const envSchema = z.object({
   GITHUB_REDIRECT_URI: z.url(),
 
   SESSIONS_SECRET: z.string(),
+
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

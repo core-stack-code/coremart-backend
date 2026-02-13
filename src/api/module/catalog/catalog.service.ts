@@ -1,74 +1,106 @@
 import { Prisma } from "generated/prisma/browser";
-import { catalogRepository } from "./catalog.repository";
+import { catalogRepository, CategoryTreeNode, CategoryTreeItem, RawCategoryTreeItem } from "./catalog.repository";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
 import { paiseToRupees } from "@mod/variants/variants.utils";
-import { AppError } from "@core/utils/response";
 import { PaginationType } from "@core/types/common";
+import { AppError } from "@core/utils/response";
 
 type ProductVariantWithSKU = {
     size: string;
     color: string;
     material: string;
     price: number;
+    imageUrl: string | null;
     inStock: boolean;
 }
 
-type ProductListItem = {
+type ProductListResultItem = {
     id: string;
     name: string;
     slug: string;
     description: string;
     brand: { name: string; slug: string } | null;
     variants: Array<{ sku: { price: number } | null }>;
+    productImages: Array<{ url: string; altText: string | null }>;
+}
+
+type ProductListItem = {
+    id: string;
+    name: string;
+    slug: string;
+    brand: {
+        name: string;
+        slug: string;
+    } | null;
+    description: string;
+    thumbnail: {
+        url: string;
+        altText: string | null;
+    };
+    price: number | null;
 }
 
 
 class CatalogService {
     public getProductDetail = async (productSlug: string) => {
-        const product = await catalogRepository.findProductBySlug(productSlug);
+        const productResult = await catalogRepository.findProductBySlug(productSlug);
 
-        if (!product) {
+        if (!productResult) {
             throw new AppError(404, "RESOURCE_NOT_FOUND", "Product not found");
         }
-        
-        const categories = await catalogRepository.findCategoriesByProductId(product.id);
 
-        const activeCategories = categories
+        const activeCategories = productResult.productCategories
             .filter(c => c.category.isActive)
             .map(c => ({
                 name: c.category.name, 
                 slug: c.category.slug
             }));
 
-        const rows = await catalogRepository.findProductVariantsByProductId(product.id);
-
         const sizes = new Set<string>();
         const colors = new Set<string>();
         const materials = new Set<string>();
 
-        const variants: ProductVariantWithSKU[] = rows
-            .filter(row => row.sku && row.sku.isActive)
-            .map(r => {
-                sizes.add(r.size.name);
-                colors.add(r.color.name);
-                materials.add(r.material.name);
+        const variants: ProductVariantWithSKU[] = productResult.variants
+            .filter(vari => vari.sku && vari.sku.isActive)
+            .map(v => {
+                sizes.add(v.size.name);
+                colors.add(v.color.name);
+                materials.add(v.material.name);
 
                 return {
-                    size: r.size.name,
-                    color: r.color.name,
-                    material: r.material.name,
-                    price: paiseToRupees(r.sku!.price),
-                    inStock: r.sku!.stock > 0,
+                    size: v.size.name,
+                    color: v.color.name,
+                    material: v.material.name,
+                    price: paiseToRupees(v.sku!.price),
+                    imageUrl: v.imageUrl,
+                    inStock: v.sku!.stock > 0,
                 }
             })
+        
+        const thumbnailImage = productResult.productImages.find(img => img.type === "THUMBNAIL");
+        const images = productResult.productImages
+            .filter(img => img.type === "GALLERY")
+            .map(img => ({
+                url: img.url,
+                altText: img.altText,
+            }));
 
         return {
             product: {
-                name: product.name,
-                slug: product.slug,
-                description: product.description,
-                brand: product.brand,
+                name: productResult.name,
+                slug: productResult.slug,
+                description: productResult.description,
+                brand: {
+                    name: productResult.brand?.name ?? null,
+                    slug: productResult.brand?.slug ?? null,
+                    logoUrl: productResult.brand?.logoUrl ?? null,
+                },
+                thumbnailImage: thumbnailImage ? {
+                    url: thumbnailImage.url,
+                    altText: thumbnailImage.altText,
+                } : null,
+                images,
             },
             categories: activeCategories,
             attributes: {
@@ -80,14 +112,17 @@ class CatalogService {
         };
     }
 
-    public getProducts = async (query: ProductListQuery) => {
+    public getProducts = async (
+        query: ProductListQuery
+    ) : Promise<{ products: ProductListItem[], pagination: PaginationType }> => {
+
         const where = this.buildWhereForProductList(query);
         const orderBy = this.buildOrderByForProductList(query.sortBy);
 
         const skip = (query.page - 1) * query.limit;
         const take = query.limit;
 
-        let products: ProductListItem[] = await catalogRepository.findProducts({
+        let products: ProductListResultItem[] = await catalogRepository.findProducts({
             where,
             orderBy,
             skip,
@@ -102,53 +137,53 @@ class CatalogService {
 
         const total = await catalogRepository.countProducts(where);
 
-        const formatted = products.map((p) => {
-            const prices = p.variants
-                .map((v) => v.sku?.price)
-                .filter((price): price is number => typeof price === "number");
-
-            const price = prices.length ? paiseToRupees(Math.min(...prices)) : null;
-
-            return {
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                brand: p.brand,
-                description: p.description,
-                price,
-            };
-        });
-
+        const formattedProducts = this.formateProductListItem(products);
         const totalPages = Math.ceil(total / query.limit);
-        const pagination: PaginationType = {
-            page: query.page,
-            limit: query.limit,
-            totalPages,
-            totalItems: total,
-            isPrevPage: query.page > 1,
-            isNextPage: query.page < totalPages,
-        };
+
 
         return {
-            products: formatted,
-            pagination,
+            products: formattedProducts,
+            pagination: {
+                page: query.page,
+                limit: query.limit,
+                totalPages,
+                totalItems: total,
+                isPrevPage: query.page > 1,
+                isNextPage: query.page < totalPages,
+            },
         };
     }
 
     public getRootCategories = async () => {
-        return await catalogRepository.findRootCategories();
+        const result = await catalogRepository.findRootCategories();
+
+        return result.map(cat => {
+            const { categoryImages, ...rest } = cat;
+            return {
+                ...rest,
+                image: categoryImages.length > 0 ? categoryImages[0].url : null,
+            }
+        });
     }
 
-    public getSubCategoriesBySlug = async (slug: string) => {
+    public getSubCategoriesBySlug = async (slug: string): Promise<CategoryTreeNode | undefined> => {
         const rootCategory = await catalogRepository.findCategoryBySlug(slug);
 
         if (!rootCategory) {
             throw new AppError(404, "RESOURCE_NOT_FOUND", "Category not found");
         }
 
-        const categories = await catalogRepository.findAllActiveCategories();
+        const rawCategories: RawCategoryTreeItem[] = await catalogRepository.findAllActiveCategories();
 
-        const categoryMap = new Map<string, any>();
+        const categories: CategoryTreeItem[] = rawCategories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            slug: cat.slug,
+            parentId: cat.parentId,
+            imageUrl: cat.categoryImages.length > 0 ? cat.categoryImages[0].url : null,
+        }));
+
+        const categoryMap = new Map<string, CategoryTreeNode>();
 
         categories.forEach(cat => {
             categoryMap.set(cat.id, { ...cat, children: [] });
@@ -159,7 +194,6 @@ class CatalogService {
             if (cat.parentId) {
                 const parent = categoryMap.get(cat.parentId);
                 const node = categoryMap.get(cat.id);
-
                 if (parent && node) {
                     parent.children.push(node);
                 }
@@ -168,10 +202,13 @@ class CatalogService {
 
         const subtree = categoryMap.get(rootCategory.id);
 
-        return subtree;
+        return subtree
     }
 
-    public getProductsByCategorySlug= async (categorySlug: string, query: ProductsByCategoryQuery) => {
+    public getProductsByCategorySlug= async (
+        categorySlug: string,
+        query: ProductsByCategoryQuery
+    ): Promise<{ products: ProductListItem[], pagination: PaginationType }>  => {
         const category = await catalogRepository.findCategoryBySlug(categorySlug);
 
         if (!category) {
@@ -183,7 +220,7 @@ class CatalogService {
         const skip = (query.page - 1) * query.limit;
         const take = query.limit;
 
-        let products: ProductListItem[] = await catalogRepository.productListByCategory({
+        let products: ProductListResultItem[] = await catalogRepository.productListByCategory({
             categoryId: category.id,
             orderBy,
             skip,
@@ -197,36 +234,20 @@ class CatalogService {
 
         const total = await catalogRepository.countProductsByCategory(category.id);
 
-        const formatted = products.map((p) => {
-            const prices = p.variants
-                .map((v) => v.sku?.price)
-                .filter((price): price is number => typeof price === "number");
-
-            const price = prices.length ? paiseToRupees(Math.min(...prices)) : null;
-
-            return {
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                brand: p.brand,
-                description: p.description,
-                price,
-            };
-        });
-
+        const formattedProducts = this.formateProductListItem(products);
         const totalPages = Math.ceil(total / query.limit);
-        const pagination: PaginationType = {
-            page: query.page,
-            limit: query.limit,
-            totalPages,
-            totalItems: total,
-            isPrevPage: query.page > 1,
-            isNextPage: query.page < totalPages,
-        };
+
 
         return {
-            products: formatted,
-            pagination,
+            products: formattedProducts,
+            pagination: {
+                page: query.page,
+                limit: query.limit,
+                totalPages,
+                totalItems: total,
+                isPrevPage: query.page > 1,
+                isNextPage: query.page < totalPages,
+            },
         };
     }
 
@@ -303,7 +324,10 @@ class CatalogService {
         return productWhere;
     }
 
-    private buildOrderByForProductList = (sortBy: ProductListQuery["sortBy"]): Prisma.ProductOrderByWithRelationInput  => {
+    private buildOrderByForProductList = (
+        sortBy: ProductListQuery["sortBy"]
+    ): Prisma.ProductOrderByWithRelationInput  => {
+        
         if (sortBy === "alphabetical") {
             return { name: "asc" };
         }
@@ -319,7 +343,7 @@ class CatalogService {
         }
     }
 
-    private sortProductsByPrice = (products: ProductListItem[], direction: "asc" | "desc") => {
+    private sortProductsByPrice = (products: ProductListResultItem[], direction: "asc" | "desc") => {
         return products.sort((a, b) => {
             const aPrices = a.variants
                 .map((v) => v.sku?.price)
@@ -332,6 +356,26 @@ class CatalogService {
             const bMinPrice = bPrices.length ? Math.min(...bPrices) : Infinity;
 
             return direction === "asc" ? aMinPrice - bMinPrice : bMinPrice - aMinPrice;
+        });
+    }
+
+    private formateProductListItem = (products: ProductListResultItem[]): ProductListItem[] => {
+        return products.map((p) => {
+            const prices = p.variants
+                .map((v) => v.sku?.price)
+                .filter((price): price is number => typeof price === "number");
+
+            const price = prices.length ? paiseToRupees(Math.min(...prices)) : null;
+
+            return {
+                id: p.id,
+                name: p.name,
+                slug: p.slug,
+                brand: p.brand,
+                description: p.description,
+                thumbnail: p.productImages[0] ?? null,
+                price,
+            };
         });
     }
 }

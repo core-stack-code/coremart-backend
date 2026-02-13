@@ -15,5 +15,5 @@
       "@/*": ["src/*"],
     }
   },
-  "include": ["src", "generated"]     // Which folders TypeScript should compile
+  "include": ["src", "generated"]
 }

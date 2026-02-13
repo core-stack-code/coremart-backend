@@ -6,11 +6,6 @@ import { productCategoryController } from "@mod/product-category/productCategory
 
 const categoryRouter = express.Router();
 
-categoryRouter.get(
-    "/",
-    categoryController.getCategoryTree
-);
-
 categoryRouter.post(
     "/",
     validationMiddleware.validateRequest(createCategorySchema),
@@ -21,6 +16,11 @@ categoryRouter.patch(
     "/:id",
     validationMiddleware.validateRequest(updateCategorySchema),
     categoryController.updateCategory
+);
+
+categoryRouter.get(
+    "/",
+    categoryController.getCategoryTree
 );
 
 categoryRouter.get(

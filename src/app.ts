@@ -68,7 +68,6 @@ class App {
             next(new AppError(404, "RESOURCE_NOT_FOUND", "Request not found."));
         });
         
-        // Global error handler
         this.app.use(globalErrorHandler);
     }
 

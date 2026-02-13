@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ProductStatus } from "generated/prisma/enums";
+import { imageAltSchema } from "@core/validator/common.validators";
 
 const productStatusEnum: ProductStatus[] = [
     "ACTIVE", "ARCHIVED", "DRAFT"
@@ -17,6 +18,13 @@ export const createProductSchema = z.object({
         .trim()
         .min(10, "Description must be at least 10 characters long")
         .max(2000, "Description must be at most 2000 characters long"),
+    thumbnailUrl: 
+        imageAltSchema("Thumbnail")
+        .nullable()
+        .optional(),
+    imageGalary: z
+        .array(imageAltSchema("Product gallery image"))
+        .optional(),
 });
 
 
@@ -36,10 +44,25 @@ export const updateProductSchema = z.object({
     status: z
         .enum(productStatusEnum, "Invalid product status")
         .optional(),
+    thumbnailUrl: 
+        imageAltSchema("Thumbnail")
+        .nullable()
+        .optional(),
+    imageGalary: z
+        .array(imageAltSchema("Product gallery image"))
+        .optional(),
+    
 }).refine(data => Object.keys(data).length > 0, {
     message: "At least name, description, or status must be provided for update"
 });
 
 
+export const productListQuerySchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(15),
+});
+
+
 export type CreateProductPayload = z.infer<typeof createProductSchema>;
 export type UpdateProductPayload = z.infer<typeof updateProductSchema>;
+export type ProductListQuery = z.infer<typeof productListQuerySchema>;

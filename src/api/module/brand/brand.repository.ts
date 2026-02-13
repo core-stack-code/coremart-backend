@@ -5,12 +5,14 @@ class BrandRepository {
     public create = async (data: {
         name: string;
         slug: string;
+        logUrl: string | null;
     }) => {
         return await prisma.brand.create({
             data: {
                 id: getUuid(),
                 name: data.name,
                 slug: data.slug,
+                logoUrl: data.logUrl,
             },
             select: null,
         });
@@ -20,6 +22,7 @@ class BrandRepository {
         name?: string;
         slug?: string;
         isActive?: boolean;
+        logoUrl?: string | null;
     }, tx: PrismaTx = prisma) => {
         return await tx.brand.update({
             where: { id },
@@ -27,6 +30,7 @@ class BrandRepository {
                 name: data.name,
                 slug: data.slug,
                 isActive: data.isActive,
+                logoUrl: data.logoUrl,
             },
             select: null,
         });
@@ -45,6 +49,7 @@ class BrandRepository {
                 id: true,
                 name: true,
                 slug: true,
+                logoUrl: true,
                 isActive: true,
                 _count: {
                     select: {
@@ -63,6 +68,7 @@ class BrandRepository {
             select: {
                 name: true,
                 slug: true,
+                logoUrl: true,
             },
             orderBy: {
                 name: "asc",

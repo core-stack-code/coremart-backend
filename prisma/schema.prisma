@@ -102,12 +102,31 @@ model Product {
   productCategories ProductCategory[]
   brandId           String?           @db.Uuid
   brand             Brand?            @relation(fields: [brandId], references: [id])
+  productImages     ProductImage[]
 }
 
 enum ProductStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+model ProductImage {
+  id        String           @id @db.Uuid
+  productId String           @db.Uuid
+  product   Product          @relation(fields: [productId], references: [id])
+  url       String
+  type      ProductImageType
+  altText   String?
+  createdAt DateTime         @default(now())
+
+  @@index([productId, type])
+  @@index([productId])
+}
+
+enum ProductImageType {
+  THUMBNAIL
+  GALLERY
 }
 
 model Variant {
@@ -120,6 +139,7 @@ model Variant {
   color      Color    @relation(fields: [colorId], references: [id])
   materialId String   @db.Uuid
   material   Material @relation(fields: [materialId], references: [id])
+  imageUrl   String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   sku        SKU?
@@ -181,8 +201,27 @@ model Category {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   productCategories ProductCategory[]
+  categoryImages    CategoryImage[]
 
   @@unique([parentId, name])
+}
+
+model CategoryImage {
+  id         String            @id @db.Uuid
+  categoryId String            @db.Uuid
+  category   Category          @relation(fields: [categoryId], references: [id])
+  url        String            @unique
+  altText    String?
+  type       CategoryImageType
+  createdAt  DateTime          @default(now())
+
+  @@index([categoryId, type])
+  @@index([categoryId])
+}
+
+enum CategoryImageType {
+  IMAGE
+  BANNER
 }
 
 model ProductCategory {
@@ -200,6 +239,7 @@ model Brand {
   name      String    @unique
   slug      String    @unique
   isActive  Boolean   @default(true)
+  logoUrl   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   products  Product[]

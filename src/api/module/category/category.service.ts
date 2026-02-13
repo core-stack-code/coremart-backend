@@ -1,5 +1,5 @@
 import { prisma } from "@core/config/prisma";
-import { CategoryListItem, categoryRepository } from "./category.repository";
+import { CategoryImageInput, CategoryListItem, CategoryTreeNode, categoryRepository, CategoryTreeItem } from "./category.repository";
 import { CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
 import { AppError } from "@core/utils/response";
 import { slugify } from "@core/utils/db.helper";
@@ -16,10 +16,34 @@ class CategoryService {
             slug = slugify(payload.name);
         }
 
-        await categoryRepository.create({
-            name: payload.name,
-            parentId: payload.parentId,
-            slug,
+        await prisma.$transaction(async (tx) => {
+            const category = await categoryRepository.create({
+                name: payload.name,
+                parentId: payload.parentId,
+                slug,
+            }, tx);
+
+            const images: CategoryImageInput[] = [];
+
+            if (payload.bannerImageUrl) {
+                images.push({
+                    url: payload.bannerImageUrl.url,
+                    altText: payload.bannerImageUrl.altText,
+                    type: "BANNER",
+                });
+            }
+
+            if (payload.imageUrl) {
+                images.push({
+                    url: payload.imageUrl.url,
+                    altText: payload.imageUrl.altText,
+                    type: "IMAGE",
+                });
+            }
+
+            if (images.length > 0) {
+                await categoryRepository.addImages(category.id, images, tx);
+            }
         });
     }
 
@@ -74,6 +98,37 @@ class CategoryService {
                 slug: newSlug,
             }, tx);
 
+            // update images if needed.
+            const images: CategoryImageInput[] = [];
+
+            if (payload.bannerImageUrl !== undefined) {
+                await categoryRepository.deleteImages(id, "BANNER", tx)
+
+                if (payload.bannerImageUrl) {
+                    images.push({
+                        url: payload.bannerImageUrl.url,
+                        altText: payload.bannerImageUrl.altText,
+                        type: "BANNER",
+                    });
+                }
+            }
+
+            if (payload.imageUrl !== undefined) {
+                await categoryRepository.deleteImages(id, "IMAGE", tx)
+
+                if (payload.imageUrl) {
+                    images.push({
+                        url: payload.imageUrl.url,
+                        altText: payload.imageUrl.altText,
+                        type: "IMAGE",
+                    });
+                }
+            }
+
+            if (images.length > 0) {
+                await categoryRepository.addImages(id, images, tx);
+            }
+
             // update descendant slugs if the base slug changed.
             if ((isParentChanging || isNameChanging) && descendants.length > 0) {
                 await Promise.all(
@@ -89,18 +144,27 @@ class CategoryService {
         });
     }
 
-    public handleGetTree = async () => {
-        const categories = await categoryRepository.findAll();
+    public handleGetTree = async (): Promise<CategoryTreeNode[]> => {
+        const categoryResult = await categoryRepository.findAll();
         
-        const categoryMap = new Map();
-        const tree: CategoryListItem[] = [];
+        const categories: CategoryTreeItem[] = categoryResult.map(cat => {
+            const { categoryImages, ...rest } = cat;
+            
+            return {
+                ...rest,
+                imageUrl: categoryImages.length > 0 ? categoryImages[0] : null,
+            }
+        });
+        
+        const categoryMap = new Map<string, CategoryTreeNode>();
+        const tree: CategoryTreeNode[] = [];
 
         categories.forEach(cat => {
             categoryMap.set(cat.id, { ...cat, children: [] });
         });
 
         categories.forEach(cat => {
-            const node = categoryMap.get(cat.id);
+            const node = categoryMap.get(cat.id)!;
             if (cat.parentId) {
                 const parent = categoryMap.get(cat.parentId);
                 if (parent) {
@@ -115,7 +179,21 @@ class CategoryService {
     }
 
     public handleGetList = async () => {
-        return await categoryRepository.findList();
+        const categoryResult = await categoryRepository.findList();
+        
+        const categories = categoryResult.map(cate => {
+            const { categoryImages, ...rest } = cate;
+            const banner = categoryImages.find(img => img.type === "BANNER");
+            const image = categoryImages.find(img => img.type === "IMAGE");
+
+            return {
+                ...rest,
+                bannerImageUrl: banner ?? null,
+                imageUrl: image ?? null,
+            }
+        })
+
+        return categories;
     }
 
     public handleToggleActive = async (id: string) => {
@@ -125,7 +203,7 @@ class CategoryService {
             throw new AppError(404, "RESOURCE_NOT_FOUND", "Category not found.");
         }
 
-        await categoryRepository.toggleActive(id, category.isActive);
+        await categoryRepository.toggleActive(id, !category.isActive);
     }
 
     public checkCategoryActive = async (categoryId: string): Promise<string> => {

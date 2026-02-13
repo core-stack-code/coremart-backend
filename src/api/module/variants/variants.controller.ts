@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
-import { CreateProductSkuPayload, CreateProductVariantPayload, UpdateProductSkuPayload } from "./variants.validator";
 import { variantsService } from "./variants.service";
+import { 
+    CreateProductSkuPayload,
+    CreateProductVariantPayload,
+    UpdateProductSkuPayload,
+    VariantImagePayload
+} from "./variants.validator";
 import { AppResponse } from "@core/utils/response";
 
 
@@ -14,6 +19,18 @@ class VariantsController {
         AppResponse(res, 201, {
             code: "CREATED",
             message: "Product variant created successfully.",
+        });
+    }
+
+    public async updateVariantImage(req: Request, res: Response) {
+        const variantId = req.params.variantId as string;
+        const payload = req.body as VariantImagePayload;
+
+        await variantsService.handleUpdateVariantImage(variantId, payload);
+        
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Product variant image updated successfully.",
         });
     }
 

@@ -1,16 +1,11 @@
 import { Request, Response } from "express";
 import { catalogService } from "./catalog.service";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
-
 import { AppResponse } from "@core/utils/response";
-import { log } from "@api/utils/log";
 
 
 class CatalogController {
     public async getProductDetail(req: Request, res: Response) {
-        const check = req.query
-        log.info("query", check)
-
         const productSlug = req.params.productSlug as string;
 
         const productDetail = await catalogService.getProductDetail(productSlug);

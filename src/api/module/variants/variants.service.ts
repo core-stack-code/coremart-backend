@@ -1,10 +1,12 @@
-import { CreateProductSkuPayload, CreateProductVariantPayload, UpdateProductSkuPayload } from "./variants.validator";
+import {
+    CreateProductSkuPayload, CreateProductVariantPayload, UpdateProductSkuPayload, VariantImagePayload
+} from "./variants.validator";
 import { variantsRepository } from "./variants.repository";
 
 import { attributesService } from "@mod/attributes/attributes.service";
 import { productRepository } from "@mod/product/product.repository";
-import { AppError } from "@core/utils/response";
 import { generateSkuCode, paiseToRupees, rupeesToPaise } from "./variants.utils";
+import { AppError } from "@core/utils/response";
 
 
 class VariantsService {
@@ -25,6 +27,10 @@ class VariantsService {
             productId: id,
             ...payload,
         })
+    }
+
+    public async handleUpdateVariantImage(variantId: string, payload: VariantImagePayload) {
+        await variantsRepository.updateVariantImage(variantId, payload.imageUrl);
     }
 
     public async productVariants(productId: string) {

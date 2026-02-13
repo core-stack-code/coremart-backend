@@ -1,6 +1,6 @@
 import express from 'express'
 import { productController } from './product.controller'
-import { createProductSchema, updateProductSchema } from './product.validator'
+import { createProductSchema, productListQuerySchema, updateProductSchema } from './product.validator'
 import { validationMiddleware } from '@api/middlewares/validate.middlewate'
 import { createProductCategorySchema } from '@mod/product-category/productCategory.validator'
 import { productCategoryController } from '@mod/product-category/productCategory.controller'
@@ -21,6 +21,7 @@ productRouter.patch(
 
 productRouter.get(
     '/list',
+    validationMiddleware.validateQuery(productListQuerySchema),
     productController.getProductList
 )
 

@@ -6,6 +6,7 @@ export const createBrandSchema = z.object({
         .trim()
         .min(2, "Name must be at least 2 characters long")
         .max(50, "Name must be at most 50 characters long"),
+    logoUrl: z.string().trim().min(1, "Logo URL must be provided").optional(),
 });
 
 export const updateBrandSchema = z.object({
@@ -18,6 +19,7 @@ export const updateBrandSchema = z.object({
     isActive: z
         .boolean()
         .optional(),
+    logoUrl: z.string().trim().min(1, "Logo URL must be provided").nullable().optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: "At least name or isActive must be provided for update"
 });

@@ -38,6 +38,13 @@ class ProductCategoryRepository {
                                 name: true,
                             },
                         },
+                        productImages: {
+                            where: { type: "THUMBNAIL" },
+                            select: {
+                                url: true,
+                                altText: true,
+                            }
+                        },
                         createdAt: true,
                         updatedAt: true,
                     },

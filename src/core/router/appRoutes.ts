@@ -8,6 +8,7 @@ import productRouter from "@mod/product/product.routes";
 import variantsRouter from "@mod/variants/variants.routes";
 import catalogRouter from "@mod/catalog/catalog.routes";
 import brandRouter from "@mod/brand/brand.routes";
+import mediaRouter from "@mod/media/media.routes";
 
 
 import reviewRoutes from '@mod/reviews/reviews.routes'
@@ -35,6 +36,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/variants`, variantsRouter);
     app.use(`${baseRouteUrl}/catalog`, catalogRouter);
     app.use(`${baseRouteUrl}/brand`, brandRouter);
+    app.use(`${baseRouteUrl}/media`, mediaRouter);
 
     // old routes
     app.use(`${baseRouteUrl}/review`, reviewRoutes)

@@ -1,62 +1,84 @@
 import { Prisma } from "generated/prisma/client";
 import { prisma, PrismaTx } from "@core/config/prisma";
 
+export type CategoryTreeItem = {
+    id: string;
+    name: string;
+    slug: string;
+    parentId: string | null;
+    imageUrl: string | null;
+}
+
+export type CategoryTreeNode = CategoryTreeItem & {
+    children: CategoryTreeNode[];
+}
+
+export type RawCategoryTreeItem = {
+    id: string;
+    name: string;
+    slug: string;
+    parentId: string | null;
+    categoryImages: Array<{ url: string }>;
+}
+
 
 class CatalogRepository {
     public findProductBySlug = async (productSlug: string) => {
         return await prisma.product.findUnique({
             where: { slug: productSlug, status: "ACTIVE" },
-            select: {
-                id: true,
-                name: true,
-                description: true,
-                slug: true,
-                createdAt: true,
-                updatedAt: true,
-                brand: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true,
-                    }
+            include: {
+            brand: true,
+            productImages: true,
+            productCategories: {
+                include: {
+                    category: true
+                }
+            },
+            variants: {
+                include: {
+                    size: true,
+                    color: true,
+                    material: true,
+                    sku: true
                 }
             }
+        }
         })
     }
 
-    public findCategoriesByProductId = async (productId: string) => {
-        return await prisma.productCategory.findMany({
-            where: { productId },
-            select: {
-                category: {
-                    select: {
-                        name: true,
-                        slug: true,
-                        isActive: true,
-                    }
-                }
-            }
-        });
-    }
+    // public findCategoriesByProductId = async (productId: string) => {
+    //     return await prisma.productCategory.findMany({
+    //         where: { productId },
+    //         select: {
+    //             category: {
+    //                 select: {
+    //                     name: true,
+    //                     slug: true,
+    //                     isActive: true,
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
-    public findProductVariantsByProductId = async (productId: string) => {
-        return await prisma.variant.findMany({
-            where: { productId },
-            select: {
-                size: { select: { name: true } },
-                color: { select: { name: true } },
-                material: { select: { name: true } },
-                sku: {
-                    select: {
-                        skuCode: true,
-                        price: true,
-                        stock: true,
-                        isActive: true,
-                    }
-                }
-            }
-        });
-    }
+    // public findProductVariantsByProductId = async (productId: string) => {
+    //     return await prisma.variant.findMany({
+    //         where: { productId },
+    //         select: {
+    //             size: { select: { name: true } },
+    //             color: { select: { name: true } },
+    //             material: { select: { name: true } },
+    //             sku: {
+    //                 select: {
+    //                     skuCode: true,
+    //                     price: true,
+    //                     stock: true,
+    //                     isActive: true,
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
     public findProducts = async ( args: {
         where: Prisma.ProductWhereInput,
@@ -82,8 +104,17 @@ class CatalogRepository {
                 },
                 variants: {
                     select: {
+                        imageUrl: true,
                         sku: { select: { price: true } },
                     },
+                },
+                productImages: {
+                    where: { type: "THUMBNAIL" },
+                    select: {
+                        url: true,
+                        altText: true,
+                    },
+                    take: 1,
                 },
             },
         });
@@ -102,6 +133,13 @@ class CatalogRepository {
             select: {
                 name: true,
                 slug: true,
+                categoryImages: {
+                    where: { type: "IMAGE" },
+                    select: {
+                        url: true,
+                    },
+                    take: 1,
+                }   
             },
             orderBy: {
                 name: "asc",
@@ -128,6 +166,12 @@ class CatalogRepository {
                 name: true,
                 slug: true,
                 parentId: true,
+                categoryImages: {
+                    where: { type: "IMAGE" },
+                    select: {
+                        url: true,
+                    },
+                }
             },
             orderBy: {
                 name: "asc",
@@ -176,6 +220,14 @@ class CatalogRepository {
                     select: {
                         sku: { select: { price: true } },
                     },
+                },
+                productImages: {
+                    where: { type: "THUMBNAIL" },
+                    select: {
+                        url: true,
+                        altText: true,
+                    },
+                    take: 1,
                 },
             },
         })

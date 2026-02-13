@@ -8,6 +8,7 @@ class BrandService {
         return await brandRepository.create({
             name: payload.name,
             slug: slugify(payload.name),
+            logUrl: payload.logoUrl ?? null,
         });
     }
 
@@ -16,6 +17,7 @@ class BrandService {
             name: payload.name ?? undefined,
             slug: payload.name ? slugify(payload.name) : undefined,
             isActive: payload.isActive ?? undefined,
+            logoUrl: payload.logoUrl ?? undefined,
         });
     }
 

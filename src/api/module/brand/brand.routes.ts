@@ -22,10 +22,7 @@ brandRouter.get(
     brandController.getBrandList
 );
 
-brandRouter.get(
-    '/',
-    brandController.getBrandSimpleList
-);
+
 
 brandRouter.post(
     '/:brandId/product/:productId',
@@ -35,6 +32,12 @@ brandRouter.post(
 brandRouter.delete(
     '/:brandId/product/:productId',
     brandController.removeProduct
+);
+
+// public api (might need in future)
+brandRouter.get(
+    '/',
+    brandController.getBrandSimpleList
 );
 
 export default brandRouter;

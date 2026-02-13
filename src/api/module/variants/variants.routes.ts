@@ -1,5 +1,10 @@
 import express from 'express';
-import { createProductSkuSchema, createProductVariantSchema, updateProductSkuSchema } from './variants.validator';
+import { 
+    createProductSkuSchema,
+    createProductVariantSchema,
+    updateProductSkuSchema,
+    variantImageSchema
+} from './variants.validator';
 import { variantsController } from './variants.controller';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 
@@ -9,6 +14,12 @@ variantsRouter.post(
     '/product/:productId',
     validationMiddleware.validateRequest(createProductVariantSchema),
     variantsController.createVariants
+)
+
+variantsRouter.patch(
+    '/:variantId/image',
+    validationMiddleware.validateRequest(variantImageSchema),
+    variantsController.updateVariantImage
 )
 
 variantsRouter.get(
