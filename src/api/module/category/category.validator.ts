@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { imageAltSchema } from "@core/validator/common.validators";
+import { imageAltSchema } from "@core/validator/common.validator";
 
 export const createCategorySchema = z.object({
     name: z.string().min(2).max(50),

@@ -17,6 +17,10 @@ export const AUTH_CONFIG = {
     jwtExpiry: {
         accessToken: '15m',
         refreshToken: '30d',
+    },
+    adminCookiesName: {
+        accessToken: "__admin-atkn",
+        refreshToken: "__admin-rtkn",
     }
 } as const;
 

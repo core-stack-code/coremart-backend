@@ -2,34 +2,35 @@ import express from "express";
 import { catalogController } from "./catalog.controller";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { productListQuerySchema, productsByCategoryQuerySchema } from "./catalog.validator";
+import { asyncWrapper } from "@core/utils/asyncWrapper";
 
 const catalogRouter = express.Router();
 
 catalogRouter.get(
     "/product/:productSlug",
-    catalogController.getProductDetail
+    asyncWrapper(catalogController.getProductDetail)
 )
 
 catalogRouter.get(
     "/products",
     validationMiddleware.validateQuery(productListQuerySchema),
-    catalogController.getProducts
+    asyncWrapper(catalogController.getProducts)
 )
 
 catalogRouter.get(
     "/categories",
-    catalogController.getRootCategories
+    asyncWrapper(catalogController.getRootCategories)
 )
 
 catalogRouter.get(
     "/category/:categorySlug/tree",
-    catalogController.getSubCategories
+    asyncWrapper(catalogController.getSubCategories)
 )
 
 catalogRouter.get(
     "/category/:categorySlug/products",
     validationMiddleware.validateQuery(productsByCategoryQuerySchema),
-    catalogController.getProductsByCategory
+    asyncWrapper(catalogController.getProductsByCategory)
 )
 
 export default catalogRouter;

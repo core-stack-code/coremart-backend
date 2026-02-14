@@ -3,39 +3,47 @@ import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { createCategorySchema, updateCategorySchema } from "./category.validator";
 import { categoryController } from "./category.controller";
 import { productCategoryController } from "@mod/product-category/productCategory.controller";
+import { adminMiddleware } from "@api/middlewares/admin.middleware";
+import { asyncWrapper } from "@core/utils/asyncWrapper";
 
 const categoryRouter = express.Router();
 
 categoryRouter.post(
     "/",
+    adminMiddleware,
     validationMiddleware.validateRequest(createCategorySchema),
-    categoryController.createCategory
+    asyncWrapper(categoryController.createCategory)
 );
 
 categoryRouter.patch(
     "/:id",
+    adminMiddleware,
     validationMiddleware.validateRequest(updateCategorySchema),
-    categoryController.updateCategory
+    asyncWrapper(categoryController.updateCategory)
 );
 
 categoryRouter.get(
     "/",
-    categoryController.getCategoryTree
+    adminMiddleware,
+    asyncWrapper(categoryController.getCategoryTree)
 );
 
 categoryRouter.get(
     "/list",
-    categoryController.getCategoryList
+    adminMiddleware,
+    asyncWrapper(categoryController.getCategoryList)
 );
 
 categoryRouter.patch(
     "/:categoryId/toggle",
-    categoryController.toggleActive
+    adminMiddleware,
+    asyncWrapper(categoryController.toggleActive)
 );
 
 categoryRouter.get(
     '/:categoryId/products',
-    productCategoryController.getProductByCategory
-)
+    adminMiddleware,
+    asyncWrapper(productCategoryController.getProductByCategory)
+);
 
 export default categoryRouter;

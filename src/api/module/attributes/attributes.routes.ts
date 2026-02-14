@@ -2,78 +2,93 @@ import express from 'express';
 import { attributesController } from './attributes.controller';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { colorAttributeSchema, materialAttributeSchema, sizeAttributeSchema } from './attributes.validator';
+import { adminMiddleware } from '@api/middlewares/admin.middleware';
+import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 const attributesRouter = express.Router();
 
 attributesRouter.get(
     '/size',
-    attributesController.getSizeList
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.getSizeList)
+);
 
 attributesRouter.get(
     '/color',
-    attributesController.getColorList
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.getColorList)
+);
 
 attributesRouter.get(
     '/material',
-    attributesController.getMaterialList
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.getMaterialList)
+);
 
 attributesRouter.get(
     '/active-list',
-    attributesController.getAttibutes
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.getAttibutes)
+);
 
 attributesRouter.post(
     '/size',
+    adminMiddleware,
     validationMiddleware.validateRequest(sizeAttributeSchema),
-    attributesController.createSize
-)
+    asyncWrapper(attributesController.createSize)
+);
 
 attributesRouter.patch(
     '/size/:id',
+    adminMiddleware,
     validationMiddleware.validateRequest(sizeAttributeSchema),
-    attributesController.updateSize
-)
+    asyncWrapper(attributesController.updateSize)
+);
 
 attributesRouter.patch(
     '/size/:id/deactivate',
-    attributesController.deactivateSize
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.deactivateSize)
+);
 
 attributesRouter.post(
     '/color',
+    adminMiddleware,
     validationMiddleware.validateRequest(colorAttributeSchema),
-    attributesController.createColor
-)
+    asyncWrapper(attributesController.createColor)
+);
 
 attributesRouter.patch(
     '/color/:id',
+    adminMiddleware,
     validationMiddleware.validateRequest(colorAttributeSchema),
-    attributesController.updateColor
-)
+    asyncWrapper(attributesController.updateColor)
+);
 
 attributesRouter.patch(
     '/color/:id/deactivate',
-    attributesController.deactivateColor
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.deactivateColor)
+);
 
 attributesRouter.post(
     '/material',
+    adminMiddleware,
     validationMiddleware.validateRequest(materialAttributeSchema),
-    attributesController.createMaterial
-)
+    asyncWrapper(attributesController.createMaterial)
+);
 
 attributesRouter.patch(
     '/material/:id',
+    adminMiddleware,
     validationMiddleware.validateRequest(materialAttributeSchema),
-    attributesController.updateMaterial
-)
+    asyncWrapper(attributesController.updateMaterial)
+);
 
 attributesRouter.patch(
     '/material/:id/deactivate',
-    attributesController.deactivateMaterial
-)
+    adminMiddleware,
+    asyncWrapper(attributesController.deactivateMaterial)
+);
 
 export default attributesRouter;

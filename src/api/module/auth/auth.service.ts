@@ -6,7 +6,7 @@ import { passwordRepository } from "@mod/password/password.repository";
 import { AppError } from "@core/utils/response";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
-import { ChangePasswordPayload, LoginPayload, SignupPayload } from "./auth.schemas";
+import { ChangePasswordPayload, LoginPayload, SignupPayload } from "./auth.validator";
 
 
 class AuthService {

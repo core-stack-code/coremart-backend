@@ -244,3 +244,14 @@ model Brand {
   updatedAt DateTime  @updatedAt
   products  Product[]
 }
+
+model Admin {
+  id              String   @id @db.Uuid
+  email           String   @unique
+  name            String
+  password        String
+  passwordVersion Int      @default(1)
+  refreshToken    String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

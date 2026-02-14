@@ -1,19 +1,19 @@
 import express from 'express';
 import { authController } from './auth.controller';
-import { 
-    changePasswordZodSchema,
+import {
     generateOtpZodSchema,
     loginZodSchema,
     resendOtpZodSchema,
     setPasswordZodSchema,
     signupZodSchema,
     verifyOtpZodSchema
-} from './auth.schemas';
+} from './auth.validator';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { detectClient } from '@api/middlewares/detectClient.middleware';
+import { changePasswordZodSchema } from '@core/validator/password.validator';
 
 const authRouter = express.Router();
 

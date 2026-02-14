@@ -5,7 +5,7 @@ import { otpSessionRepository } from "@mod/otp-session/otpSession.repository";
 import { passwordRepository } from "@mod/password/password.repository";
 import { userRepository } from "@mod/users/user.repository";
 import { passwordService } from "@mod/password/password.service";
-import { VerifyOtpPayload } from "./auth.schemas";
+import { VerifyOtpPayload } from "./auth.validator";
 
 import { sendEmail } from "@core/lib/snedEmail";
 import { compareOtpHash, genrateOtpHash } from "@core/lib/crypto";

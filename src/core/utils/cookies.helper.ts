@@ -4,6 +4,7 @@ import { log } from "@api/utils/log";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 type SameSiteType = boolean | "lax" | "strict" | "none" | undefined
+type UserRole = 'user' | 'admin';
 const DOMAIN = ".coremart.com";
 
 
@@ -31,20 +32,38 @@ export const getCookiesConfig = (): CookieOptions => {
 
 export const applyAuthCookies = (
     res: Response, 
-    {accessToken, refreshToken}: {accessToken: string, refreshToken: string}
+    {accessToken, refreshToken}: {accessToken: string, refreshToken: string},
+    type: UserRole = 'user'
 ) => {
-    res.cookie(AUTH_CONFIG.cookieName.accessToken, accessToken, {
+    const accessCookieName = type === 'admin' 
+        ? AUTH_CONFIG.adminCookiesName.accessToken
+        : AUTH_CONFIG.cookieName.accessToken;
+
+    const refreshCookieName = type === 'admin' 
+        ? AUTH_CONFIG.adminCookiesName.refreshToken
+        : AUTH_CONFIG.cookieName.refreshToken;
+
+    res.cookie(accessCookieName, accessToken, {
         ...getCookiesConfig(),
         maxAge: AUTH_CONFIG.age.accessToken * 1000,
     });
 
-    res.cookie(AUTH_CONFIG.cookieName.refreshToken, refreshToken, {
+    res.cookie(refreshCookieName, refreshToken, {
         ...getCookiesConfig(),
         maxAge: AUTH_CONFIG.age.refreshToken * 1000,
     });
 }
 
-export const clearAuthCookies = (res: Response) => {
-    res.clearCookie(AUTH_CONFIG.cookieName.accessToken, {...getCookiesConfig()});
-    res.clearCookie(AUTH_CONFIG.cookieName.refreshToken, {...getCookiesConfig()});
+
+export const clearAuthCookies = (res: Response, type: UserRole = 'user') => {
+    const accessCookieName = type === 'admin' 
+        ? AUTH_CONFIG.adminCookiesName.accessToken
+        : AUTH_CONFIG.cookieName.accessToken;
+
+    const refreshCookieName = type === 'admin' 
+        ? AUTH_CONFIG.adminCookiesName.refreshToken
+        : AUTH_CONFIG.cookieName.refreshToken;
+
+    res.clearCookie(accessCookieName, {...getCookiesConfig()});
+    res.clearCookie(refreshCookieName, {...getCookiesConfig()});
 }

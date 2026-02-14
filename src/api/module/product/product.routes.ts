@@ -4,41 +4,49 @@ import { createProductSchema, productListQuerySchema, updateProductSchema } from
 import { validationMiddleware } from '@api/middlewares/validate.middlewate'
 import { createProductCategorySchema } from '@mod/product-category/productCategory.validator'
 import { productCategoryController } from '@mod/product-category/productCategory.controller'
+import { adminMiddleware } from '@api/middlewares/admin.middleware'
+import { asyncWrapper } from '@core/utils/asyncWrapper'
 
 const productRouter = express.Router()
 
 productRouter.post(
     '/',
+    adminMiddleware,
     validationMiddleware.validateRequest(createProductSchema),
-    productController.createProduct
+    asyncWrapper(productController.createProduct)
 )
 
 productRouter.patch(
     '/:productId',
+    adminMiddleware,
     validationMiddleware.validateRequest(updateProductSchema),
-    productController.updateProduct
+    asyncWrapper(productController.updateProduct)
 )
 
 productRouter.get(
     '/list',
+    adminMiddleware,
     validationMiddleware.validateQuery(productListQuerySchema),
-    productController.getProductList
+    asyncWrapper(productController.getProductList)
 )
 
 productRouter.get(
     '/:productId',
-    productController.getProduct
+    adminMiddleware,
+    asyncWrapper(productController.getProduct)
 )
 
 productRouter.post(
     '/:productId/category',
+    adminMiddleware,
     validationMiddleware.validateRequest(createProductCategorySchema),
-    productCategoryController.createProductCategory
+    asyncWrapper(productCategoryController.createProductCategory)
 )
 
 productRouter.delete(
     "/:productId/category/:categoryId",
-    productCategoryController.deleteProductCategory
+    adminMiddleware,
+    asyncWrapper(productCategoryController.deleteProductCategory)
 )
 
 export default productRouter;

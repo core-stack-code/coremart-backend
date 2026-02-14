@@ -11,7 +11,7 @@ import {
     SetPasswordPayload,
     SignupPayload,
     VerifyOtpPayload
-} from "./auth.schemas";
+} from "./auth.validator";
 import { AppError, AppResponse } from "@core/utils/response";
 import { applyAuthCookies, clearAuthCookies } from "@core/utils/cookies.helper";
 import { AUTH_CONFIG } from "@core/constants/authConfig";

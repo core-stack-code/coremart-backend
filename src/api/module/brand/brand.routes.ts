@@ -2,42 +2,47 @@ import express from 'express';
 import { brandController } from './brand.controller';
 import { createBrandSchema, updateBrandSchema } from './brand.validator';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
+import { adminMiddleware } from '@api/middlewares/admin.middleware';
+import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 const brandRouter = express.Router();
 
 brandRouter.post(
     '/',
+    adminMiddleware,
     validationMiddleware.validateRequest(createBrandSchema),
-    brandController.createBrand
+    asyncWrapper(brandController.createBrand)
 );
 
 brandRouter.patch(
     '/:brandId',
+    adminMiddleware,
     validationMiddleware.validateRequest(updateBrandSchema),
-    brandController.updateBrand
+    asyncWrapper(brandController.updateBrand)
 );
 
 brandRouter.get(
     '/list',
-    brandController.getBrandList
+    adminMiddleware,
+    asyncWrapper(brandController.getBrandList)
 );
-
-
 
 brandRouter.post(
     '/:brandId/product/:productId',
-    brandController.assignProduct
+    adminMiddleware,
+    asyncWrapper(brandController.assignProduct)
 );
 
 brandRouter.delete(
     '/:brandId/product/:productId',
-    brandController.removeProduct
+    adminMiddleware,
+    asyncWrapper(brandController.removeProduct)
 );
 
 // public api (might need in future)
 brandRouter.get(
     '/',
-    brandController.getBrandSimpleList
+    asyncWrapper(brandController.getBrandSimpleList)
 );
 
 export default brandRouter;

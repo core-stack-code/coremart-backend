@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ProductStatus } from "generated/prisma/enums";
-import { imageAltSchema } from "@core/validator/common.validators";
+import { imageAltSchema } from "@core/validator/common.validator";
 
 const productStatusEnum: ProductStatus[] = [
     "ACTIVE", "ARCHIVED", "DRAFT"
