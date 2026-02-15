@@ -1,34 +1,58 @@
-import { Types } from "mongoose";
-import { NextFunction, Request, Response } from "express";
-import { AddressPayload } from "./address.schema";
-import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
-import { addAddressService, getAddressCountPerUser } from "./address.service";
-import { AppError, AppResponse } from "../../../core/utils/response";
-import { log } from "../../utils/log";
 
-export const addAddressController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
+import { Request, Response } from "express";
+import { addressService } from "./address.service";
+import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
+import { AppResponse } from "@core/utils/response";
 
-        const payload: AddressPayload = req.body;
-        const userID = new Types.ObjectId(req.auth.userId);
+class AddressController {
+    public async createAddress(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const payload = req.body as CreateAddressPayload;
 
-        const addressCount = await getAddressCountPerUser(userID)
+        await addressService.handleCreate(userId, payload);
 
-        if (addressCount >= 5) {
-            throw new AppError(409, "CONFLICT","You have reach the limit to store address");
-        }
+        AppResponse(res, 201, {
+            code: "CREATED",
+            message: "Address created successfully.",
+        });
+    }
 
-        const address = await addAddressService(userID, payload);
+    public async updateAddress(req: Request, res: Response) {
+        const { addressId } = req.params;
+        const payload = req.body as UpdateAddressPayload;
+        const userId = req.user!.id;
+
+        await addressService.handleUpdate(userId, addressId, payload);
 
         AppResponse(res, 200, {
-            message: "Address added successfully",
             code: "OK",
-            data: address
-        })
+            message: "Address updated successfully.",
+        });
     }
-    catch (error) {
-        next(error);
+
+    public async deleteAddress(req: Request, res: Response) {
+        const { addressId } = req.params;
+        const userId = req.user!.id;
+
+        await addressService.handleDelete(userId, addressId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Address deleted successfully.",
+        });
+    }
+
+    public async getAddressList(req: Request, res: Response) {
+        const userId = req.user!.id;
+
+        const addresses = await addressService.handleGetList(userId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Addresses fetched successfully.",
+            data: addresses,
+        });
     }
 }
+
+export const addressController = new AddressController();

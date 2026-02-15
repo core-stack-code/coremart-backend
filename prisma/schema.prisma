@@ -12,12 +12,16 @@ model User {
   email               String              @unique
   name                String?
   isEmailVerified     Boolean             @default(false)
+  profilePictureUrl   String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   oauths              OAuthAccount[]
   sessions            Session[]
   passwordCredentials PasswordCredential?
   otpSessions         OtpSession[]
+  userAddresses       UserAddress[]
+  favoriteProducts    FavoriteProduct[]
+  wishLists           WishList[]
 }
 
 model OAuthAccount {
@@ -103,6 +107,8 @@ model Product {
   brandId           String?           @db.Uuid
   brand             Brand?            @relation(fields: [brandId], references: [id])
   productImages     ProductImage[]
+  favoriteProducts  FavoriteProduct[]
+  wishListItems     WishListItem[]
 }
 
 enum ProductStatus {
@@ -254,4 +260,56 @@ model Admin {
   refreshToken    String?  @unique
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model UserAddress {
+  id           String   @id @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, addressLine1, city, state, postalCode, country])
+  @@index([userId, isDefault])
+  @@index([userId])
+}
+
+model FavoriteProduct {
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model WishList {
+  id            String         @id @db.Uuid
+  userId        String         @db.Uuid
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  wishListItems WishListItem[]
+
+  @@unique([userId])
+}
+
+model WishListItem {
+  wishListId String   @db.Uuid
+  wishList   WishList @relation(fields: [wishListId], references: [id], onDelete: Cascade)
+  productId  String   @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishListId, productId])
+  @@index([wishListId])
 }

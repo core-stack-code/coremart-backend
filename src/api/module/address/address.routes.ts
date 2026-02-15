@@ -1,11 +1,34 @@
-import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import { addAddressController } from "./address.controller";
-import { addressSchema } from "./address.schema";
-import { validateRequest } from "../../middlewares/validate.middlewate";
+import express from "express";
+import { validationMiddleware } from "@api/middlewares/validate.middlewate";
+import { createAddressSchema, updateAddressSchema } from "./address.validator";
+import { addressController } from "./address.controller";
+import { authMiddleware } from "@api/middlewares/auth.middleware";
+import { asyncWrapper } from "@core/utils/asyncWrapper";
 
-const router = Router();
+const addressRouter = express.Router();
 
-router.post("/", validateRequest(addressSchema), authMiddleware, addAddressController)
+addressRouter.use(authMiddleware());
 
-export default router;
+addressRouter.post(
+    "/",
+    validationMiddleware.validateRequest(createAddressSchema),
+    asyncWrapper(addressController.createAddress)
+);
+
+addressRouter.patch(
+    "/:addressId",
+    validationMiddleware.validateRequest(updateAddressSchema),
+    asyncWrapper(addressController.updateAddress)
+);
+
+addressRouter.delete(
+    "/:addressId",
+    asyncWrapper(addressController.deleteAddress)
+);
+
+addressRouter.get(
+    "/",
+    asyncWrapper(addressController.getAddressList)
+);
+
+export default addressRouter;

@@ -74,6 +74,18 @@ class SessionRepository {
         });
     }
 
+    public async findByUserId(userId: string, tx: PrismaTx = prisma) {
+        return await tx.session.findFirst({
+            where: {
+                userId,
+                revokedAt: null,
+                expiresAt: {
+                    gt: new Date(),
+                },
+            },
+        });
+    }
+
     public async findByRefreshToken(refreshToken: string, tx: PrismaTx = prisma) {
         return await tx.session.findFirst({
             where: {

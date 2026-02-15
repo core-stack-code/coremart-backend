@@ -1,14 +1,15 @@
+import { randomUUID } from "crypto";
+import { env } from "@core/config/env";
 import { prisma } from "@core/config/prisma";
 import { sessionRepository } from "./session.repository";
 import { getDeviceInfo, MAX_SESSION_PER_USER } from "./session.utils";
 
-import { env } from "@core/config/env";
+import { userRepository } from "@mod/users/user.repository";
 import { getExpiryTime, getUuid } from "@core/utils/db.helper";
+import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
-import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
 import { AppError } from "@core/utils/response";
-import { randomUUID } from "crypto";
 
 
 class SessionService {
@@ -66,32 +67,35 @@ class SessionService {
     }
 
     public async refreshSession(oldRefreshToken: string): Promise<TokensResponse> {
-        return await prisma.$transaction(async (tx) => {
-            const session = await sessionRepository.findByRefreshToken(oldRefreshToken, tx);
+        const decode = verifyJwtToken(
+            oldRefreshToken,
+            env.JWT_REFRESH_SECRET
+        );
 
-            if (!session) {
-                throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
-            }
+        if (!decode || typeof decode.sub !== "string") {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+        }
 
-            const isValidToken = verifyJwtToken(
-                oldRefreshToken,
-                env.JWT_REFRESH_SECRET
-            );
+        const user = await userRepository.findById(decode.sub)
 
-            if (!isValidToken) {
-                throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
-            }
+        if (!user) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+        }
 
-            const accessToken = generateJwtToken({
-                sub: session.userId,
-            }, env.JWT_ACCESS_SECRET, AUTH_CONFIG.jwtExpiry.accessToken);
+        const session = await sessionRepository.findByUserId(user.id);
 
+        if (!session) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+        }
 
-            return {
-                accessToken,
-                refreshToken: oldRefreshToken,
-            }
-        });
+        const accessToken = generateJwtToken({
+            sub: session.userId,
+        }, env.JWT_ACCESS_SECRET, AUTH_CONFIG.jwtExpiry.accessToken);
+
+        return {
+            accessToken,
+            refreshToken: oldRefreshToken,
+        }
     }
 }
 

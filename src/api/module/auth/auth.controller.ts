@@ -3,8 +3,7 @@ import { authService } from "./auth.service";
 import { sessionService } from "@mod/session/session.service";
 import { otpService } from "./otp.service";
 
-import { 
-    ChangePasswordPayload,
+import {
     GenerateOtpPayload,
     LoginPayload,
     ResendOtpPayload,
@@ -15,6 +14,7 @@ import {
 import { AppError, AppResponse } from "@core/utils/response";
 import { applyAuthCookies, clearAuthCookies } from "@core/utils/cookies.helper";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
+import { ChangePasswordPayload } from "@core/validator/password.validator";
 
 
 class AuthController {

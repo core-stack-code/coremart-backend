@@ -10,6 +10,7 @@ import catalogRouter from "@mod/catalog/catalog.routes";
 import brandRouter from "@mod/brand/brand.routes";
 import mediaRouter from "@mod/media/media.routes";
 import adminRouter from "@mod/admin/admin.routes";
+import userRouter from "@mod/users/user.routes";
 
 import reviewRoutes from '@mod/reviews/reviews.routes'
 import favoriteRoutes from '@mod/favorites/favorites.routes';
@@ -38,6 +39,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/brand`, brandRouter);
     app.use(`${baseRouteUrl}/media`, mediaRouter);
     app.use(`${baseRouteUrl}/admin`, adminRouter);
+    app.use(`${baseRouteUrl}/user`, userRouter);
 
     // old routes
     app.use(`${baseRouteUrl}/review`, reviewRoutes)

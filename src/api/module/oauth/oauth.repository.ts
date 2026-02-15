@@ -49,6 +49,16 @@ class OAuthRepository {
             select: null,
         });
     }
+
+    public async getOauthByUserId(userId: string) {
+        return await prisma.oAuthAccount.findMany({
+            where: { userId },
+            select: {
+                provider: true,
+                emailFromProvider: true,
+            }
+        })
+    }
 }
 
 export const oauthRepository = new OAuthRepository();

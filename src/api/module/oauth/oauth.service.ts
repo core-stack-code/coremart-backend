@@ -12,6 +12,8 @@ import { getUuid } from "@core/utils/db.helper";
 import { getState, encryptLinkingState, decryptLinkingState } from "@core/lib/crypto";
 import { AppError } from "@core/utils/response";
 
+type QyeryParam = string | QueryString.ParsedQs | (string | QueryString.ParsedQs)[] | undefined
+
 
 class OAuthService {
     public getGoogleAuthUrl(): { url: string; state: string } {
@@ -42,6 +44,7 @@ class OAuthService {
             name: profile.name,
             oauthProviderId: profile.sub,
             isEmailVerified: profile.email_verified,
+            profileUrl: profile.picture || null,
         };
     }
 
@@ -87,10 +90,10 @@ class OAuthService {
 
         if (!user) {
             const newUser = await userRepository.create({
-                id: getUuid(),
                 name,
                 email,
                 isEmailVerified,
+                profilePictureUrl: userInfo.profileUrl,
             });
             userId = newUser.id;
         }
@@ -190,6 +193,30 @@ class OAuthService {
             providerAccountId: oauthProviderId,
             email,
         });
+    }
+
+    public validateRedirectionQuery(code: QyeryParam, state: QyeryParam, storedState: any): { code: string; state: string } {
+        if (!code || typeof code !== "string") {
+            throw new AppError(
+                400, 
+                "BAD_REQUEST",
+                "Authorization code is missing or invalid."
+            );
+        }
+
+        if (!state || typeof state !== "string") {
+            throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
+        }
+
+        if (!storedState || storedState !== state) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
+        }
+
+        return { code, state }
+    }
+
+    public getLinkedOAuthAccounts(userId: string) {
+        return oauthRepository.getOauthByUserId(userId);
     }
 }
 

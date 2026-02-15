@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { AppError, AppResponse } from "@core/utils/response";
 import { oauthService } from "./oauth.service";
-import { applyAuthCookies } from "@core/utils/cookies.helper";
 import { STATE_COOKIE_CONFIG } from "./oauth.utils";
-import { AUTH_CONFIG } from "@core/constants/authConfig";
+import { applyAuthCookies } from "@core/utils/cookies.helper";
+import { AppResponse } from "@core/utils/response";
 
 
 class OauthController {
@@ -18,37 +17,18 @@ class OauthController {
         });
         
         return res.redirect(url)
-        
-        // sending respone for testing purpose
-        // AppResponse(res, 200, {
-        //     code: "OK",
-        //     message: "Success",
-        //     data: { url }
-        // });
     }
 
     public async googleCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        if (!code || typeof code !== "string") {
-            throw new AppError(
-                400, 
-                "BAD_REQUEST",
-                "Authorization code is missing or invalid."
-            );
-        }
-
-        if (!state || typeof state !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
-        }
-
         const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
 
-        if (!storedState || storedState !== state) {
-            throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
-        }
+        const { 
+            code: validCode,
+        } = oauthService.validateRedirectionQuery(code, state, storedState)
 
-        const userInfo =  await oauthService.handleGoogleCallback(code);
+        const userInfo =  await oauthService.handleGoogleCallback(validCode);
 
         const { accessToken, refreshToken } = await oauthService.loginWithOAuth(
             { ...userInfo, provider: "GOOGLE" }, 
@@ -58,7 +38,6 @@ class OauthController {
             }
         );
 
-        // Set cookies
         applyAuthCookies(res, { accessToken, refreshToken });
 
         AppResponse(res, 200, {
@@ -83,25 +62,13 @@ class OauthController {
     public async githubCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        if (!code || typeof code !== "string") {
-            throw new AppError(
-                400, 
-                "BAD_REQUEST",
-                "Authorization code is missing or invalid."
-            );
-        }
-
-        if (!state || typeof state !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
-        }
-
         const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
 
-        if (!storedState || storedState !== state) {
-            throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
-        }
+        const { 
+            code: validCode,
+        } = oauthService.validateRedirectionQuery(code, state, storedState)
 
-        const userInfo = await oauthService.handleGitHubCallback(code);
+        const userInfo = await oauthService.handleGitHubCallback(validCode);
 
         const { accessToken, refreshToken } = await oauthService.loginWithOAuth(
             { ...userInfo, provider: "GITHUB" }, 
@@ -137,27 +104,16 @@ class OauthController {
     public async linkGoogleCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        if (!code || typeof code !== "string") {
-            throw new AppError(
-                400, 
-                "BAD_REQUEST",
-                "Authorization code is missing or invalid."
-            );
-        }
-
-        if (!state || typeof state !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
-        }
-
         const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
 
-        if (!storedState || storedState !== state) {
-            throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
-        }
+        const { 
+            code: validCode,
+            state: validState
+        } = oauthService.validateRedirectionQuery(code, state, storedState)
 
-        const userInfo = await oauthService.handleGoogleCallback(code);
+        const userInfo = await oauthService.handleGoogleCallback(validCode);
 
-        await oauthService.linkOAuthAccount(state, {
+        await oauthService.linkOAuthAccount(validState, {
             ...userInfo,
             provider: "GOOGLE",
         });
@@ -186,27 +142,16 @@ class OauthController {
     public async linkGithubCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        if (!code || typeof code !== "string") {
-            throw new AppError(
-                400, 
-                "BAD_REQUEST",
-                "Authorization code is missing or invalid."
-            );
-        }
-
-        if (!state || typeof state !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
-        }
-
         const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
 
-        if (!storedState || storedState !== state) {
-            throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
-        }
+        const { 
+            code: validCode,
+            state: validState
+        } = oauthService.validateRedirectionQuery(code, state, storedState)
 
-        const userInfo = await oauthService.handleGitHubCallback(code);
+        const userInfo = await oauthService.handleGitHubCallback(validCode);
 
-        await oauthService.linkOAuthAccount(state, {
+        await oauthService.linkOAuthAccount(validState, {
             ...userInfo,
             provider: "GITHUB",
         });

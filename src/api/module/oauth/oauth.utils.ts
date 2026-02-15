@@ -27,6 +27,7 @@ export type OauthLoginData = {
     name: string;
     oauthProviderId: string;
     isEmailVerified: boolean;
+    profileUrl: string | null;
 }
 
 
@@ -192,5 +193,6 @@ export const fetchGithubProfile = async (accessToken: string): Promise<OauthLogi
         name: userRes.data.name || userRes.data.login,
         oauthProviderId: userRes.data.id.toString(),
         isEmailVerified,
+        profileUrl: userRes.data.avatar_url,
     }
 }

@@ -1,58 +1,82 @@
-import { Types } from "mongoose";
-import Address, { AddressLean, AddressLeanSelected } from "./address.model";
-import { AddressPayload } from "./address.schema";
-import { AppError } from "../../../core/utils/response";
-import { log } from "../../utils/log";
+import { prisma } from "@core/config/prisma";
+import { AppError } from "@core/utils/response";
+import { addressRepository, AddressResultItem } from "./address.repository";
+import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
 
-const normalize = (text: string) => text.trim().toLowerCase();
+const MAX_ADDRESS_COUNT = 3;
 
+class AddressService {
+    public async handleCreate(userId: string, payload: CreateAddressPayload) {
+        const addressCount = await addressRepository.count(userId);
 
-export const addAddressService = async (userID: Types.ObjectId, payload: AddressPayload) => {
-    const normalized = {
-        addressLine: normalize(payload.addressLine),
-        city: normalize(payload.city),
-        state: normalize(payload.state),
-        postalCode: payload.postalCode.trim(),
-        country: normalize(payload.country),
-    };
+        if (addressCount >= MAX_ADDRESS_COUNT) {
+            throw new AppError(
+                400,
+                "BAD_REQUEST",
+                `Maximum address limit (${MAX_ADDRESS_COUNT}) reached. Please delete an address before adding a new one.`
+            );
+        }
 
-    const exists = await Address.exists({
-        userId: userID,
-        "normalized.addressLine": normalized.addressLine,
-        "normalized.city": normalized.city,
-        "normalized.state": normalized.state,
-        "normalized.postalCode": normalized.postalCode,
-        "normalized.country": normalized.country,
-    });
-
-    log.info('exists in add address', exists)
-
-    if (exists) {
-        throw new AppError(409, "CONFLICT","Address already exists");
+        await addressRepository.create({
+            userId,
+            addressLine1: payload.addressLine1,
+            addressLine2: payload.addressLine2,
+            city: payload.city,
+            state: payload.state,
+            postalCode: payload.postalCode,
+            country: payload.country,
+        });
     }
 
-    const address = new Address({
-        ...payload,
-        userId: userID,
-        normalized,
-    });
-    await address.save();
-    return address;
-}
+    public async handleUpdate(userId: string, addressId: string, payload: UpdateAddressPayload) {
+        if (payload.isDefault === true) {
+            await prisma.$transaction(async (tx) => {
+                await addressRepository.clearDefaultForUser(userId, tx);
 
+                const result = await addressRepository.update(userId, addressId, {
+                    addressLine1: payload.addressLine1,
+                    addressLine2: payload.addressLine2,
+                    city: payload.city,
+                    state: payload.state,
+                    postalCode: payload.postalCode,
+                    country: payload.country,
+                    isDefault: true,
+                }, tx);
 
-export const getAddressCountPerUser = async (userID: Types.ObjectId): Promise<number> => {
-    const count = await Address.countDocuments({ userID });
-    return count;
-}
+                if (!result) {
+                    throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
+                }
+            });
 
-export const getAddressById = async (addressId: Types.ObjectId): Promise<AddressLeanSelected> => {
-    const address = await Address.findById(addressId)
-        .select('-normalized -createdAt -updatedAt')
-        .lean<AddressLeanSelected>();
+            return;
+        }
 
-    if (!address){
-        throw new AppError(404, "RESOURCE_NOT_FOUND","Address not found");
+        const result = await addressRepository.update(userId, addressId, {
+            addressLine1: payload.addressLine1,
+            addressLine2: payload.addressLine2,
+            city: payload.city,
+            state: payload.state,
+            postalCode: payload.postalCode,
+            country: payload.country,
+            isDefault: payload.isDefault,
+        });
+
+        if (!result) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
+        }
     }
-    return address;
+
+    public async handleDelete(userId: string, addressId: string) {
+        const result = await addressRepository.delete(userId, addressId);
+
+        if (!result) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
+        }
+    }
+
+    public async handleGetList(userId: string): Promise<AddressResultItem[]> {
+        return await addressRepository.findListByUserId(userId);
+    }
 }
+
+export const addressService = new AddressService();

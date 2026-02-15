@@ -6,7 +6,8 @@ import { passwordRepository } from "@mod/password/password.repository";
 import { AppError } from "@core/utils/response";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
-import { ChangePasswordPayload, LoginPayload, SignupPayload } from "./auth.validator";
+import { LoginPayload, SignupPayload } from "./auth.validator";
+import { ChangePasswordPayload } from "@core/validator/password.validator";
 
 
 class AuthService {
@@ -42,13 +43,13 @@ class AuthService {
             userId = existedUser.id; 
             const passwordCredential = await passwordRepository.findByUserId(existedUser.id);
 
+            // user already exist by login from oauth
             if (passwordCredential) {
                 throw new AppError(400, "BAD_REQUEST", "User already exists.");
             }
         }
         else {
             const newUser = await userRepository.create({
-                id: getUuid(),
                 name: payload.name,
                 email: payload.email,
                 isEmailVerified: false,
