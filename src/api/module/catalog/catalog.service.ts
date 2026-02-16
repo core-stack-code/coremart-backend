@@ -2,9 +2,11 @@ import { Prisma } from "generated/prisma/browser";
 import { catalogRepository, CategoryTreeNode, CategoryTreeItem, RawCategoryTreeItem } from "./catalog.repository";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
-import { paiseToRupees } from "@mod/variants/variants.utils";
-import { PaginationType } from "@core/types/common";
+import { ProductListApiResponse, ProductListResultItem } from "@core/types/product";
+import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
+import { favoritesRepository } from "@mod/favorites/favorites.repository";
+import { favoritesService } from "@mod/favorites/favorites.service";
 
 type ProductVariantWithSKU = {
     size: string;
@@ -15,35 +17,10 @@ type ProductVariantWithSKU = {
     inStock: boolean;
 }
 
-type ProductListResultItem = {
-    id: string;
-    name: string;
-    slug: string;
-    description: string;
-    brand: { name: string; slug: string } | null;
-    variants: Array<{ sku: { price: number } | null }>;
-    productImages: Array<{ url: string; altText: string | null }>;
-}
-
-type ProductListItem = {
-    id: string;
-    name: string;
-    slug: string;
-    brand: {
-        name: string;
-        slug: string;
-    } | null;
-    description: string;
-    thumbnail: {
-        url: string;
-        altText: string | null;
-    };
-    price: number | null;
-}
 
 
 class CatalogService {
-    public getProductDetail = async (productSlug: string) => {
+    public getProductDetail = async (productSlug: string, userId: string | null) => {
         const productResult = await catalogRepository.findProductBySlug(productSlug);
 
         if (!productResult) {
@@ -85,6 +62,13 @@ class CatalogService {
                 url: img.url,
                 altText: img.altText,
             }));
+        
+        let isFavorite = false;
+
+        if (userId) {
+            const favoriteProduct = await favoritesRepository.checkFavorite(userId, productResult.id);
+            isFavorite = !!favoriteProduct;
+        }
 
         return {
             product: {
@@ -101,6 +85,7 @@ class CatalogService {
                     altText: thumbnailImage.altText,
                 } : null,
                 images,
+                isFavorite,
             },
             categories: activeCategories,
             attributes: {
@@ -113,8 +98,9 @@ class CatalogService {
     }
 
     public getProducts = async (
-        query: ProductListQuery
-    ) : Promise<{ products: ProductListItem[], pagination: PaginationType }> => {
+        query: ProductListQuery,
+        userId: string | null
+    ) : Promise<ProductListApiResponse> => {
 
         const where = this.buildWhereForProductList(query);
         const orderBy = this.buildOrderByForProductList(query.sortBy);
@@ -126,7 +112,7 @@ class CatalogService {
             where,
             orderBy,
             skip,
-            take
+            take,
         });
 
         // price-based sorting
@@ -137,7 +123,14 @@ class CatalogService {
 
         const total = await catalogRepository.countProducts(where);
 
-        const formattedProducts = this.formateProductListItem(products);
+        let favoriteSet = new Set<string>()
+
+        if (userId) {
+            const productIds = products.map(product => product.id);
+            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+        }
+
+        const formattedProducts = formatProductListItem(products, favoriteSet);
         const totalPages = Math.ceil(total / query.limit);
 
 
@@ -207,8 +200,9 @@ class CatalogService {
 
     public getProductsByCategorySlug= async (
         categorySlug: string,
-        query: ProductsByCategoryQuery
-    ): Promise<{ products: ProductListItem[], pagination: PaginationType }>  => {
+        query: ProductsByCategoryQuery,
+        userId: string | null
+    ): Promise<ProductListApiResponse>  => {
         const category = await catalogRepository.findCategoryBySlug(categorySlug);
 
         if (!category) {
@@ -224,7 +218,7 @@ class CatalogService {
             categoryId: category.id,
             orderBy,
             skip,
-            take
+            take,
         });
 
         if (query.sortBy === "price_asc" || query.sortBy === "price_desc") {
@@ -234,7 +228,14 @@ class CatalogService {
 
         const total = await catalogRepository.countProductsByCategory(category.id);
 
-        const formattedProducts = this.formateProductListItem(products);
+        let favoriteSet = new Set<string>()
+
+        if (userId) {
+            const productIds = products.map(product => product.id);
+            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+        }
+
+        const formattedProducts = formatProductListItem(products, favoriteSet);
         const totalPages = Math.ceil(total / query.limit);
 
 
@@ -359,24 +360,16 @@ class CatalogService {
         });
     }
 
-    private formateProductListItem = (products: ProductListResultItem[]): ProductListItem[] => {
-        return products.map((p) => {
-            const prices = p.variants
-                .map((v) => v.sku?.price)
-                .filter((price): price is number => typeof price === "number");
+    
 
-            const price = prices.length ? paiseToRupees(Math.min(...prices)) : null;
+    public checkActiveProduct = async (productId: string) => {
+        const product = await catalogRepository.existActiveProduct(productId);
+        
+        if (!product) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Product not found.");
+        }
 
-            return {
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                brand: p.brand,
-                description: p.description,
-                thumbnail: p.productImages[0] ?? null,
-                price,
-            };
-        });
+        return product;
     }
 }
 

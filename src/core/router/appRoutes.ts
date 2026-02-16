@@ -11,13 +11,14 @@ import brandRouter from "@mod/brand/brand.routes";
 import mediaRouter from "@mod/media/media.routes";
 import adminRouter from "@mod/admin/admin.routes";
 import userRouter from "@mod/users/user.routes";
+import addressRouter from "@mod/address/address.routes";
+import favoritesRouter from "@mod/favorites/favorites.routes";
+import wishlistRouter from "@mod/wishlist/wishlist.routes";
+
 
 import reviewRoutes from '@mod/reviews/reviews.routes'
-import favoriteRoutes from '@mod/favorites/favorites.routes';
-import saveForLaterRoutes from '@mod/save-for-later/saveForLater.routes';
 import cartRoutes from '@mod/cart/cart.routes';
 import checoutRoutes from '@mod/checkout/checkout.routes'
-import addressRoutes from '@mod/address/address.routes'
 import paymentRoutes from '@mod/payment/payment.routes';
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
@@ -40,14 +41,14 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/media`, mediaRouter);
     app.use(`${baseRouteUrl}/admin`, adminRouter);
     app.use(`${baseRouteUrl}/user`, userRouter);
+    app.use(`${baseRouteUrl}/address`, addressRouter);
+    app.use(`${baseRouteUrl}/favorite`, favoritesRouter);
+    app.use(`${baseRouteUrl}/wishlist`, wishlistRouter);
 
     // old routes
     app.use(`${baseRouteUrl}/review`, reviewRoutes)
-    app.use(`${baseRouteUrl}/favorite`, favoriteRoutes)
-    app.use(`${baseRouteUrl}/save-for-later`, saveForLaterRoutes)
     app.use(`${baseRouteUrl}/cart`, cartRoutes)
     app.use(`${baseRouteUrl}/checkout`, checoutRoutes)
-    app.use(`${baseRouteUrl}/address`, addressRoutes)
     app.use(`${baseRouteUrl}/payment`, paymentRoutes)
 
     // test routes

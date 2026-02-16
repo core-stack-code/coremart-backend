@@ -1,22 +1,29 @@
 import express from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import { validateRequest } from "../../middlewares/validate.middlewate";
-import { toggleFavoriteSchema } from "./favorites.schema";
-import { getFavoritesListController, toggleFavoriteController } from "./favorites.controller";
+import { favoriteListQuerySchema } from "./favorites.validator";
+import { favoritesController } from "./favorites.controller";
 
-const router = express.Router();
+import { authMiddleware } from "@api/middlewares/auth.middleware";
+import { validationMiddleware } from "@api/middlewares/validate.middlewate";
+import { asyncWrapper } from "@core/utils/asyncWrapper";
 
-router.post(
-    '/',
-    authMiddleware,
-    validateRequest(toggleFavoriteSchema),
-    toggleFavoriteController
-)
+const favoritesRouter = express.Router();
 
-router.get(
-    '/',
-    authMiddleware,
-    getFavoritesListController
-)
+favoritesRouter.use(authMiddleware());
 
-export default router;
+favoritesRouter.get(
+    "/",
+    validationMiddleware.validateQuery(favoriteListQuerySchema),
+    asyncWrapper(favoritesController.getFavoritesList)
+);
+
+favoritesRouter.post(
+    "/:productId",
+    asyncWrapper(favoritesController.addFavorite)
+);
+
+favoritesRouter.delete(
+    "/:productId",
+    asyncWrapper(favoritesController.removeFavorite)
+);
+
+export default favoritesRouter;

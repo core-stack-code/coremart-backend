@@ -33,7 +33,7 @@ class AddressService {
             await prisma.$transaction(async (tx) => {
                 await addressRepository.clearDefaultForUser(userId, tx);
 
-                const result = await addressRepository.update(userId, addressId, {
+                await addressRepository.update(userId, addressId, {
                     addressLine1: payload.addressLine1,
                     addressLine2: payload.addressLine2,
                     city: payload.city,
@@ -42,16 +42,12 @@ class AddressService {
                     country: payload.country,
                     isDefault: true,
                 }, tx);
-
-                if (!result) {
-                    throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
-                }
             });
 
             return;
         }
 
-        const result = await addressRepository.update(userId, addressId, {
+        await addressRepository.update(userId, addressId, {
             addressLine1: payload.addressLine1,
             addressLine2: payload.addressLine2,
             city: payload.city,
@@ -60,18 +56,10 @@ class AddressService {
             country: payload.country,
             isDefault: payload.isDefault,
         });
-
-        if (!result) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
-        }
     }
 
     public async handleDelete(userId: string, addressId: string) {
-        const result = await addressRepository.delete(userId, addressId);
-
-        if (!result) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Address not found.");
-        }
+        await addressRepository.delete(userId, addressId);
     }
 
     public async handleGetList(userId: string): Promise<AddressResultItem[]> {

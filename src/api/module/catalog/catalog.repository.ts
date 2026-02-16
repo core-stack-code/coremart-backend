@@ -27,66 +27,32 @@ class CatalogRepository {
         return await prisma.product.findUnique({
             where: { slug: productSlug, status: "ACTIVE" },
             include: {
-            brand: true,
-            productImages: true,
-            productCategories: {
-                include: {
-                    category: true
-                }
-            },
-            variants: {
-                include: {
-                    size: true,
-                    color: true,
-                    material: true,
-                    sku: true
+                brand: true,
+                productImages: true,
+                productCategories: {
+                    include: {
+                        category: true
+                    }
+                },
+                variants: {
+                    include: {
+                        size: true,
+                        color: true,
+                        material: true,
+                        sku: true
+                    }
                 }
             }
-        }
         })
     }
 
-    // public findCategoriesByProductId = async (productId: string) => {
-    //     return await prisma.productCategory.findMany({
-    //         where: { productId },
-    //         select: {
-    //             category: {
-    //                 select: {
-    //                     name: true,
-    //                     slug: true,
-    //                     isActive: true,
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
-
-    // public findProductVariantsByProductId = async (productId: string) => {
-    //     return await prisma.variant.findMany({
-    //         where: { productId },
-    //         select: {
-    //             size: { select: { name: true } },
-    //             color: { select: { name: true } },
-    //             material: { select: { name: true } },
-    //             sku: {
-    //                 select: {
-    //                     skuCode: true,
-    //                     price: true,
-    //                     stock: true,
-    //                     isActive: true,
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
-
-    public findProducts = async ( args: {
+    public findProducts = async (args: {
         where: Prisma.ProductWhereInput,
         orderBy: Prisma.ProductOrderByWithRelationInput,
         skip: number,
         take: number
-    }, tx: PrismaTx = prisma) => {
-        return await tx.product.findMany({
+    }) => {
+        return await prisma.product.findMany({
             where: args.where,
             orderBy: args.orderBy,
             skip: args.skip,
@@ -185,6 +151,35 @@ class CatalogRepository {
         skip: number,
         take: number
     }) {
+        const productSelect = {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            brand: {
+                select: {
+                    name: true,
+                    slug: true,
+                },
+            },
+            variants: {
+                where: {
+                    sku: { is: { isActive: true } },
+                },
+                select: {
+                    sku: { select: { price: true } },
+                },
+            },
+            productImages: {
+                where: { type: "THUMBNAIL" },
+                select: {
+                    url: true,
+                    altText: true,
+                },
+                take: 1,
+            },
+        } as const satisfies Prisma.ProductSelect;
+
         return await prisma.product.findMany({
             where: {
                 status: "ACTIVE",
@@ -202,34 +197,7 @@ class CatalogRepository {
             orderBy: args.orderBy,
             skip: args.skip,
             take: args.take,
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                description: true,
-                brand: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
-                },
-                variants: {
-                    where: {
-                        sku: { is: { isActive: true } },
-                    },
-                    select: {
-                        sku: { select: { price: true } },
-                    },
-                },
-                productImages: {
-                    where: { type: "THUMBNAIL" },
-                    select: {
-                        url: true,
-                        altText: true,
-                    },
-                    take: 1,
-                },
-            },
+            select: productSelect,
         })
     }
 
@@ -248,6 +216,16 @@ class CatalogRepository {
                     },
                 },
             },
+        });
+    }
+
+    public existActiveProduct = async (productId: string) => {
+        return await prisma.product.findFirstOrThrow({
+            where: {
+                id: productId,
+                status: "ACTIVE",
+            },
+            select: { id: true },
         });
     }
 }

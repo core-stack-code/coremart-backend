@@ -7,3 +7,14 @@ export const imageAltSchema = (name: string) => z.
     });
 
 export type ImageAltPayload = z.infer<ReturnType<typeof imageAltSchema>>;
+
+
+// pagination
+export const pageQuery = z.coerce.number().int().positive().default(1);
+
+export const limitQuery= (defaultLimit = 15, maxLimit = 50) => z
+    .coerce.number()
+    .int()
+    .positive()
+    .max(maxLimit, `Limit cannot exceed ${maxLimit}`)
+    .default(defaultLimit);

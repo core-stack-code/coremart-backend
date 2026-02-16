@@ -13,6 +13,7 @@ export type AddressResultItem = {
     isDefault: boolean;
 }
 
+
 class AddressRepository {
     public create = async (data: {
         userId: string;
@@ -22,8 +23,8 @@ class AddressRepository {
         state: string;
         postalCode: string;
         country: string;
-    }, tx: PrismaTx = prisma) => {
-        return await tx.userAddress.create({
+    }) => {
+        return await prisma.userAddress.create({
             data: {
                 id: getUuid(),
                 userId: data.userId,
@@ -37,7 +38,7 @@ class AddressRepository {
         });
     }
 
-    public update = async (id: string, data: {
+    public update = async (userId: string, id: string, data: {
         addressLine1?: string;
         addressLine2?: string | null;
         city?: string;
@@ -47,9 +48,7 @@ class AddressRepository {
         isDefault?: boolean;
     }, tx: PrismaTx = prisma) => {
         return await tx.userAddress.update({
-            where: {
-                id,
-            },
+            where: { id },
             data: {
                 addressLine1: data.addressLine1,
                 addressLine2: data.addressLine2,
@@ -59,47 +58,6 @@ class AddressRepository {
                 country: data.country,
                 isDefault: data.isDefault,
             }
-        });
-    }
-
-    public findById = async (id: string) => {
-        return await prisma.userAddress.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                userId: true,
-                addressLine1: true,
-                addressLine2: true,
-                city: true,
-                state: true,
-                postalCode: true,
-                country: true,
-                isDefault: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
-    }
-
-    public findByUserIdAndAddressId = async (userId: string, id: string) => {
-        return await prisma.userAddress.findFirst({
-            where: {
-                id,
-                userId,
-            },
-            select: {
-                id: true,
-                userId: true,
-                addressLine1: true,
-                addressLine2: true,
-                city: true,
-                state: true,
-                postalCode: true,
-                country: true,
-                isDefault: true,
-                createdAt: true,
-                updatedAt: true,
-            },
         });
     }
 
@@ -134,8 +92,8 @@ class AddressRepository {
         });
     }
 
-    public delete = async (userId: string, id: string, tx: PrismaTx = prisma) => {
-        return await tx.userAddress.delete({
+    public delete = async (userId: string, id: string) => {
+        return await prisma.userAddress.delete({
             where: { id, userId }
         });
     }

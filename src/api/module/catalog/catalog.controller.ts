@@ -7,8 +7,9 @@ import { AppResponse } from "@core/utils/response";
 class CatalogController {
     public async getProductDetail(req: Request, res: Response) {
         const productSlug = req.params.productSlug as string;
+        const userId = (req.user && !req.isGuest) ? req.user.id : null;
 
-        const productDetail = await catalogService.getProductDetail(productSlug);
+        const productDetail = await catalogService.getProductDetail(productSlug, userId);
 
         AppResponse(res, 200, {
             code: "OK",
@@ -19,8 +20,9 @@ class CatalogController {
 
     public async getProducts(req: Request, res: Response) {
         const query = req.localsQuery as ProductListQuery;
+        const userId = (req.user && !req.isGuest) ? req.user.id : null;
 
-        const result = await catalogService.getProducts(query);
+        const result = await catalogService.getProducts(query, userId);
 
         AppResponse(res, 200, {
             code: "OK",
@@ -54,10 +56,12 @@ class CatalogController {
     public async getProductsByCategory(req: Request, res: Response) {
         const categorySlug = req.params.categorySlug;
         const query = req.localsQuery as ProductsByCategoryQuery;
+        const userId = (req.user && !req.isGuest) ? req.user.id : null;
         
         const result = await catalogService.getProductsByCategorySlug(
             categorySlug,
-            query
+            query,
+            userId
         );
         
         AppResponse(res, 200, {

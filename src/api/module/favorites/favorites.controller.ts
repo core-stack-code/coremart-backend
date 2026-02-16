@@ -1,46 +1,45 @@
-import { NextFunction, Request, Response } from "express";
-import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
-import { Types } from "mongoose";
-import { getFavoritesList, toggleFavorite } from "./favorites.service";
-import { AppResponse } from "../../../core/utils/response";
+import { Request, Response } from "express";
+import { favoritesService } from "./favorites.service";
+import { FavoriteListQuery } from "./favorites.validator";
+import { AppResponse } from "@core/utils/response";
 
-export const toggleFavoriteController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
+class FavoritesController {
+    public async getFavoritesList(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const query = req.localsQuery as FavoriteListQuery;
 
-        const productId =  new Types.ObjectId(req.body.productId);
-        const userId = new Types.ObjectId(req.auth.userId);
-
-        await toggleFavorite(productId, userId);
+        const result = await favoritesService.getFavoritesList(userId, query);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Favorite updated successfully.',
-            data: null
+            message: "Favorites fetched successfully",
+            data: result,
         });
     }
-    catch (error) {
-        next(error);
+
+    public async addFavorite(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const { productId } = req.params;
+
+        await favoritesService.addFavorite(userId, productId);
+
+        AppResponse(res, 201, {
+            code: "CREATED",
+            message: "Product added to favorites successfully",
+        });
     }
-}
 
-export const getFavoritesListController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
+    public async removeFavorite(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const { productId } = req.params;
 
-        const userId = new Types.ObjectId(req.auth.userId);
-        const favorites = await getFavoritesList(userId);
+        await favoritesService.removeFavorite(userId, productId);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Favorites list fetched successfully.',
-            data: {
-                favorites
-            }
+            message: "Product removed from favorites successfully",
         });
-    } catch (error) {
-        next(error);
     }
 }
+
+export const favoritesController = new FavoritesController();

@@ -1,3 +1,4 @@
+import { limitQuery, pageQuery } from "@core/validator/common.validator";
 import { z } from "zod";
 
 const PRODUCT_SORT_BY = {
@@ -31,8 +32,8 @@ const multiValueString = z
 
 
 export const productListQuerySchema = z.object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(50).default(12),
+    page: pageQuery,
+    limit: limitQuery(12, 50),
 
     size: multiValueString,
     color: multiValueString,
@@ -55,8 +56,8 @@ export const productListQuerySchema = z.object({
 })
 
 export const productsByCategoryQuerySchema = z.object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(50).default(12),
+    page: pageQuery,
+    limit: limitQuery(12, 50),
     sortBy: z.enum(productSortByValues).optional(),
 });
 

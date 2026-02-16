@@ -8,14 +8,6 @@ export const generateSkuCode = (productSlug: string, size: string, color: string
     ].join('-')
 }
 
-export function rupeesToPaise(value: number): number {
-    return Math.round(value * 100);
-}
-
-export function paiseToRupees(value: number): number {
-    return Number((value / 100).toFixed(2));
-}
-
 
 
 function productSlugToCode(slug: string): string {

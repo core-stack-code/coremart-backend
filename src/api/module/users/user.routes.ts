@@ -1,21 +1,22 @@
 import express from 'express';
-import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { userController } from './user.controller';
-import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { updateUserSchema } from './user.validator';
+
+import { validationMiddleware } from '@api/middlewares/validate.middlewate';
+import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 const userRouter = express.Router();
 
 userRouter.get(
     '/profile',
-    authMiddleware(),
+    authMiddleware({ requireEmailVerified: false }),
     asyncWrapper(userController.getProfile)
 )
 
 userRouter.patch(
-    '/profile',
-    authMiddleware(),
+    '/',
+    authMiddleware({ requireEmailVerified: false }),
     validationMiddleware.validateRequest(updateUserSchema),
     asyncWrapper(userController.updateProfile)
 )

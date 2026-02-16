@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
 import { getCart } from "../cart/cart.service";
-import { getAddressById } from "../address/address.service";
+// import { getAddressById } from "../address/address.service";
 import { createOrder } from "../order/order.service";
 
 import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
@@ -22,7 +22,7 @@ export const checkoutController = async (req: Request, res: Response, next: Next
         // const userId = new Types.ObjectId(req.auth.userId)
         const userId = new Types.ObjectId("6831d8c6b6181a5ec08620dc");
 
-        const address = await getAddressById(addressId);
+        // const address = await getAddressById(addressId);
         // log.info("address", address);
 
         const cart = await getCart(userId);
@@ -31,16 +31,16 @@ export const checkoutController = async (req: Request, res: Response, next: Next
         // const check = await validateProductStocks(cart)
         // log.info("stock validation", check);
 
-        const order = await createOrder(userId, cart, address);
+        // const order = await createOrder(userId, cart, address);
         // log.info("order created", order);
 
-        const response = await cashfreeCreateOrder(order);
+        // const response = await cashfreeCreateOrder(order);
 
         AppResponse(res, 200, {
             code: "OK",
             message: 'Checkout successful.',
             data: {
-                response,
+                // response,
             }
         });
     }

@@ -301,7 +301,7 @@ model WishList {
   updatedAt     DateTime       @updatedAt
   wishListItems WishListItem[]
 
-  @@unique([userId])
+  @@index([userId])
 }
 
 model WishListItem {
@@ -309,6 +309,7 @@ model WishListItem {
   wishList   WishList @relation(fields: [wishListId], references: [id], onDelete: Cascade)
   productId  String   @db.Uuid
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
   @@unique([wishListId, productId])
   @@index([wishListId])

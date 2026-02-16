@@ -1,46 +1,66 @@
-import { fetchUserSavedProducts } from "../../utils/dbUtils";
-import { ProductLean  } from "../product/products.model";
-import { ProductWithFav } from "../product/products.types";
-import { Favorites } from "./favorites.model";
-import { Types } from "mongoose";
+import { favoritesRepository } from "./favorites.repository";
+import { FavoriteListQuery } from "./favorites.validator";
 
-export const getFavoritesFromProducts = async (products: ProductLean[], userId: string): Promise<ProductWithFav[]> => {
-    const productsIds = products.map(product => product._id);
+import { ProductListApiResponse, ProductListResultItem } from "@core/types/product";
+import { formatProductListItem } from "@core/utils/product.helper";
+import { catalogService } from "@mod/catalog/catalog.service";
 
-    const favorites = await Favorites.find({
-        productId: { $in: productsIds }, 
-        userId
-    }).select('productId').lean();
 
-    const favoriteSet = new Set(favorites.map(fav => fav.productId.toString()));
+class FavoritesService {
+    public async getFavoritesList(
+        userId: string,
+        query: FavoriteListQuery
+    ): Promise<ProductListApiResponse> {
 
-    const productsWithFav = products.map((p) => {
+        const skip = (query.page - 1) * query.limit;
+        const take = query.limit;
+
+        const favoriteResults = await favoritesRepository.findFavoriteProducts(
+            userId,
+            skip,
+            take,
+        );
+
+        const products: ProductListResultItem[] = favoriteResults.map(fav => fav.product);
+
+        const total = await favoritesRepository.countFavoriteProducts(userId);
+
+        const formattedProducts = formatProductListItem(products, true);
+        const totalPages = Math.ceil(total / query.limit);
+
         return {
-            ...p,
-            isFav: favoriteSet.has(p._id.toString()),
+            products: formattedProducts,
+            pagination: {
+                page: query.page,
+                limit: query.limit,
+                totalPages,
+                totalItems: total,
+                isPrevPage: query.page > 1,
+                isNextPage: query.page < totalPages,
+            },
         };
-    });
-
-    return productsWithFav;
-}
-
-export const getFavoritesByProductId = async (productId: Types.ObjectId, userId: Types.ObjectId): Promise<boolean> => {
-    const favorite = await Favorites.findOne({ productId, userId }).lean();
-    return !!favorite;
-}
-
-
-export const getFavoritesList = async (userId: Types.ObjectId) => {
-    return await fetchUserSavedProducts(Favorites, userId);
-}
-
-
-export const toggleFavorite = async (productId: Types.ObjectId, userId: Types.ObjectId) => {
-    const existing = await Favorites.findOne({ productId, userId });
-
-    if (existing) {
-        await Favorites.deleteOne({ _id: existing._id });
-    } else {
-        await Favorites.create({ productId, userId });
     }
-};
+
+    public async addFavorite(userId: string, productId: string): Promise<void> {
+        await catalogService.checkActiveProduct(productId);
+
+        await favoritesRepository.addFavorite({
+            userId,
+            productId,
+        });
+    }
+
+    public async removeFavorite(userId: string, productId: string): Promise<void> {
+        await favoritesRepository.removeFavorite(userId, productId);
+    }
+
+    public async findFavoriteProducts(userId: string, productIds: string[]) {
+        const favorites = await favoritesRepository.findByUserAndProductIds(userId, productIds);
+
+        const favoriteProductSet = new Set(favorites.map(fav => fav.productId));
+
+        return favoriteProductSet;
+    }
+}
+
+export const favoritesService = new FavoritesService();

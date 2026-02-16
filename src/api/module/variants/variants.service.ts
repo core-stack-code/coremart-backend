@@ -2,10 +2,11 @@ import {
     CreateProductSkuPayload, CreateProductVariantPayload, UpdateProductSkuPayload, VariantImagePayload
 } from "./variants.validator";
 import { variantsRepository } from "./variants.repository";
+import { generateSkuCode } from "./variants.utils";
 
 import { attributesService } from "@mod/attributes/attributes.service";
 import { productRepository } from "@mod/product/product.repository";
-import { generateSkuCode, paiseToRupees, rupeesToPaise } from "./variants.utils";
+import { paiseToRupees, rupeesToPaise } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
 
 

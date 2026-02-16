@@ -8,5 +8,6 @@ declare module "express-serve-static-core" {
       localsQuery?: any;
       user?: User;
       admin?: Omit<Admin, 'password' | 'passwordVersion' | 'refreshToken'>;
+      isGuest?: boolean;
     }
 }

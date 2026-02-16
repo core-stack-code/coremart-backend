@@ -12,21 +12,21 @@ import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
-import { detectClient } from '@api/middlewares/detectClient.middleware';
+import { identityMiddleware } from '@api/middlewares/identity.middleware';
 import { changePasswordZodSchema } from '@core/validator/password.validator';
 
 const authRouter = express.Router();
 
 authRouter.post(
     '/login',
-    detectClient,
+    identityMiddleware.detectClient,
     validationMiddleware.validateRequest(loginZodSchema),
     asyncWrapper(authController.login)
 );
 
 authRouter.post(
     '/signup',
-    detectClient,
+    identityMiddleware.detectClient,
     validationMiddleware.validateRequest(signupZodSchema),
     asyncWrapper(authController.signup)
 );
@@ -47,7 +47,7 @@ authRouter.post(
 
 authRouter.post(
     '/refresh-token',
-    detectClient,
+    identityMiddleware.detectClient,
     asyncWrapper(authController.refreshTokens)
 )
 

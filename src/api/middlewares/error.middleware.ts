@@ -27,6 +27,11 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
         code = "CONFLICT"
         message = 'Data already exists.';
     }
+    else if (err.code === "P2003") {
+        status = 400;
+        code = "BAD_REQUEST"
+        message = 'Foreign key constraint failed.';
+    }
     else if (err.code === "P2025") {
         status = 404;
         code = "RESOURCE_NOT_FOUND"

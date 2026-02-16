@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ProductStatus } from "generated/prisma/enums";
-import { imageAltSchema } from "@core/validator/common.validator";
+import { imageAltSchema, limitQuery, pageQuery } from "@core/validator/common.validator";
 
 const productStatusEnum: ProductStatus[] = [
     "ACTIVE", "ARCHIVED", "DRAFT"
@@ -58,8 +58,8 @@ export const updateProductSchema = z.object({
 
 
 export const productListQuerySchema = z.object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(50).default(15),
+    page: pageQuery,
+    limit: limitQuery(),
 });
 
 
