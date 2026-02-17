@@ -1,42 +1,38 @@
 import express from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import { addToCartController, clearCartController, deleteItemFromCartController, getCartController, removFromCartController } from "./cart.controller";
-import { commonCartPoductSchema } from "./cart.schema";
-import { validateRequest } from "../../middlewares/validate.middlewate";
+import { cartController } from "./cart.controller";
+import { updateCartItemSchema } from "./cart.validator";
 
-const router = express.Router()
+import { authMiddleware } from "@api/middlewares/auth.middleware";
+import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 
-router.get(
+const cartRouter = express.Router();
+
+cartRouter.use(authMiddleware());
+
+cartRouter.post(
+    '/:skuId',
+    cartController.addToCart
+)
+
+cartRouter.get(
     '/',
-    authMiddleware,
-    getCartController
+    cartController.getCart
 )
 
-router.post(
-    '/items',
-    authMiddleware,
-    validateRequest(commonCartPoductSchema),
-    addToCartController
+cartRouter.patch(
+    "/:skuId",
+    validationMiddleware.validateRequest(updateCartItemSchema),
+    cartController.updateCart
 )
 
-router.patch(
-    '/items',
-    authMiddleware,
-    validateRequest(commonCartPoductSchema),
-    removFromCartController
+cartRouter.delete(
+    "/",
+    cartController.clearCart
 )
 
-router.delete(
-    '/items',
-    authMiddleware,
-    validateRequest(commonCartPoductSchema),
-    deleteItemFromCartController
+cartRouter.delete(
+    '/:skuId',
+    cartController.removeFromCart
 )
 
-router.delete(
-    '/',
-    authMiddleware,
-    clearCartController
-)
-
-export default router;
+export default cartRouter;

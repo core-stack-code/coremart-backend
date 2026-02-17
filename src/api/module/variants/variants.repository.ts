@@ -1,4 +1,4 @@
-import { prisma } from "@core/config/prisma";
+import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
 
 
@@ -114,6 +114,24 @@ class VariantsRepository {
                 stock: data.stock,
                 isActive: data.isActive,
             },
+        });
+    }
+
+    public async findActiveSku(skuId: string, tx: PrismaTx = prisma) {
+        return await tx.sKU.findFirst({
+            where: { 
+                id: skuId,
+                isActive: true,
+                variant: {
+                    product: {
+                        status: "ACTIVE"
+                    }
+                }
+            },
+            select: {
+                id: true,
+                stock: true
+            }
         });
     }
 }

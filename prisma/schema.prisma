@@ -22,6 +22,7 @@ model User {
   userAddresses       UserAddress[]
   favoriteProducts    FavoriteProduct[]
   wishLists           WishList[]
+  cart                Cart?
 }
 
 model OAuthAccount {
@@ -185,15 +186,16 @@ model Material {
 }
 
 model SKU {
-  id        String   @id @db.Uuid
-  variantId String   @unique @db.Uuid
-  variant   Variant  @relation(fields: [variantId], references: [id])
-  skuCode   String   @unique
+  id        String     @id @db.Uuid
+  variantId String     @unique @db.Uuid
+  variant   Variant    @relation(fields: [variantId], references: [id])
+  skuCode   String     @unique
   price     Int
   stock     Int
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  cartItems CartItem[]
 }
 
 model Category {
@@ -313,4 +315,23 @@ model WishListItem {
 
   @@unique([wishListId, productId])
   @@index([wishListId])
+}
+
+model Cart {
+  id        String     @id @db.Uuid
+  userId    String     @unique @db.Uuid
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  cartId   String @db.Uuid
+  cart     Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  skuId    String @db.Uuid
+  sku      SKU    @relation(fields: [skuId], references: [id])
+  quantity Int    @default(1)
+
+  @@id([cartId, skuId])
 }

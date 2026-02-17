@@ -1,108 +1,69 @@
-import { NextFunction, Request, Response } from "express";
-import { assertAuth, assertLoggedIn } from "../../utils/assertAuth";
-import { addToCart, clearCart, deleteItemFromCart, getCart, removFromCart } from "./cart.service";
-import { Types } from "mongoose";
-import { AppResponse } from "../../../core/utils/response";
-
-export const getCartController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
-
-        const cart = await getCart(new Types.ObjectId(req.auth.userId));
-
-        AppResponse(res, 200, {
-           code: "OK",
-            message: 'Cart fetched successfully.',
-            data: {
-                cart
-            }
-        });
-    }
-    catch (error) {
-        next(error);
-    }
-}
+import { Request, Response } from "express";
+import { cartService } from "./cart.service";
+import { UpdateCartItemPayload } from "./cart.validator";
+import { AppResponse } from "@core/utils/response";
 
 
-export const addToCartController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
+class CartController {
+    public async addToCart(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const skuId = req.params.skuId;
 
-        const userId = new Types.ObjectId(req.auth.userId)
-        const productId = new Types.ObjectId(req.body.productId as string)
-
-        await addToCart(userId, productId);
+        await cartService.addToCart(userId, skuId);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Product add to cart successfully.',
-        });
+            message: "Product added to cart successfully",
+        })
     }
-    catch (error) {
-        next(error);
-    }
-}
 
+    public async getCart(req: Request, res: Response) {
+        const userId = req.user!.id;
 
-export const removFromCartController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
-
-        const userId = new Types.ObjectId(req.auth.userId)
-        const productId = new Types.ObjectId(req.body.productId as string)
-
-        await removFromCart(userId, productId);
+        const cart = await cartService.getCartData(userId);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Product remove from cart successfully.',
-        });
+            message: "Cart retrieved successfully",
+            data: cart,
+        })
     }
-    catch (error) {
-        next(error);
-    }
-}
 
+    public async removeFromCart(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const skuId = req.params.skuId;
 
-export const deleteItemFromCartController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
-
-        const userId = new Types.ObjectId(req.auth.userId)
-        const productId = new Types.ObjectId(req.body.productId as string)
-
-        await deleteItemFromCart(userId, productId);
+        await cartService.removeFromCart(userId, skuId);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Product deleted from cart successfully.',
-        });
+            message: "Product removed from cart successfully",
+        })
     }
-    catch (error) {
-        next(error);
-    }
-}
 
+    public async updateCart(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const skuId = req.params.skuId;
+        const payload = req.body as UpdateCartItemPayload;
 
-export const clearCartController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        assertAuth(req.auth);
-        assertLoggedIn(req.auth);
-
-        const userId = new Types.ObjectId(req.auth.userId)
-
-        await clearCart(userId);
+        await cartService.updateCartItems(userId, skuId, payload);
 
         AppResponse(res, 200, {
             code: "OK",
-            message: 'Cart clear successfully.',
-        });
+            message: "Cart updated successfully",
+        })
     }
-    catch (error) {
-        next(error);
+
+    public async clearCart(req: Request, res: Response) {
+        const userId = req.user!.id;
+
+        await cartService.clearCart(userId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Cart cleared successfully",
+        })
     }
 }
+
+export const cartController = new CartController();

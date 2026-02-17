@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
-import { getCart } from "../cart/cart.service";
+// import { getCart } from "../cart/cart.service";
 // import { getAddressById } from "../address/address.service";
 import { createOrder } from "../order/order.service";
 
@@ -25,7 +25,7 @@ export const checkoutController = async (req: Request, res: Response, next: Next
         // const address = await getAddressById(addressId);
         // log.info("address", address);
 
-        const cart = await getCart(userId);
+        // const cart = await getCart(userId);
         // log.info("cart", cart);
 
         // const check = await validateProductStocks(cart)

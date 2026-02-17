@@ -14,10 +14,9 @@ import userRouter from "@mod/users/user.routes";
 import addressRouter from "@mod/address/address.routes";
 import favoritesRouter from "@mod/favorites/favorites.routes";
 import wishlistRouter from "@mod/wishlist/wishlist.routes";
-
+import cartRouter from "@mod/cart/cart.routes";
 
 import reviewRoutes from '@mod/reviews/reviews.routes'
-import cartRoutes from '@mod/cart/cart.routes';
 import checoutRoutes from '@mod/checkout/checkout.routes'
 import paymentRoutes from '@mod/payment/payment.routes';
 
@@ -32,22 +31,26 @@ const baseRouteUrl = `${baseUrl}/${version}`;
 export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/auth`, authRoutes);
     app.use(`${baseRouteUrl}/oauth`, oauthRouter);
+
     app.use(`${baseRouteUrl}/attributes`, attributesRouter);
     app.use(`${baseRouteUrl}/category`, categoryRouter);
     app.use(`${baseRouteUrl}/product`, productRouter);
     app.use(`${baseRouteUrl}/variants`, variantsRouter);
-    app.use(`${baseRouteUrl}/catalog`, catalogRouter);
     app.use(`${baseRouteUrl}/brand`, brandRouter);
-    app.use(`${baseRouteUrl}/media`, mediaRouter);
+    
+    app.use(`${baseRouteUrl}/catalog`, catalogRouter);
+
     app.use(`${baseRouteUrl}/admin`, adminRouter);
+    app.use(`${baseRouteUrl}/media`, mediaRouter);
+
     app.use(`${baseRouteUrl}/user`, userRouter);
     app.use(`${baseRouteUrl}/address`, addressRouter);
     app.use(`${baseRouteUrl}/favorite`, favoritesRouter);
     app.use(`${baseRouteUrl}/wishlist`, wishlistRouter);
+    app.use(`${baseRouteUrl}/cart`, cartRouter);
 
     // old routes
     app.use(`${baseRouteUrl}/review`, reviewRoutes)
-    app.use(`${baseRouteUrl}/cart`, cartRoutes)
     app.use(`${baseRouteUrl}/checkout`, checoutRoutes)
     app.use(`${baseRouteUrl}/payment`, paymentRoutes)
 

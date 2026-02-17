@@ -12,7 +12,7 @@ export type ProductListItem = {
     thumbnail: {
         url: string;
         altText: string | null;
-    };
+    } | null;
     price: number | null;
     isFavorite?: boolean;
 }
@@ -30,4 +30,29 @@ export type ProductListResultItem = {
     brand: { name: string; slug: string } | null;
     variants: Array<{ sku: { price: number } | null }>;
     productImages: Array<{ url: string; altText: string | null }>;
+}
+
+export type ProductCartItem = {
+    skuId: string;
+    quantity: number;
+    price: number;
+    product: {
+        id: string;
+        name: string;
+        slug: string;
+        brand: {
+            name: string;
+            slug: string;
+        } | null;
+        thumbnail: {
+            url: string;
+            altText: string | null;
+        } | null;
+    },
+    variant : {
+        id: string;
+        size: string,
+        color: string,
+        material: string,
+    }
 }
