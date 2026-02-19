@@ -15,14 +15,10 @@ import addressRouter from "@mod/address/address.routes";
 import favoritesRouter from "@mod/favorites/favorites.routes";
 import wishlistRouter from "@mod/wishlist/wishlist.routes";
 import cartRouter from "@mod/cart/cart.routes";
-
-import reviewRoutes from '@mod/reviews/reviews.routes'
-import checoutRoutes from '@mod/checkout/checkout.routes'
-import paymentRoutes from '@mod/payment/payment.routes';
+import orderRouter from "@mod/order/order.routes";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { appConfig } from "@/core/config/app.config";
-
 
 const { baseUrl, version } = appConfig;
 const baseRouteUrl = `${baseUrl}/${version}`;
@@ -49,10 +45,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/wishlist`, wishlistRouter);
     app.use(`${baseRouteUrl}/cart`, cartRouter);
 
-    // old routes
-    app.use(`${baseRouteUrl}/review`, reviewRoutes)
-    app.use(`${baseRouteUrl}/checkout`, checoutRoutes)
-    app.use(`${baseRouteUrl}/payment`, paymentRoutes)
+    app.use(`${baseRouteUrl}/order`, orderRouter);
 
     // test routes
     app.get(`${baseRouteUrl}/test`, (req: Request, res: Response) => {

@@ -23,6 +23,7 @@ model User {
   favoriteProducts    FavoriteProduct[]
   wishLists           WishList[]
   cart                Cart?
+  orders              Order[]
 }
 
 model OAuthAccount {
@@ -334,4 +335,95 @@ model CartItem {
   quantity Int    @default(1)
 
   @@id([cartId, skuId])
+}
+
+model Order {
+  id              String           @id @db.Uuid
+  userId          String           @db.Uuid
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  totalAmount     Int
+  status          OrderStatus      @default(PENDING)
+  currency        String
+  confirmedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  orderItems      OrderItem[]
+  payments        Payment[]
+  customerDetails CustomerDetails?
+
+  @@index([userId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  FAILED
+}
+
+model OrderItem {
+  id          String @id @db.Uuid
+  orderId     String @db.Uuid
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  skuId       String @db.Uuid
+  productId   String @db.Uuid
+  productName String
+  productSlug String
+  size        String
+  color       String
+  material    String
+  price       Int
+  quantity    Int
+  totalPrice  Int
+
+  @@index([productId])
+  @@index([skuId])
+  @@index([orderId])
+}
+
+model Payment {
+  id               String        @id @db.Uuid
+  orderId          String        @db.Uuid
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount           Int
+  cfStatus         PaymentStatus @default(ACTIVE)
+  cfOrderId        String?       @unique
+  orderCreatedAt   DateTime?
+  paymentSessionId String?       @unique
+  webhookPayload   Json?
+  createdAt        DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([cfOrderId])
+  @@index([paymentSessionId])
+}
+
+enum PaymentStatus {
+  ACTIVE
+  PAID
+  EXPIRED
+  CANCELLED
+}
+
+model CustomerDetails {
+  id      String  @id @db.Uuid
+  orderId String  @unique @db.Uuid
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  email   String
+  name    String
+  note    String?
+  mobile  String
+
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
 }

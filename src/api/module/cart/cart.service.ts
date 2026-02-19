@@ -140,7 +140,7 @@ class CartService {
     }
 
 
-    private async checkCart(userId: string, tx: PrismaTx) {
+    public async checkCart(userId: string, tx: PrismaTx = prisma) {
         const cart = await cartRepository.findCartByUserId(userId, tx);
     
         if (!cart) {

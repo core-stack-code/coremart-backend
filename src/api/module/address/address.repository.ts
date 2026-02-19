@@ -1,5 +1,8 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
+import { CreateAddressPayload } from "./address.validator";
+import { UserAddressCreateInput, UserAddressUpdateInput } from "generated/prisma/models";
+import { ShippingAddress } from "@mod/order/order.repository";
 
 export type AddressResultItem = {
     id: string;
@@ -23,8 +26,8 @@ class AddressRepository {
         state: string;
         postalCode: string;
         country: string;
-    }) => {
-        return await prisma.userAddress.create({
+    }, tx: PrismaTx = prisma) => {
+        return await tx.userAddress.create({
             data: {
                 id: getUuid(),
                 userId: data.userId,
@@ -79,8 +82,8 @@ class AddressRepository {
         });
     }
 
-    public count = async (userId: string): Promise<number> => {
-        return await prisma.userAddress.count({
+    public count = async (userId: string, tx: PrismaTx = prisma): Promise<number> => {
+        return await tx.userAddress.count({
             where: { userId },
         });
     }
@@ -96,6 +99,25 @@ class AddressRepository {
         return await prisma.userAddress.delete({
             where: { id, userId }
         });
+    }
+
+    public findOne = async (
+        userId: string, addressId: string, tx: PrismaTx = prisma
+    ): Promise<ShippingAddress | null>  => {
+        return await tx.userAddress.findUnique({
+            where : {
+                id: addressId,
+                userId
+            },
+            select: {
+                addressLine1: true,
+                addressLine2: true,
+                city: true,
+                country: true,
+                postalCode: true,
+                state: true,
+            }
+        })
     }
 }
 

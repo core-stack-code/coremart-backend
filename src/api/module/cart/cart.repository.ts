@@ -66,8 +66,8 @@ class CartRepository {
         });
     }
 
-    public async findCartItems(userId: string) {
-        return await prisma.cartItem.findMany({
+    public async findCartItems(userId: string, tx: PrismaTx = prisma) {
+        return await tx.cartItem.findMany({
             where: {
                 cart: { userId },
                 sku: {

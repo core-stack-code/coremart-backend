@@ -134,6 +134,25 @@ class VariantsRepository {
             }
         });
     }
+
+    public async findActiveSkus(skuIds: string[], tx: PrismaTx = prisma) {
+        return await tx.sKU.findMany({
+            where: { 
+                id: { in: skuIds },
+                isActive: true,
+                variant: {
+                    product: {
+                        status: "ACTIVE"
+                    }
+                }
+            },
+            select: {
+                id: true,
+                stock: true,
+                price: true,
+            }
+        });
+    }
 }
 
 export const variantsRepository = new VariantsRepository();

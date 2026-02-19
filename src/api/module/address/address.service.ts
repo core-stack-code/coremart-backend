@@ -3,7 +3,8 @@ import { AppError } from "@core/utils/response";
 import { addressRepository, AddressResultItem } from "./address.repository";
 import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
 
-const MAX_ADDRESS_COUNT = 3;
+export const MAX_ADDRESS_COUNT = 3;
+
 
 class AddressService {
     public async handleCreate(userId: string, payload: CreateAddressPayload) {
