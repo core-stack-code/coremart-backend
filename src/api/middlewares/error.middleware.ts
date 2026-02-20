@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusType } from '@/core/constants/httpStatusCode';
-import { clearAuthCookies } from '@core/utils/cookies.helper';
+// import { clearAuthCookies } from '@core/utils/cookies.helper';
 import { AppError, errorResponse } from '@core/utils/response';
 
 import { log } from '../utils/log';
@@ -54,9 +54,9 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     log.error('Error data:', err.code);
 
-    if (status === 401) {
-        clearAuthCookies(res);
-    }
+    // if (status === 401) {
+    //     clearAuthCookies(res);
+    // }
 
     errorResponse(res, status, { code, message });
 };

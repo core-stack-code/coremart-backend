@@ -15,7 +15,7 @@ export type CashFreeCreateOrderPayload = {
 }
 
 export type CashFreeCreateOrderResponse = {
-    cf_order_id: number;
+    cf_order_id: string ;
     order_id: string;
     order_amount: number;
     order_currency: string;

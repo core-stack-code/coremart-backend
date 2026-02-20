@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { orderService } from "./order.service";
-import { CheckoutPayload } from "./order.validator";
+import { CheckoutPayload, OrderListQuery } from "./order.validator";
 import { AppError, AppResponse } from "@core/utils/response";
+import { log } from "@api/utils/log";
 
 
 class OrderController {
@@ -21,6 +22,8 @@ class OrderController {
     public async paymentWebhook(req: Request, res: Response) {
         const rawBody = (req as any).rawBody;
 
+        log.info("Received payment webhook with body:", rawBody);
+
         const signature = req.headers["x-webhook-signature"];
         const timestamp = req.headers["x-webhook-timestamp"];
 
@@ -33,6 +36,19 @@ class OrderController {
         AppResponse(res, 200, {
             code: "OK",
             message: "Webhook received successfully",
+        });
+    }
+
+    public async getOrders(req: Request, res: Response) {
+        const user = req.user!;
+        const query = req.localsQuery as OrderListQuery;
+
+        const result = await orderService.orderList(user.id, query);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Orders retrieved successfully",
+            data: result
         });
     }
 }

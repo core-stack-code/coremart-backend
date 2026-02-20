@@ -52,7 +52,7 @@ export default function appRoutes(app: Application) {
         res.json({ message: 'I am just a guy who is hero for fun!'});
     });
 
-    app.get(`${baseRouteUrl}/protected_test`, authMiddleware(), (req: Request, res: Response) => {
+    app.get(`${baseRouteUrl}/protected-test`, authMiddleware(), (req: Request, res: Response) => {
         res.send({ message: 'This is a protected route, you are authenticated!' });
     })
 }

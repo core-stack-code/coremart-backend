@@ -150,7 +150,7 @@ class CartService {
         return cart;
     }
 
-    private async checkSku(skuId: string, tx: PrismaTx) {
+    public async checkSku(skuId: string, tx: PrismaTx) {
         const sku = await variantsRepository.findActiveSku(skuId, tx);
 
         if (!sku) {

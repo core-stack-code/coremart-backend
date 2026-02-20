@@ -1,9 +1,7 @@
 import { prisma } from "@core/config/prisma";
 import { AppError } from "@core/utils/response";
-import { addressRepository, AddressResultItem } from "./address.repository";
+import { addressRepository, AddressResultItem, MAX_ADDRESS_COUNT } from "./address.repository";
 import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
-
-export const MAX_ADDRESS_COUNT = 3;
 
 
 class AddressService {

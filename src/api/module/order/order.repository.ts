@@ -1,9 +1,7 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
-import { CheckoutPayload } from "./order.validator";
-import { CreateAddressPayload } from "@mod/address/address.validator";
 import { PaymentStatus } from "generated/prisma/enums";
-import { OrderUpdateInput, PaymentUpdateInput } from "generated/prisma/models";
+import { OrderOrderByWithRelationInput, OrderUpdateInput, OrderWhereInput, PaymentUpdateInput } from "generated/prisma/models";
 
 export type OrderItem = {
     skuId: string;
@@ -126,6 +124,43 @@ class OrderRepository {
             where: { cfOrderId },
             data,
         });
+    }
+
+    public async findOrderList(args: {
+        where: OrderWhereInput
+        orderBy: OrderOrderByWithRelationInput,
+        skip: number,
+        take: number,
+    }) {
+        return prisma.order.findMany({
+            where: args.where,
+            orderBy: args.orderBy,
+            skip: args.skip,
+            take: args.take,
+            select: {
+                id: true,
+                totalAmount: true,
+                currency: true,
+                confirmedAt: true,
+                status: true,
+                createdAt: true,
+                payments: {
+                    select: {
+                        cfStatus: true,
+                        amount: true,
+                    }
+                },
+                _count: {
+                    select: {
+                        orderItems: true,
+                    }
+                }
+            }
+        })
+    }
+
+    public async countOrders(where: OrderWhereInput) {
+        return prisma.order.count({ where });
     }
 }
 

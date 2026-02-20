@@ -2,17 +2,19 @@ import { prisma, PrismaTx } from "@core/config/prisma";
 import { Order, OrderStatus, User } from "generated/prisma/client";
 
 import { OrderItem, orderRepository, ShippingAddress } from "./order.repository";
-import { CheckoutPayload } from "./order.validator";
-
+import { CheckoutPayload, OrderListQuery } from "./order.validator";
 import { cartService } from "@mod/cart/cart.service";
 import { cartRepository } from "@mod/cart/cart.repository";
 import { variantsRepository } from "@mod/variants/variants.repository";
-import { addressRepository } from "@mod/address/address.repository";
-import { MAX_ADDRESS_COUNT } from "@mod/address/address.service";
+import { addressRepository, MAX_ADDRESS_COUNT } from "@mod/address/address.repository";
+
 import { createCashfreeOrder } from "@core/integrations/cashfree/cashfree.client";
 import { CashFreeCreateOrderResponse, CashfreePaymentWebhookPayload } from "@core/integrations/cashfree/type";
 import { verifyCashFreeWebhookSignature } from "@core/integrations/cashfree/cashfree.client";
+import { paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
+import { OrderOrderByWithRelationInput, OrderWhereInput } from "generated/prisma/models";
+import { PaginationType } from "@core/types/common";
 
 
 class OrderService {
@@ -30,28 +32,14 @@ class OrderService {
         return { paymentSessionId: response.payment_session_id };
     }
 
-    public async handleWebhook(rawBody: any, signature: string, timestamp: string) {
-        const isValid = verifyCashFreeWebhookSignature(rawBody, signature, timestamp);
-
-        if (!isValid) {
-            throw new AppError(400, "BAD_REQUEST", "Invalid webhook signature");
-        }
-
-        const payload = JSON.parse(rawBody) as CashfreePaymentWebhookPayload;
-
-        if (!payload.data.order) {
-            return;
-        }
-
-        await this.updatePaymentStatus(payload.data.order, payload.data.payment);
-    }
-
-
-
     private async createOrder(user: User, payload: CheckoutPayload, tx: PrismaTx = prisma) {
         await cartService.checkCart(user.id, tx);
 
         const cartItemsResult = await cartRepository.findCartItems(user.id, tx);
+
+        if (cartItemsResult.length === 0) {
+            throw new AppError(400, "BAD_REQUEST", "Cart is empty");
+        }
 
         const skuIds = cartItemsResult.map(item => item.sku.id);
         const activeSkus = await variantsRepository.findActiveSkus(skuIds, tx);
@@ -167,7 +155,7 @@ class OrderService {
     }) {
         const result = await createCashfreeOrder({
             order_id: order.id,
-            order_amount: order.totalAmount,
+            order_amount: paiseToRupees(order.totalAmount),
             order_currency: order.currency,
             customer_details: {
                 customer_id: order.userId,
@@ -194,10 +182,36 @@ class OrderService {
         return payment;
     }
 
-    private async updatePaymentStatus(
-        orderData: CashfreePaymentWebhookPayload["data"]["order"],
-        paymentData: CashfreePaymentWebhookPayload["data"]["payment"]
-    ) {
+
+    public async handleWebhook(rawBody: any, signature: string, timestamp: string) {
+        const isValid = verifyCashFreeWebhookSignature(rawBody, signature, timestamp);
+
+        if (!isValid) {
+            throw new AppError(400, "BAD_REQUEST", "Invalid webhook signature");
+        }
+
+        const payload = JSON.parse(rawBody) as CashfreePaymentWebhookPayload;
+
+        if (!payload.data.order) {
+            return;
+        }
+
+        await this.updatePaymentAndOrder(rawBody);
+    }
+
+    private async updatePaymentAndOrder(rawBody: any) {
+        const payload = JSON.parse(rawBody) as CashfreePaymentWebhookPayload;
+
+        if (!payload.data.order) {
+            throw new AppError(400, "BAD_REQUEST", "Invalid webhook payload: missing order data");
+        }
+
+        const { 
+            order: orderData,
+            payment: paymentData,
+            payment_gateway_details: gatewayDetails,
+        } = payload.data;
+
         await prisma.$transaction(async (tx) => {
             const order = await orderRepository.findOrderById(orderData.order_id, tx);
     
@@ -212,13 +226,74 @@ class OrderService {
                         ? "FAILED" : "PENDING";
     
             await orderRepository.updateOrder(order.id, {
-                status: newStatus
+                status: newStatus,
+                confirmedAt: newStatus === "CONFIRMED" ? paymentData.payment_time : undefined,
             }, tx);
 
-            await orderRepository.updatePayment(paymentData.cf_payment_id, {
-                cfStatus: paymentData.payment_status as any,
+            await orderRepository.updatePayment(gatewayDetails.gateway_order_id, {
+                webhookPayload: rawBody,
             }, tx);
+
+            if (newStatus === "CONFIRMED") {
+                const cart = await cartService.checkCart(order.userId, tx);
+                await cartRepository.clearCart(cart.id, tx);
+            }
         });
+    }
+
+    public async orderList(userId: string, query: OrderListQuery) {
+        const skip = (query.page - 1) * query.limit;
+        const take = query.limit;
+
+        const where: OrderWhereInput = {
+            userId,
+            status: query.status,
+        }
+
+        const orderBy: OrderOrderByWithRelationInput = {
+            createdAt: query.sort === "NEW_FIRST" ? "desc" : "asc",
+        };
+
+        const orderResult = await orderRepository.findOrderList({
+            where,
+            orderBy,
+            skip,
+            take,
+        });
+
+        const total = await orderRepository.countOrders(where);
+
+
+        const orders = orderResult.map(order => {
+            const payments = order.payments.map(payment => ({
+                stuatu: payment.cfStatus,
+                amount: payment.amount
+            }))
+
+            return {
+                id: order.id,
+                totalAmount: order.totalAmount,
+                currency: order.currency,
+                status: order.status,
+                confirmedAt: order.confirmedAt,
+                createdAt: order.createdAt,
+                itemCount: order._count.orderItems,
+                payments
+            }
+        });
+
+        const totalPages = Math.ceil(total / query.limit);
+
+        const pagination: PaginationType = {
+            page: query.page,
+            limit: query.limit,
+            totalPages,
+            totalItems: total,
+            isPrevPage: query.page > 1,
+            isNextPage: query.page < totalPages,
+        }
+        
+        return { orders, pagination };
     }
 }
 

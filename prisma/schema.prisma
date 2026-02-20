@@ -360,7 +360,6 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
-  FAILED
 }
 
 model OrderItem {
@@ -389,9 +388,9 @@ model Payment {
   order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   amount           Int
   cfStatus         PaymentStatus @default(ACTIVE)
-  cfOrderId        String?       @unique
-  orderCreatedAt   DateTime?
-  paymentSessionId String?       @unique
+  cfOrderId        String        @unique
+  orderCreatedAt   DateTime
+  paymentSessionId String        @unique
   webhookPayload   Json?
   createdAt        DateTime      @default(now())
 
@@ -404,7 +403,6 @@ enum PaymentStatus {
   ACTIVE
   PAID
   EXPIRED
-  CANCELLED
 }
 
 model CustomerDetails {

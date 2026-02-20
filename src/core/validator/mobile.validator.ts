@@ -1,9 +1,13 @@
 import z from "zod";
-import { isValidPhoneNumber } from "libphonenumber-js";
+import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js";
 
 export const mobileSchema = z
     .string()
     .transform(str => str.trim())
     .refine(val => {
-        return isValidPhoneNumber(val);
-    }, { message: "Invalid mobile number" });
+        return isValidPhoneNumber(val, 'IN');
+    }, { message: "Invalid Indian mobile number" })
+    .transform(val => {
+        const phoneNumber = parsePhoneNumberFromString(val, 'IN');
+        return phoneNumber!.format('E.164');
+    });

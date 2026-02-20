@@ -1,8 +1,8 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
-import { CreateAddressPayload } from "./address.validator";
-import { UserAddressCreateInput, UserAddressUpdateInput } from "generated/prisma/models";
 import { ShippingAddress } from "@mod/order/order.repository";
+
+export const MAX_ADDRESS_COUNT = 3;
 
 export type AddressResultItem = {
     id: string;

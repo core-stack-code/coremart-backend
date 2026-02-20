@@ -30,6 +30,7 @@ export const createCashfreeOrder = async (data: CashFreeCreateOrderPayload) => {
 
     try {
         const res = await axios.post<CashFreeCreateOrderResponse>(URL, body, { headers });
+        log.info("Cashfree order created successfully:", res.data);
         return res.data;
     }
     catch (e: any) {
