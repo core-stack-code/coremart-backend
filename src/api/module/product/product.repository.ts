@@ -76,6 +76,8 @@ class ProductRepository {
         slug?: string;
         description?: string;
         status?: ProductStatus;
+        rating?: number;
+        totalReviews?: number;
     }, tx: PrismaTx = prisma) => {
         return await tx.product.update({
             where: { id },

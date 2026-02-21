@@ -1,3 +1,4 @@
+import { NumberFoundLegacy } from "libphonenumber-js";
 import { PaginationType } from "./common";
 
 export type ProductListItem = {
@@ -15,6 +16,8 @@ export type ProductListItem = {
     } | null;
     price: number | null;
     isFavorite?: boolean;
+    rating: number;
+    totalReviews: number;
 }
 
 export type ProductListApiResponse = {
@@ -27,6 +30,8 @@ export type ProductListResultItem = {
     id: string;
     slug: string;
     description: string;
+    rating: number;
+    totalReviews: number;
     brand: { name: string; slug: string } | null;
     variants: Array<{ sku: { price: number } | null }>;
     productImages: Array<{ url: string; altText: string | null }>;

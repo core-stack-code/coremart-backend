@@ -89,6 +89,8 @@ class WishlistRepository {
                         name: true,
                         slug: true,
                         description: true,
+                        rating: true,
+                        totalReviews: true,
                         brand: {
                             select: {
                                 name: true,

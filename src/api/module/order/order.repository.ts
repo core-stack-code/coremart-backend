@@ -234,6 +234,24 @@ class OrderRepository {
             where: { orderId },
         });
     }
+
+    public async findProductFromUserOrders(userId: string, productId: string, tx: PrismaTx = prisma) {
+        return await tx.orderItem.findFirst({
+            where: {
+                productId,
+                order: {
+                    userId,
+                    status: "DELIVERED",
+                },
+                product: {
+                    status: "ACTIVE",
+                }
+            },
+            include: {
+                product: true
+            }
+        });
+    }
 }
 
 export const orderRepository = new OrderRepository();

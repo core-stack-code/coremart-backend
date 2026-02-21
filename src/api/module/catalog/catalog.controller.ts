@@ -70,6 +70,18 @@ class CatalogController {
             data: result
         })
     }
+
+    public async getProductReviews(req: Request, res: Response) {
+        const productSlug = req.params.productSlug;
+
+        const reviews = await catalogService.getProductReviews(productSlug);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Product reviews fetched successfully",
+            data: reviews
+        })
+    }
 }
 
 export const catalogController = new CatalogController();

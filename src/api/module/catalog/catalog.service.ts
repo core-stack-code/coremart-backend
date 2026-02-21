@@ -18,7 +18,6 @@ type ProductVariantWithSKU = {
 }
 
 
-
 class CatalogService {
     public getProductDetail = async (productSlug: string, userId: string | null) => {
         const productResult = await catalogRepository.findProductBySlug(productSlug);
@@ -70,6 +69,13 @@ class CatalogService {
             isFavorite = !!favoriteProduct;
         }
 
+        const ratingBreakdown = await catalogRepository.getRatingBreakdown(productResult.id);
+        
+        const breakdown: Record<number, number> = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+        ratingBreakdown.forEach(r => {
+            breakdown[r.rating] = r._count.rating;
+        });
+        
         return {
             product: {
                 name: productResult.name,
@@ -94,6 +100,11 @@ class CatalogService {
                 materials: Array.from(materials),
             },
             variants,
+            review: {
+                averageRating: productResult.rating,
+                totalReviews: productResult.totalReviews,
+                breakdown: breakdown,
+            }
         };
     }
 
@@ -132,7 +143,6 @@ class CatalogService {
 
         const formattedProducts = formatProductListItem(products, favoriteSet);
         const totalPages = Math.ceil(total / query.limit);
-
 
         return {
             products: formattedProducts,
@@ -370,6 +380,18 @@ class CatalogService {
         }
 
         return product;
+    }
+
+    public getProductReviews = async (productSlug: string) => {
+        const reviews = await catalogRepository.findProductReviews(productSlug);
+
+        return reviews.map(review => ({
+            id: review.id,
+            rating: review.rating,
+            comment: review.comment,
+            createdAt: review.createdAt,
+            userName: review.user.name,
+        }));
     }
 }
 

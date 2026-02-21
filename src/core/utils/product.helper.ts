@@ -30,6 +30,8 @@ export const formatProductListItem = (
             description: p.description,
             thumbnail: p.productImages[0] ?? null,
             price,
+            rating: p.rating,
+            totalReviews: p.totalReviews,
         };
 
         return addIsFavorite ? { ...product, isFavorite } : product;

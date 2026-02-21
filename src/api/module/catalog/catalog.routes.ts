@@ -38,4 +38,10 @@ catalogRouter.get(
     asyncWrapper(catalogController.getProductsByCategory)
 )
 
+catalogRouter.get(
+    "/reviews/product/:productSlug",
+    authMiddleware({ isGuestRoute: true }),
+    asyncWrapper(catalogController.getProductReviews)
+)
+
 export default catalogRouter;

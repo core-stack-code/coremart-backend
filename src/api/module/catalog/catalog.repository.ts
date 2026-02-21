@@ -62,6 +62,8 @@ class CatalogRepository {
                 name: true,
                 slug: true,
                 description: true,
+                rating: true,
+                totalReviews: true,
                 brand: {
                     select: {
                         name: true,
@@ -156,6 +158,8 @@ class CatalogRepository {
             name: true,
             slug: true,
             description: true,
+            rating: true,
+            totalReviews: true,
             brand: {
                 select: {
                     name: true,
@@ -226,6 +230,33 @@ class CatalogRepository {
                 status: "ACTIVE",
             },
             select: { id: true },
+        });
+    }
+
+    public findProductReviews = async (productSlug: string) => {
+        return await prisma.review.findMany({
+            where: { 
+                product: { slug: productSlug, status: "ACTIVE" },
+            },
+            select: {
+                id: true,
+                rating: true,
+                comment: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        name: true,
+                    }
+                }
+            }
+        });
+    }
+
+    public async getRatingBreakdown(productId: string) {
+        return await prisma.review.groupBy({
+            by: ["rating"],
+            where: { productId },
+            _count: { rating: true }
         });
     }
 }

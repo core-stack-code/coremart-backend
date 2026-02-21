@@ -20,6 +20,8 @@ class FavoritesRepository {
                         name: true,
                         slug: true,
                         description: true,
+                        rating: true,
+                        totalReviews: true,
                         brand: {
                             select: {
                                 name: true,
