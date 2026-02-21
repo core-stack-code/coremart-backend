@@ -360,6 +360,7 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+  EXPIRED
 }
 
 model OrderItem {
@@ -387,6 +388,7 @@ model Payment {
   orderId          String        @db.Uuid
   order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   amount           Int
+  orderUid         String        @unique @db.Uuid
   cfStatus         PaymentStatus @default(ACTIVE)
   cfOrderId        String        @unique
   orderCreatedAt   DateTime
@@ -395,6 +397,7 @@ model Payment {
   createdAt        DateTime      @default(now())
 
   @@index([orderId])
+  @@index([orderUid])
   @@index([cfOrderId])
   @@index([paymentSessionId])
 }

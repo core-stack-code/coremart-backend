@@ -6,7 +6,7 @@ import { OrderStatus } from "generated/prisma/enums";
 
 
 const statusEnum: OrderStatus[] = [
-    "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED", "FAILED"
+    "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED", "EXPIRED"
 ] as const;
 
 const sortEnum = ["NEW_FIRST", "OLD_FIRST"] as const;

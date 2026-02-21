@@ -7,10 +7,12 @@ import { sessionService } from "@mod/session/session.service";
 
 import { env } from "@core/config/env";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
-import { exchangeGitHubCode, exchangeGoogleCode, fetchGithubProfile, fetchGoogleProfile, GITHUB_OAUTH, GOOGLE_OAUTH, OauthLoginData } from "./oauth.utils";
+import { OauthLoginData } from "./oauth.utils";
 import { getUuid } from "@core/utils/db.helper";
 import { getState, encryptLinkingState, decryptLinkingState } from "@core/lib/crypto";
 import { AppError } from "@core/utils/response";
+import { exchangeGoogleCode, fetchGoogleProfile, GOOGLE_OAUTH } from "@core/integrations/oauth/google.client";
+import { exchangeGitHubCode, fetchGithubProfile, GITHUB_OAUTH } from "@core/integrations/oauth/github.client";
 
 type QyeryParam = string | QueryString.ParsedQs | (string | QueryString.ParsedQs)[] | undefined
 

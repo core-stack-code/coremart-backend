@@ -1,5 +1,5 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
-import { Order, OrderStatus, User } from "generated/prisma/client";
+import { Order, User } from "generated/prisma/client";
 
 import { OrderItem, orderRepository, ShippingAddress } from "./order.repository";
 import { CheckoutPayload, OrderListQuery } from "./order.validator";
@@ -11,10 +11,16 @@ import { addressRepository, MAX_ADDRESS_COUNT } from "@mod/address/address.repos
 import { createCashfreeOrder } from "@core/integrations/cashfree/cashfree.client";
 import { CashFreeCreateOrderResponse, CashfreePaymentWebhookPayload } from "@core/integrations/cashfree/type";
 import { verifyCashFreeWebhookSignature } from "@core/integrations/cashfree/cashfree.client";
-import { paiseToRupees } from "@core/utils/product.helper";
+import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
-import { OrderOrderByWithRelationInput, OrderWhereInput } from "generated/prisma/models";
+import { OrderOrderByWithRelationInput, OrderWhereInput, ProductWhereInput } from "generated/prisma/models";
 import { PaginationType } from "@core/types/common";
+import { getUuid } from "@core/utils/db.helper";
+import { catalogRepository } from "@mod/catalog/catalog.repository";
+
+const ORDER_EXPIERY_TIME = 60 * 60 * 1000; // 60 minutes
+
+type ItemQuantityMap = Map<string, { quantity: number }>;
 
 
 class OrderService {
@@ -23,7 +29,7 @@ class OrderService {
             return await this.createOrder(user, payload, tx);
         });
 
-        const response = await this.cashfreeCreateOrder(order, customer);
+        const response = await this.cashfreeCreateOrder(order, user.id,customer);
 
         await prisma.$transaction(async (tx) => {
             await this.createPayment(order.id, response, tx);
@@ -42,20 +48,11 @@ class OrderService {
         }
 
         const skuIds = cartItemsResult.map(item => item.sku.id);
-        const activeSkus = await variantsRepository.findActiveSkus(skuIds, tx);
+        const cartItemsMap = new Map(cartItemsResult.map(item => [item.sku.id, {
+            quantity: item.quantity,
+        }]));
 
-        if (activeSkus.length !== skuIds.length) {
-            throw new AppError(400, "BAD_REQUEST", "Some items in the cart are no longer available");
-        }
-        
-        const isInvalidStock = activeSkus.some(sku => {
-            const cartItem = cartItemsResult.find(item => item.sku.id === sku.id);
-            return cartItem ? cartItem.quantity > sku.stock : false;
-        });
-
-        if (isInvalidStock) {
-            throw new AppError(400, "BAD_REQUEST", "Some items in the cart exceed available stock");
-        }
+        await this.checkSkuStocks(skuIds, cartItemsMap, tx);
 
         let totalAmount = 0;
 
@@ -148,51 +145,12 @@ class OrderService {
         };
     }
 
-    private async cashfreeCreateOrder(order: Order, customer : {
-        name: string;
-        email: string;
-        mobile: string
-    }) {
-        const result = await createCashfreeOrder({
-            order_id: order.id,
-            order_amount: paiseToRupees(order.totalAmount),
-            order_currency: order.currency,
-            customer_details: {
-                customer_id: order.userId,
-                customer_name: customer.name,
-                customer_phone: customer.mobile,
-            },
-            order_meta: {
-                return_url: ""
-            }
-        })
-
-        return result;
-    }
-
-    private async createPayment(orderId: string, paymentData: CashFreeCreateOrderResponse, tx: PrismaTx = prisma) {
-        const payment = await orderRepository.createPayment(orderId, {
-            amount: paymentData.order_amount,
-            cfStatus: paymentData.order_status,
-            cfOrderId: paymentData.cf_order_id.toString(),
-            orderCreatedAt: paymentData.created_at,
-            paymentSessionId: paymentData.payment_session_id,
-        }, tx);
-
-        return payment;
-    }
-
 
     public async handleWebhook(rawBody: any, signature: string, timestamp: string) {
         const isValid = verifyCashFreeWebhookSignature(rawBody, signature, timestamp);
 
         if (!isValid) {
-            throw new AppError(400, "BAD_REQUEST", "Invalid webhook signature");
-        }
-
-        const payload = JSON.parse(rawBody) as CashfreePaymentWebhookPayload;
-
-        if (!payload.data.order) {
+            // Invalid webhook signature
             return;
         }
 
@@ -203,43 +161,61 @@ class OrderService {
         const payload = JSON.parse(rawBody) as CashfreePaymentWebhookPayload;
 
         if (!payload.data.order) {
-            throw new AppError(400, "BAD_REQUEST", "Invalid webhook payload: missing order data");
+            // Invalid webhook payload: missing data
+            return;
         }
 
         const { 
             order: orderData,
             payment: paymentData,
-            payment_gateway_details: gatewayDetails,
         } = payload.data;
 
         await prisma.$transaction(async (tx) => {
-            const order = await orderRepository.findOrderById(orderData.order_id, tx);
+            const data = await orderRepository.findOrderAndPayment(orderData.order_id, tx);
     
-            if (!order) {
-                throw new AppError(404, "RESOURCE_NOT_FOUND", "Order not found for the given order ID");
+            if (!data) {
+                // Order Or Payment not found for the given order ID
+                return;
             }
-    
-            const newStatus: OrderStatus = 
-                paymentData.payment_status === "SUCCESS" 
-                    ? "CONFIRMED"
-                    : paymentData.payment_status === "FAILED"
-                        ? "FAILED" : "PENDING";
-    
-            await orderRepository.updateOrder(order.id, {
-                status: newStatus,
-                confirmedAt: newStatus === "CONFIRMED" ? paymentData.payment_time : undefined,
-            }, tx);
 
-            await orderRepository.updatePayment(gatewayDetails.gateway_order_id, {
+            const { order, ...rest } = data;
+            const payment = rest;
+
+            if (payment.cfStatus !== "ACTIVE") {
+                return;
+            }
+
+            const isPaymentSuccess = paymentData.payment_status === "SUCCESS"
+
+            await orderRepository.updatePayment(payment.id, {
                 webhookPayload: rawBody,
+                cfStatus: isPaymentSuccess ? "PAID" : "EXPIRED",
             }, tx);
 
-            if (newStatus === "CONFIRMED") {
-                const cart = await cartService.checkCart(order.userId, tx);
-                await cartRepository.clearCart(cart.id, tx);
+            if (!isPaymentSuccess) {
+                // Payment failed, do not update order status or clear cart or change stock
+                return;
             }
+
+            const updatedOrderResult = await orderRepository.updateManyOrder(order.id, {
+                status: "CONFIRMED",
+                confirmedAt: new Date(paymentData.payment_time),
+            }, tx);
+
+            const wasConfirmedNow = updatedOrderResult.count === 1;
+
+            if (!wasConfirmedNow) {
+                // Order was already confirmed or cancelled, do not clear cart or change stock
+                return;
+            }
+
+            const cart = await cartService.checkCart(order.userId, tx);
+            await cartRepository.clearCart(cart.id, tx);
+
+            // const orderItems = await orderRepository.findOrderItems(order.id, tx);
         });
     }
+
 
     public async orderList(userId: string, query: OrderListQuery) {
         const skip = (query.page - 1) * query.limit;
@@ -294,6 +270,162 @@ class OrderService {
         }
         
         return { orders, pagination };
+    }
+
+
+    public async orderDetails(userId: string, orderId: string) {
+        const order = await orderRepository.findOrderDetails(orderId);
+
+        if (!order || order.userId !== userId) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Order not found");
+        }
+
+        const productIds = order.orderItems.map(item => item.productId);
+
+        const productWhere: ProductWhereInput = {
+            id: { in: productIds },
+            status: "ACTIVE",
+        }
+
+        const products = await catalogRepository.findProducts({
+            where: productWhere,
+            orderBy: { createdAt: "desc" },
+            skip: 0,
+            take: productIds.length,
+        })
+
+        const formattedProducts = formatProductListItem(products, false, false);
+
+        const productMap = new Map(formattedProducts.map(p => [p.id, p]));
+
+        const { orderItems, ...orderDetails } = order;
+
+        const formatedOrderItems = orderItems.map(item => {
+            const product = productMap.get(item.productId);
+
+            return {
+                ...item,
+                price: paiseToRupees(item.price),
+                brand: product?.brand ?? null,
+                thumbnail: product?.thumbnail ?? null,
+                description: product?.description ?? null,
+            }
+        });
+
+        return { ...orderDetails, orderItems: formatedOrderItems };
+    }
+
+
+    public async retryPayment(userId: string, orderId: string) {
+        const { order, customer } = await prisma.$transaction(async (tx) => {
+            const order = await orderRepository.findOrder(orderId, tx);
+    
+            if (!order || order.userId !== userId) {
+                throw new AppError(404, "RESOURCE_NOT_FOUND", "Order not found");
+            }
+    
+            if (order.status !== "PENDING") {
+                throw new AppError(400, "BAD_REQUEST", "Order has already been processed or completed, cannot retry payment");
+            }
+    
+            if (new Date().getTime() - order.createdAt.getTime() > ORDER_EXPIERY_TIME) {
+                await orderRepository.updateManyOrder(order.id, {
+                    status: "EXPIRED"
+                }, tx);
+    
+                throw new AppError(400, "BAD_REQUEST", "Order has expired, cannot retry payment");
+            }
+    
+            const orderItems = await orderRepository.findOrderItems(order.id, tx);
+            
+            const skuIds = orderItems.map(item => item.skuId);
+            const orderItemsMap: ItemQuantityMap = new Map(orderItems.map(item => [item.skuId, {
+                quantity: item.quantity,
+            }]));
+    
+            await this.checkSkuStocks(skuIds, orderItemsMap, tx);
+            
+            const customerDetails = await orderRepository.findCustomerDetails(order.id, tx);
+    
+            if (!customerDetails) {
+                throw new AppError(404, "RESOURCE_NOT_FOUND", "Customer details not found for the order");
+            }
+
+            return {
+                order,
+                customer : {
+                    name: customerDetails.name,
+                    email: customerDetails.email,
+                    mobile: customerDetails.mobile,
+                }
+            }
+        });
+
+        const result = await this.cashfreeCreateOrder(order, userId, {
+            name: customer.name,
+            email: customer.email,
+            mobile: customer.mobile,
+        });
+
+        await prisma.$transaction(async (tx) => {
+            await this.createPayment(order.id, result, tx);
+        });
+
+        return { paymentSessionId: result.payment_session_id };
+    }
+
+
+    private async checkSkuStocks(skuIds: string[], items: ItemQuantityMap, tx: PrismaTx) {
+        const activeSkus = await variantsRepository.findActiveSkus(skuIds, tx);
+
+        if (activeSkus.length !== skuIds.length) {
+            throw new AppError(400, "BAD_REQUEST", "Some items in the order are no longer available");
+        }
+
+        const isInvalidStock = activeSkus.some(sku => {
+            const item = items.get(sku.id);
+            return item ? item.quantity > sku.stock : false;
+        });
+
+        if (isInvalidStock) {
+            throw new AppError(400, "BAD_REQUEST", "Some items in the order exceed available stock");
+        }
+    }
+
+    private async cashfreeCreateOrder(order: Order, userId: string, customer : {
+        name: string;
+        email: string;
+        mobile: string
+    }) {
+        const result = await createCashfreeOrder({
+            order_id: getUuid(),
+            order_amount: paiseToRupees(order.totalAmount),
+            order_currency: order.currency,
+            customer_details: {
+                customer_name: customer.name,
+                customer_phone: customer.mobile,
+                customer_id: userId,
+            },
+            order_meta: {
+                // TODO: will add frontend url later
+                return_url: ""
+            }
+        })
+
+        return result;
+    }
+
+    private async createPayment(orderId: string, paymentData: CashFreeCreateOrderResponse, tx: PrismaTx = prisma) {
+        const payment = await orderRepository.createPayment(orderId, {
+            orderUid: paymentData.order_id,
+            amount: paymentData.order_amount,
+            cfStatus: paymentData.order_status,
+            cfOrderId: paymentData.cf_order_id.toString(),
+            orderCreatedAt: paymentData.created_at,
+            paymentSessionId: paymentData.payment_session_id,
+        }, tx);
+
+        return payment;
     }
 }
 

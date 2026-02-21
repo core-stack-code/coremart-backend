@@ -87,6 +87,7 @@ class OrderRepository {
     }
 
     public async createPayment(orderId: string, data: {
+        orderUid: string;
         amount: number;
         cfStatus: PaymentStatus;
         cfOrderId: string;
@@ -97,6 +98,7 @@ class OrderRepository {
             data: {
                 id: getUuid(),
                 orderId,
+                orderUid: data.orderUid,
                 amount: data.amount,
                 cfStatus: data.cfStatus,
                 cfOrderId: data.cfOrderId,
@@ -106,22 +108,25 @@ class OrderRepository {
         });
     }
 
-    public async findOrderById(orderId: string, tx: PrismaTx = prisma) {
-        return await tx.order.findUnique({
-            where: { id: orderId },
+    public async findOrderAndPayment(orderUid: string, tx: PrismaTx = prisma) {
+        return await tx.payment.findUnique({
+            where: { orderUid },
+            include: {
+                order: true
+            }
         });
     }
 
-    public async updateOrder(orderId: string, data: OrderUpdateInput ,tx: PrismaTx = prisma) {
-        return await tx.order.update({
-            where: { id: orderId },
+    public async updateManyOrder(orderId: string, data: OrderUpdateInput ,tx: PrismaTx = prisma) {
+        return await tx.order.updateMany({
+            where: { id: orderId, status: "PENDING" },
             data,
         });
     }
 
-    public async updatePayment(cfOrderId: string, data: PaymentUpdateInput ,tx: PrismaTx = prisma) {
+    public async updatePayment(id: string, data: PaymentUpdateInput ,tx: PrismaTx = prisma) {
         return await tx.payment.update({
-            where: { cfOrderId },
+            where: { id },
             data,
         });
     }
@@ -161,6 +166,73 @@ class OrderRepository {
 
     public async countOrders(where: OrderWhereInput) {
         return prisma.order.count({ where });
+    }
+
+    public async findOrderDetails(orderId: string, tx: PrismaTx = prisma) {
+        return await tx.order.findUnique({
+            where: { id: orderId },
+            select: {
+                id: true,
+                totalAmount: true,
+                currency: true,
+                status: true,
+                confirmedAt: true,
+                userId: true,
+                createdAt: true,
+                customerDetails: {
+                    select: {
+                        name: true,
+                        email: true,
+                        mobile: true,
+                        note: true,
+                        addressLine1: true,
+                        addressLine2: true,
+                        city: true,
+                        state: true,
+                        postalCode: true,
+                        country: true
+                    }
+                },
+                orderItems : {
+                    select : {
+                        productId :true,
+                        productName :true, 
+                        productSlug :true, 
+                        size :true, 
+                        color :true, 
+                        material :true, 
+                        price :true, 
+                        quantity :true, 
+                        totalPrice:true,
+                    }
+                },
+                payments : {
+                    select : {
+                        amount:true,
+                        cfStatus:true,
+                        orderCreatedAt:true,
+                    }
+                }
+            }
+        });
+    }
+
+    public async findOrder(orderId: string, tx: PrismaTx = prisma) {
+        return await tx.order.findUnique({
+            where: { id: orderId },
+        });
+    }
+
+    public async findOrderItems(orderId: string, tx: PrismaTx = prisma) {
+        return await tx.orderItem.findMany({
+            where: { orderId },
+        });
+    }
+
+    public async findCustomerDetails(orderId: string, tx: PrismaTx = prisma) {
+        return await tx.customerDetails.findUnique({
+            where: { orderId },
+        });
     }
 }
 

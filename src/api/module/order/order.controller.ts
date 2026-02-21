@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { orderService } from "./order.service";
 import { CheckoutPayload, OrderListQuery } from "./order.validator";
-import { AppError, AppResponse } from "@core/utils/response";
+import { AppResponse } from "@core/utils/response";
 import { log } from "@api/utils/log";
 
 
@@ -28,7 +28,8 @@ class OrderController {
         const timestamp = req.headers["x-webhook-timestamp"];
 
         if (!signature || typeof signature !== "string" || !timestamp || typeof timestamp !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Missing webhook signature or timestamp");
+            // Missing webhook signature or timestamp
+            return
         }
 
         await orderService.handleWebhook(rawBody, signature, timestamp);
@@ -40,14 +41,40 @@ class OrderController {
     }
 
     public async getOrders(req: Request, res: Response) {
-        const user = req.user!;
+        const userId = req.user!.id;
         const query = req.localsQuery as OrderListQuery;
 
-        const result = await orderService.orderList(user.id, query);
+        const result = await orderService.orderList(userId, query);
 
         AppResponse(res, 200, {
             code: "OK",
             message: "Orders retrieved successfully",
+            data: result
+        });
+    }
+
+    public async getOrderDetails(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const orderId = req.params.orderId;
+
+        const result = await orderService.orderDetails(userId, orderId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Order details retrieved successfully",
+            data: result
+        });
+    }
+
+    public async retryPayment(req: Request, res: Response) {
+        const userId = req.user!.id;
+        const orderId = req.params.orderId;
+
+        const result = await orderService.retryPayment(userId, orderId);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Payment retry initiated successfully",
             data: result
         });
     }

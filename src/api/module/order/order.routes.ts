@@ -22,6 +22,18 @@ orderRouter.get(
     asyncWrapper(orderController.getOrders)
 )
 
+orderRouter.get(
+    "/:orderId",
+    authMiddleware(),
+    asyncWrapper(orderController.getOrderDetails)
+)
+
+orderRouter.post(
+    "/:orderId/retry-payment",
+    authMiddleware(),
+    asyncWrapper(orderController.retryPayment)
+)
+
 orderRouter.post(
     "/cashfree/webhook",
     asyncWrapper(orderController.paymentWebhook)
