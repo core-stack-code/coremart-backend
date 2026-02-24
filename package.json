@@ -27,7 +27,6 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.12.37",
-    "mongoose": "^8.14.1",
     "morgan": "^1.10.0",
     "qs": "^6.14.1",
     "resend": "^4.5.1",

@@ -1,6 +1,6 @@
 import { ProductSelect } from "generated/prisma/models"
 
-export const ProductDbList: ProductSelect = {
+export const ProductDbList = {
     id: true,
     name: true,
     slug: true,
@@ -14,6 +14,9 @@ export const ProductDbList: ProductSelect = {
         },
     },
     variants: {
+        where: {
+            sku: { is: { isActive: true } },
+        },
         select: {
             imageUrl: true,
             sku: { select: { price: true } },
@@ -27,4 +30,4 @@ export const ProductDbList: ProductSelect = {
         },
         take: 1,
     },
-}
+} as const satisfies ProductSelect

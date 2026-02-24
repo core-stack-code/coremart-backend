@@ -1,4 +1,5 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
+import { ProductDbList } from "@core/types/product.db";
 
 
 class FavoritesRepository {
@@ -15,34 +16,7 @@ class FavoritesRepository {
             take,
             select: {
                 product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true,
-                        description: true,
-                        rating: true,
-                        totalReviews: true,
-                        brand: {
-                            select: {
-                                name: true,
-                                slug: true,
-                            },
-                        },
-                        variants: {
-                            select: {
-                                imageUrl: true,
-                                sku: { select: { price: true } },
-                            },
-                        },
-                        productImages: {
-                            where: { type: "THUMBNAIL" },
-                            select: {
-                                url: true,
-                                altText: true,
-                            },
-                            take: 1,
-                        },
-                    },
+                    select: ProductDbList,
                 },
             },
         });

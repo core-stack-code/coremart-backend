@@ -116,6 +116,7 @@ model Product {
   wishListItems     WishListItem[]
   reviews           Review[]
   orderItems        OrderItem[]
+  discountProducts  DiscountProduct[]
 }
 
 enum ProductStatus {
@@ -205,17 +206,18 @@ model SKU {
 }
 
 model Category {
-  id                String            @id @db.Uuid
-  name              String
-  slug              String            @unique
-  parentId          String?           @db.Uuid
-  parent            Category?         @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children          Category[]        @relation("CategoryToCategory")
-  isActive          Boolean           @default(true)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  productCategories ProductCategory[]
-  categoryImages    CategoryImage[]
+  id                 String             @id @db.Uuid
+  name               String
+  slug               String             @unique
+  parentId           String?            @db.Uuid
+  parent             Category?          @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children           Category[]         @relation("CategoryToCategory")
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  productCategories  ProductCategory[]
+  categoryImages     CategoryImage[]
+  discountCategories DiscountCategory[]
 
   @@unique([parentId, name])
 }
@@ -350,6 +352,9 @@ model Order {
   status          OrderStatus      @default(PENDING)
   currency        String
   confirmedAt     DateTime?
+  discountAmount  Int              @default(0)
+  discountId      String?          @db.Uuid
+  discount        Discount?        @relation(fields: [discountId], references: [id])
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   orderItems      OrderItem[]
@@ -449,4 +454,53 @@ model Review {
   @@index([userId])
   @@index([productId])
   @@index([userId, productId])
+}
+
+model Discount {
+  id                 String             @id @db.Uuid
+  name               String
+  type               DiscountType
+  benefitType        BenefitType
+  benefitValue       Int
+  code               String?            @unique
+  maxDiscount        Int?
+  minOrderAmount     Int?
+  usageLimit         Int?
+  usedCount          Int                @default(0)
+  startsAt           DateTime?
+  endsAt             DateTime?
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  discountProducts   DiscountProduct[]
+  discountCategories DiscountCategory[]
+  orders             Order[]
+}
+
+enum DiscountType {
+  AUTOMATIC
+  COUPON
+}
+
+enum BenefitType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model DiscountProduct {
+  discountId String   @db.Uuid
+  productId  String   @db.Uuid
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([discountId, productId])
+}
+
+model DiscountCategory {
+  discountId String   @db.Uuid
+  categoryId String   @db.Uuid
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([discountId, categoryId])
 }

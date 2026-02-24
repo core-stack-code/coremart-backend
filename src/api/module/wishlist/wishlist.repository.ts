@@ -2,6 +2,7 @@
 import { prisma } from "@core/config/prisma";
 import { Prisma } from "generated/prisma/client";
 import { getUuid } from "@core/utils/db.helper";
+import { ProductDbList } from "@core/types/product.db";
 
 
 class WishlistRepository {
@@ -84,34 +85,7 @@ class WishlistRepository {
             orderBy: { createdAt: "desc" },
             select: {
                 product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true,
-                        description: true,
-                        rating: true,
-                        totalReviews: true,
-                        brand: {
-                            select: {
-                                name: true,
-                                slug: true,
-                            },
-                        },
-                        variants: {
-                            select: {
-                                imageUrl: true,
-                                sku: { select: { price: true } },
-                            },
-                        },
-                        productImages: {
-                            where: { type: "THUMBNAIL" },
-                            select: {
-                                url: true,
-                                altText: true,
-                            },
-                            take: 1,
-                        },
-                    },
+                    select: ProductDbList,
                 },
             },
         });

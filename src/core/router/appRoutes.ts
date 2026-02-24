@@ -17,6 +17,7 @@ import wishlistRouter from "@mod/wishlist/wishlist.routes";
 import cartRouter from "@mod/cart/cart.routes";
 import orderRouter from "@mod/order/order.routes";
 import reviewRouter from "@mod/review/review.routes";
+import discountRouter from "@mod/dicout/discount.routes";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { appConfig } from "@/core/config/app.config";
@@ -48,6 +49,8 @@ export default function appRoutes(app: Application) {
 
     app.use(`${baseRouteUrl}/order`, orderRouter);
     app.use(`${baseRouteUrl}/review`, reviewRouter);
+    app.use(`${baseRouteUrl}/discount`, discountRouter);
+    
 
     // test routes
     app.get(`${baseRouteUrl}/test`, (req: Request, res: Response) => {

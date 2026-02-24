@@ -1,5 +1,6 @@
 import { Prisma } from "generated/prisma/client";
 import { prisma, PrismaTx } from "@core/config/prisma";
+import { ProductDbList } from "@core/types/product.db";
 
 export type CategoryTreeItem = {
     id: string;
@@ -57,34 +58,7 @@ class CatalogRepository {
             orderBy: args.orderBy,
             skip: args.skip,
             take: args.take,
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                description: true,
-                rating: true,
-                totalReviews: true,
-                brand: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
-                },
-                variants: {
-                    select: {
-                        imageUrl: true,
-                        sku: { select: { price: true } },
-                    },
-                },
-                productImages: {
-                    where: { type: "THUMBNAIL" },
-                    select: {
-                        url: true,
-                        altText: true,
-                    },
-                    take: 1,
-                },
-            },
+            select: ProductDbList,
         });
     }
 
@@ -153,37 +127,6 @@ class CatalogRepository {
         skip: number,
         take: number
     }) {
-        const productSelect = {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            rating: true,
-            totalReviews: true,
-            brand: {
-                select: {
-                    name: true,
-                    slug: true,
-                },
-            },
-            variants: {
-                where: {
-                    sku: { is: { isActive: true } },
-                },
-                select: {
-                    sku: { select: { price: true } },
-                },
-            },
-            productImages: {
-                where: { type: "THUMBNAIL" },
-                select: {
-                    url: true,
-                    altText: true,
-                },
-                take: 1,
-            },
-        } as const satisfies Prisma.ProductSelect;
-
         return await prisma.product.findMany({
             where: {
                 status: "ACTIVE",
@@ -201,7 +144,7 @@ class CatalogRepository {
             orderBy: args.orderBy,
             skip: args.skip,
             take: args.take,
-            select: productSelect,
+            select: ProductDbList,
         })
     }
 
