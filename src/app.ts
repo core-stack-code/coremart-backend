@@ -32,7 +32,7 @@ class App {
             origin: function (origin, callback) {
                 if (!origin) return callback(null, true);
                 
-                if (origin === env.CLIENT_DOMAIN_URL) {
+                if (origin === env.CLIENT_DOMAIN_URL || origin === env.ADMIN_DOMAIN_URL) {
                     callback(null, true);
                 } else {
                     log.error('Blocked origin:', origin);

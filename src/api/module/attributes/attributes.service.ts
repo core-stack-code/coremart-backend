@@ -1,5 +1,7 @@
 import { attributesRepository } from "./attributes.repository";
-import { ColorAttributeInput, MaterialAttributeInput, SizeAttributeInput } from "./attributes.validator";
+import { 
+    CreateColorPayload, CreateMaterialPayload, CreateSizePayload, UpdateColorPayload, UpdateMaterialPayload, UpdateSizePayload
+} from "./attributes.validator";
 
 
 class AttributesService {
@@ -37,54 +39,45 @@ class AttributesService {
         }
     }
 
-    public async handleCreateSize(payload: SizeAttributeInput) {
+    public async handleCreateSize(payload: CreateSizePayload) {
         return await attributesRepository.createSize({
             name: payload.name,
             type: payload.type,
         });
     }
 
-    public async handleUpdateSize(sizeId: string, payload: SizeAttributeInput) {
+    public async handleUpdateSize(sizeId: string, payload: UpdateSizePayload) {
         return await attributesRepository.updateSize(sizeId, {
             name: payload.name,
             type: payload.type,
+            isActive: payload.isActive,
         });
     }
 
-    public async handleDeactivateSize(sizeId: string) {
-        return await attributesRepository.deactivateSize(sizeId);
-    }
-
-    public async handleCreateColor(payload: ColorAttributeInput) {
+    public async handleCreateColor(payload: CreateColorPayload) {
         return await attributesRepository.createColor({
             name: payload.name,
         });
     }
 
-    public async handleUpdateColor(colorId: string, payload: ColorAttributeInput) {
+    public async handleUpdateColor(colorId: string, payload: UpdateColorPayload) {
         return await attributesRepository.updateColor(colorId, {
             name: payload.name,
+            isActive: payload.isActive,
         });
     }
 
-    public async handleDeactivateColor(colorId: string) {
-        return await attributesRepository.deactivateColor(colorId);
-    }
-
-    public async handleCreateMaterial(payload: MaterialAttributeInput) {
+    public async handleCreateMaterial(payload: CreateMaterialPayload) {
         return await attributesRepository.createMaterial({
             name: payload.name,
         });
     }
 
-    public async handleUpdateMaterial(materialId: string, payload: MaterialAttributeInput) {
+    public async handleUpdateMaterial(materialId: string, payload: UpdateMaterialPayload) {
         return await attributesRepository.updateMaterial(materialId, {
             name: payload.name,
+            isActive: payload.isActive,
         });
-    }
-
-    public async handleDeactivateMaterial(materialId: string) {
-        return await attributesRepository.deactivateMaterial(materialId);
     }
 }
 

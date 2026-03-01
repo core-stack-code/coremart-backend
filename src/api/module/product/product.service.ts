@@ -2,16 +2,11 @@ import { prisma } from "@core/config/prisma";
 import { CreateProductPayload, ProductListQuery, UpdateProductPayload } from "./product.validator";
 import { ProductInput, productRepository, ProductResultItem } from "./product.repository";
 
+import { ProductDetailItem, ProductsItem } from "@core/types/product";
 import { AppError } from "@core/utils/response";
 import { slugify } from "@core/utils/db.helper";
 import { PaginationType } from "@core/types/common";
-
-type ImageItm = ProductResultItem["productImages"][number];
-
-type ProductItem = Omit<ProductResultItem, "productImages"> & {
-    thumbnail: ImageItm | null,
-    images: ImageItm[],
-}
+import { log } from "@api/utils/log";
 
 
 class ProductService {
@@ -93,17 +88,21 @@ class ProductService {
     }
 
     public getProductList = async (query: ProductListQuery): Promise<{
-        products: ProductItem[],
+        products: ProductsItem[],
         pagination: PaginationType
     }> => {
         const skip = (query.page - 1) * query.limit;
         const take = query.limit;
 
         const productsResult = await productRepository.getList(skip, take);
-        const  total = await productRepository.count();
+        const total = await productRepository.count();
 
-        const products = this.productImageMaping(productsResult);
+        log.info("productsResult", productsResult);
+        // name, status, thumbnailUrl, updatedAt, brand, number of variants
+
         const totalPages = Math.ceil(total / query.limit);
+        
+        const products = this.productsMaping(productsResult);
 
         return {
             products,
@@ -118,33 +117,72 @@ class ProductService {
         }
     }
 
-    public getProduct = async (productId: string): Promise<ProductItem> => {
+    public getProduct = async (productId: string): Promise<ProductDetailItem> => {
         const product = await productRepository.findById(productId);
 
         if (!product) {
             throw new AppError(404, "RESOURCE_NOT_FOUND", "Product not found");
         }
 
-        const result = this.productImageMaping([product]);
-        const { thumbnail, images, ...rest } = result[0];
+        const { productImages, productCategories, variants, ...rest } = product;
+        const thumbnail = productImages.find(img => img.type === "THUMBNAIL");
+        const images = productImages.filter(img => img.type === "GALLERY");
+
+        const variantsWithSku: ProductDetailItem['variants'] = variants.map(v => {
+            return {
+                id: v.id,
+                color: v.color.name,
+                size: v.size.name,
+                material: v.material.name,
+                sku: v.sku ? {
+                    id: v.sku.id,
+                    skuCode: v.sku.skuCode,
+                    stock: v.sku.stock,
+                    price: v.sku.price,
+                    isActive: v.sku.isActive
+                } : null
+            };
+        });
+
+        const categories: ProductDetailItem['categories'] = productCategories.map(pc => ({
+            name: pc.category.name,
+            id: pc.category.id
+        }));
+
 
         return {
             ...rest,
-            images,
-            thumbnail
+            thumbnail: thumbnail ? {
+                url: thumbnail.url,
+                altText: thumbnail.altText,
+                createdAt: thumbnail.createdAt
+            } : null,
+            images: images.map(img => ({
+                url: img.url,
+                altText: img.altText,
+                createdAt: img.createdAt
+            })),
+            categories,
+            variants: variantsWithSku
         };
     }
 
-    private productImageMaping = (products: ProductResultItem[]): ProductItem[] => {
+    private productsMaping = (products: ProductResultItem[]): ProductsItem[] => {
         return products.map(prod => {
-            const { productImages, ...rest } = prod;
+            const { productImages, _count, brand, ...rest } = prod;
             const thumbnail = productImages.find(img => img.type === "THUMBNAIL")
-            const images = productImages.filter(img => img.type === "GALLERY")
 
             return {
                 ...rest,
-                images,
-                thumbnail: thumbnail ?? null,
+                thumbnail: thumbnail ? {
+                    url: thumbnail.url,
+                    altText: thumbnail.altText
+                } : null,
+                variantsCount: _count.variants,
+                brand: brand ? {
+                    name: brand.name,
+                    id: brand.id
+                } : null,
             }
         })
     }

@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
-import { CreateProductCategoryPayload } from "./productCategory.validator";
 import { productCategoryService } from "./productCategory.service";
 import { AppResponse } from "@core/utils/response";
 
 
 class ProductCategoryController {
     public async createProductCategory(req: Request, res: Response) {
-        const productId = req.params.productId as string;
-        const payload = req.body as CreateProductCategoryPayload;
+        const productId = req.params.productId;
+        const categoryId = req.params.categoryId;
 
-        await productCategoryService.createProductCategory(productId, payload);
+        await productCategoryService.createProductCategory(productId, categoryId);
 
         AppResponse(res, 201, {
             code: "CREATED",

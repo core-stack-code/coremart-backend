@@ -29,6 +29,7 @@ class BrandService {
             name: brand.name,
             slug: brand.slug,
             isActive: brand.isActive,
+            logoUrl: brand.logoUrl,
             productCount: brand._count.products,
         }));
     }

@@ -1,6 +1,63 @@
-import { NumberFoundLegacy } from "libphonenumber-js";
+import { ProductStatus } from "generated/prisma/enums";
 import { PaginationType } from "./common";
 
+export type ProductImage = {
+    url: string;
+    altText: string | null;
+    createdAt: Date;
+}
+
+// -------------------- ADMIN SIDE TYPES --------------------
+export type ProductsItem = {
+    id: string,
+    name: string,
+    slug: string,
+    status: ProductStatus,
+    createdAt: Date,
+    updatedAt: Date,
+    thumbnail: { url: string, altText: string | null } | null,
+    variantsCount: number,
+    brand: { name: string, id: string } | null,
+}
+
+export type ProductDetailItem = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    status: ProductStatus;
+    createdAt: Date;
+    updatedAt: Date;
+    rating: number;
+    totalReviews: number;
+    brand: {
+        name: string;
+        id: string;
+        logoUrl: string | null;
+    } | null;
+    variants: Array<{
+        id: string;
+        sku: {
+            id: string;
+            price: number;
+            stock: number;
+            skuCode: string;
+            isActive: boolean;
+        } | null;
+        size: string;
+        color: string;
+        material: string;
+    }>;
+    thumbnail: ProductImage | null;
+    images: Array<ProductImage>;
+    categories: {
+        name: string;
+        id: string;
+    }[] | null;
+}
+
+
+// -------------------- USER SIDE TYPES --------------------
 export type ProductListItem = {
     id: string;
     name: string;

@@ -15,6 +15,7 @@ class AttributesRepository {
                 isActive: true,
                 name: true,
                 type: true,
+                createdAt: true,
             } 
         });
     }
@@ -55,6 +56,7 @@ class AttributesRepository {
         data: {
             name?: string;
             type?: SizeType;
+            isActive?: boolean;
         }
     ): Promise<Size> {
         return await prisma.size.update({
@@ -63,11 +65,8 @@ class AttributesRepository {
         });
     }
 
-    public async deactivateSize(id: string): Promise<Size> {
-        return await prisma.size.update({
-            where: { id },
-            data: { isActive: false },
-        });
+    public async sizeCount() {
+        return await prisma.size.count()
     }
 
 
@@ -79,6 +78,7 @@ class AttributesRepository {
                 id: true,
                 isActive: true,
                 name: true,
+                createdAt: true,
             } 
         });
     }
@@ -115,6 +115,7 @@ class AttributesRepository {
         id: string,
         data: {
             name?: string;
+            isActive?: boolean;
         }
     ): Promise<Color> {
         return await prisma.color.update({
@@ -123,11 +124,8 @@ class AttributesRepository {
         });
     }
 
-    public async deactivateColor(id: string): Promise<Color> {
-        return await prisma.color.update({
-            where: { id },
-            data: { isActive: false },
-        });
+    public async colorCount() {
+        return await prisma.color.count()
     }
 
 
@@ -139,7 +137,8 @@ class AttributesRepository {
                 id: true,
                 isActive: true,
                 name: true,
-            } 
+                createdAt: true,
+            }
         });
     }
 
@@ -176,6 +175,7 @@ class AttributesRepository {
         id: string,
         data: {
             name?: string;
+            isActive?: boolean;
         }
     ): Promise<Material> {
         return await prisma.material.update({
@@ -184,11 +184,8 @@ class AttributesRepository {
         });
     }
 
-    public async deactivateMaterial(id: string): Promise<Material> {
-        return await prisma.material.update({
-            where: { id },
-            data: { isActive: false },
-        });
+    public async materialCount() {
+        return await prisma.material.count()
     }
 }
 

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
-import { ColorAttributeInput, MaterialAttributeInput, SizeAttributeInput } from "./attributes.validator";
 import { attributesService } from "./attributes.service";
+import { 
+    CreateColorPayload, CreateMaterialPayload, CreateSizePayload, UpdateColorPayload, UpdateMaterialPayload, UpdateSizePayload
+} from "./attributes.validator";
 import { AppResponse } from "@core/utils/response";
 
 
@@ -46,7 +48,7 @@ class AttributesController {
     }
 
     public async createSize(req: Request, res: Response) {
-        const payload = req.body as SizeAttributeInput;
+        const payload = req.body as CreateSizePayload;
 
         const size = await attributesService.handleCreateSize(payload);
 
@@ -59,7 +61,7 @@ class AttributesController {
 
     public async updateSize(req: Request, res: Response) {
         const sizeId = req.params.id;
-        const payload = req.body as SizeAttributeInput;
+        const payload = req.body as UpdateSizePayload;
 
         const size = await attributesService.handleUpdateSize(sizeId, payload);
 
@@ -70,20 +72,8 @@ class AttributesController {
         });
     }
 
-    public async deactivateSize(req: Request, res: Response) {
-        const sizeId = req.params.id;
-
-        const size = await attributesService.handleDeactivateSize(sizeId);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Size deactivated successfully",
-            data: size,
-        });
-    }
-
     public async createColor(req: Request, res: Response) {
-        const payload = req.body as ColorAttributeInput;
+        const payload = req.body as CreateColorPayload;
 
         const color = await attributesService.handleCreateColor(payload);
 
@@ -96,7 +86,7 @@ class AttributesController {
 
     public async updateColor(req: Request, res: Response) {
         const colorId = req.params.id;
-        const payload = req.body as ColorAttributeInput;
+        const payload = req.body as UpdateColorPayload;
 
         const color = await attributesService.handleUpdateColor(colorId, payload);
 
@@ -107,20 +97,8 @@ class AttributesController {
         });
     }
 
-    public async deactivateColor(req: Request, res: Response) {
-        const colorId = req.params.id;
-
-        const color = await attributesService.handleDeactivateColor(colorId);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Color deactivated successfully",
-            data: color,
-        });
-    }
-
     public async createMaterial(req: Request, res: Response) {
-        const payload = req.body as MaterialAttributeInput;
+        const payload = req.body as CreateMaterialPayload;
 
         const material = await attributesService.handleCreateMaterial(payload);
 
@@ -133,25 +111,13 @@ class AttributesController {
 
     public async updateMaterial(req: Request, res: Response) {
         const materialId = req.params.id;
-        const payload = req.body as MaterialAttributeInput;
+        const payload = req.body as UpdateMaterialPayload;
 
         const material = await attributesService.handleUpdateMaterial(materialId, payload);
 
         AppResponse(res, 200, {
             code: "OK",
             message: "Material updated successfully",
-            data: material,
-        });
-    }
-
-    public async deactivateMaterial(req: Request, res: Response) {
-        const materialId = req.params.id;
-
-        const material = await attributesService.handleDeactivateMaterial(materialId);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Material deactivated successfully",
             data: material,
         });
     }

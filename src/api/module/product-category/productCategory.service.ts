@@ -1,20 +1,19 @@
 import { productRepository } from "@mod/product/product.repository";
 import { productCategoryRepository } from "./productCategory.repository";
-import { CreateProductCategoryPayload } from "./productCategory.validator";
 import { categoryService } from "@mod/category/category.service";
 
 
 class ProductCategoryService {
-    public async createProductCategory(productId: string, payload: CreateProductCategoryPayload) {
+    public async createProductCategory(productId: string, categoryId: string) {
         const product = await productRepository.exists(productId);
 
         if (!product) {
             throw new Error("Product not found");
         }
 
-        await categoryService.checkCategoryActive(payload.categoryId);
+        await categoryService.checkCategoryActive(categoryId);
 
-        await productCategoryRepository.create(productId, payload.categoryId);
+        await productCategoryRepository.create(productId, categoryId);
     }
 
     public async deleteProductCategory(productId: string, categoryId: string) {

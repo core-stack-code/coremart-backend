@@ -91,6 +91,10 @@ class BrandRepository {
             select: null,
         });
     }
+
+    public count = async () => {
+        return await prisma.brand.count()
+    }
 }
 
 export const brandRepository = new BrandRepository();

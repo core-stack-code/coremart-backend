@@ -13,7 +13,10 @@ class MediaService {
     public async handleSignatureRequest(mediaType: UploadConfigType) {
         const config = UPLOAD_CONFIGS[mediaType];
 
-        const signatureData = await this.generateSignature(config.folderPath);
+        const signatureData = await this.generateSignature(
+            config.folderPath,
+            config.transformation
+        );
 
         return {
             timestamp: signatureData.timestamp,
@@ -21,15 +24,23 @@ class MediaService {
             cloud_name: env.CLOUDINARY_CLOUD_NAME,
             api_key: env.CLOUDINARY_API_KEY,
             folder: signatureData.folder,
+            transformation: signatureData.transformation,
         }
     }
 
-    private async generateSignature(folderPath: string) {
+    private async generateSignature(folderPath: string, transformation: {
+        width: number;
+        height: number;
+        crop: string;
+    }) {
         const timestamp = Math.round(new Date().getTime() / 1000);
+
+        const transformationString = `w_${transformation.width},h_${transformation.height},c_${transformation.crop},q_auto,f_auto`;
 
         const signatureParams = { 
             timestamp, 
-            folder: folderPath,
+            folder: `coremart/${folderPath}`,
+            transformation: transformationString,
         };
 
         const signature = cloudinary.utils.api_sign_request(

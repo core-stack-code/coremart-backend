@@ -14,7 +14,6 @@ export type ProductResultItem = {
     createdAt: Date;
     updatedAt: Date;
     slug: string;
-    description: string;
     status: ProductStatus;
     productImages: {
         url: string;
@@ -22,6 +21,13 @@ export type ProductResultItem = {
         type: ProductImageType;
         altText: string | null;
     }[];
+    brand: {
+        name: string;
+        id: string;
+    } | null;
+    _count: {
+        variants: number;
+    };
 }
 
 
@@ -93,16 +99,26 @@ class ProductRepository {
                 id: true,
                 name: true,
                 slug: true,
-                description: true,
                 status: true,
                 createdAt: true,
                 updatedAt: true,
+                brand: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
                 productImages: {
                     select: {
                         url: true,
                         altText: true,
                         type: true,
                         createdAt: true,
+                    }
+                },
+                _count: {
+                    select: {
+                        variants: true,
                     }
                 }
             }
@@ -113,7 +129,7 @@ class ProductRepository {
         return await prisma.product.count();
     }
 
-    public findById = async (id: string): Promise<ProductResultItem | null> => {
+    public findById = async (id: string) => {
         return await prisma.product.findUnique({
             where: { id },
             select: {
@@ -124,12 +140,48 @@ class ProductRepository {
                 status: true,
                 createdAt: true,
                 updatedAt: true,
+                rating: true,
+                totalReviews: true,
                 productImages: {
                     select: {
                         url: true,
                         altText: true,
                         type: true,
                         createdAt: true,
+                    }
+                },
+                variants: {
+                    select: {
+                        id: true,
+                        sku: {
+                            select: {
+                                id: true,
+                                price: true,
+                                stock: true,
+                                skuCode: true,
+                                isActive: true,
+                            }
+                        },
+                        size: true,
+                        color: true,
+                        material: true,
+                    }
+                },
+                productCategories: {
+                    select: {
+                        category: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        }
+                    }
+                },
+                brand: {
+                    select: {
+                        id: true,
+                        name: true,
+                        logoUrl: true,
                     }
                 }
             }

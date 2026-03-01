@@ -18,6 +18,7 @@ import cartRouter from "@mod/cart/cart.routes";
 import orderRouter from "@mod/order/order.routes";
 import reviewRouter from "@mod/review/review.routes";
 import discountRouter from "@mod/dicout/discount.routes";
+import analysisRouter from "@mod/analysis/analysis.routes";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { appConfig } from "@/core/config/app.config";
@@ -35,6 +36,7 @@ export default function appRoutes(app: Application) {
     app.use(`${baseRouteUrl}/product`, productRouter);
     app.use(`${baseRouteUrl}/variants`, variantsRouter);
     app.use(`${baseRouteUrl}/brand`, brandRouter);
+    app.use(`${baseRouteUrl}/analysis`, analysisRouter);
     
     app.use(`${baseRouteUrl}/catalog`, catalogRouter);
 

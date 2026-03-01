@@ -1,9 +1,9 @@
 import express from 'express'
 import { productController } from './product.controller'
 import { createProductSchema, productListQuerySchema, updateProductSchema } from './product.validator'
-import { validationMiddleware } from '@api/middlewares/validate.middlewate'
-import { createProductCategorySchema } from '@mod/product-category/productCategory.validator'
+
 import { productCategoryController } from '@mod/product-category/productCategory.controller'
+import { validationMiddleware } from '@api/middlewares/validate.middlewate'
 import { adminMiddleware } from '@api/middlewares/admin.middleware'
 import { asyncWrapper } from '@core/utils/asyncWrapper'
 
@@ -37,9 +37,8 @@ productRouter.get(
 )
 
 productRouter.post(
-    '/:productId/category',
+    '/:productId/category/:categoryId',
     adminMiddleware,
-    validationMiddleware.validateRequest(createProductCategorySchema),
     asyncWrapper(productCategoryController.createProductCategory)
 )
 
