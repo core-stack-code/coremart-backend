@@ -103,6 +103,7 @@ class CategoryRepository {
         name?: string;
         parentId?: string | null;
         slug?: string;
+        isActive?: boolean
     }, tx: PrismaTx = prisma) => {
         return await tx.category.update({
             where: { id },
@@ -197,14 +198,6 @@ class CategoryRepository {
             select: {
                 isActive: true,
             }
-        });
-    }
-
-    public toggleActive = async (id: string, isActive: boolean) => {
-        await prisma.category.update({
-            where: { id },
-            data: { isActive: isActive },
-            select: null,
         });
     }
 }

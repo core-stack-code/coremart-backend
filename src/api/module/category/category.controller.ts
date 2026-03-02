@@ -48,14 +48,13 @@ class CategoryController {
         });
     }
 
-    public async toggleActive(req: Request, res: Response) {
-        const categoryId = req.params.categoryId;
-
-        await categoryService.handleToggleActive(categoryId);
+    public async getCategoriesOptions(_req: Request, res: Response) {
+        const categories = await categoryService.categoriesOptions();
 
         AppResponse(res, 200, {
             code: "OK",
-            message: `Category toggled successfully.`,
+            message: "Categories fetched successfully.",
+            data: categories,
         });
     }
 }

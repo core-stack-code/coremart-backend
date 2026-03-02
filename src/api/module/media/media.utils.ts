@@ -8,6 +8,8 @@ export const UPLOAD_CONFIGS_TYPES = [
     "category-image",
     "category-banner",
     "profile-picture",
+    "variant-image",
+    "admin-profile"
 ] as const;
 
 export type UploadConfigType = typeof UPLOAD_CONFIGS_TYPES[number];
@@ -45,6 +47,17 @@ export const UPLOAD_CONFIGS: UploadConfig = {
             width: 1200,
             height: 1200,
             crop: "limit",
+        }
+    },
+    "variant-image": {
+        folderPath: "variants/images",
+        maxFileSize: 2 * 1024 * 1024,
+        minWidth: 800,
+        minHeight: 800,
+        transformation: {
+            width: 800,
+            height: 800,
+            crop: "fill",
         }
     },
     "brand-logo": {
@@ -91,4 +104,15 @@ export const UPLOAD_CONFIGS: UploadConfig = {
             crop: "fill",
         }
     },
+    "admin-profile": {
+        folderPath: "admin/profiles",
+        maxFileSize: 2 * 1024 * 1024,
+        minWidth: 400,
+        minHeight: 400,
+        transformation: {
+            width: 500,
+            height: 500,
+            crop: "fill",
+        }
+    }
 };

@@ -37,6 +37,7 @@ export type ProductDetailItem = {
     } | null;
     variants: Array<{
         id: string;
+        imageUrl: string | null;
         sku: {
             id: string;
             price: number;

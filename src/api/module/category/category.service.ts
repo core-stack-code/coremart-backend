@@ -96,6 +96,7 @@ class CategoryService {
                 name: finalName,
                 parentId: finalParentId,
                 slug: newSlug,
+                isActive: payload.isActive
             }, tx);
 
             // update images if needed.
@@ -196,14 +197,14 @@ class CategoryService {
         return categories;
     }
 
-    public handleToggleActive = async (id: string) => {
-        const category = await categoryRepository.findUnique(id);
+    public categoriesOptions = async () => {
+        const categoryResult = await categoryRepository.findList();
 
-        if (!category) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Category not found.");
-        }
-
-        await categoryRepository.toggleActive(id, !category.isActive);
+        return categoryResult.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            slug: cat.slug
+        }))
     }
 
     public checkCategoryActive = async (categoryId: string): Promise<string> => {

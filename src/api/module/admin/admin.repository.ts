@@ -23,6 +23,7 @@ class AdminRepository {
                 id: true,
                 email: true,
                 name: true,
+                imageUrl: true,
                 createdAt: true,
                 updatedAt: true,
             }
@@ -55,6 +56,16 @@ class AdminRepository {
                 password: passwordHash,
                 passwordVersion: { increment: 1 }
             },
+        });
+    }
+
+    public async updateProfile(adminId: string, payload: {
+        name?: string;
+        imageUrl?: string
+    }) {
+        return await prisma.admin.update({
+            where: { id: adminId },
+            data: payload,
         });
     }
 }

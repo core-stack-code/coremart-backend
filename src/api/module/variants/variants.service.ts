@@ -1,8 +1,9 @@
-import {
-    CreateProductSkuPayload, CreateProductVariantPayload, UpdateProductSkuPayload, VariantImagePayload
-} from "./variants.validator";
+import { prisma } from "@core/config/prisma";
 import { variantsRepository } from "./variants.repository";
 import { generateSkuCode } from "./variants.utils";
+import {
+    CreateProductSkuPayload, CreateProductVariantWithSkuPayload, UpdateProductSkuPayload, VariantImagePayload
+} from "./variants.validator";
 
 import { attributesService } from "@mod/attributes/attributes.service";
 import { productRepository } from "@mod/product/product.repository";
@@ -11,7 +12,7 @@ import { AppError } from "@core/utils/response";
 
 
 class VariantsService {
-    public async handleCreateVariants(id: string, payload: CreateProductVariantPayload) {
+    public async handleCreateVariants(id: string, payload: CreateProductVariantWithSkuPayload) {
         const product = await productRepository.exists(id);
 
         if (!product) {
@@ -24,9 +25,26 @@ class VariantsService {
             payload.materialId
         )
 
-        await variantsRepository.createVariant({
-            productId: id,
-            ...payload,
+        await prisma.$transaction(async (tx) => {
+            const variant = await variantsRepository.createVariant({
+                productId: id,
+                ...payload,
+            }, tx)
+
+            const skuCode = generateSkuCode(
+                variant.product.slug, 
+                variant.sizeId, 
+                variant.colorId, 
+                variant.materialId
+            );
+
+            await variantsRepository.createProductSku({
+                variantId: variant.id,
+                skuCode,
+                price: payload.sku.price,
+                stock: payload.sku.stock,
+                isActive: payload.sku.isActive,
+            }, tx);
         })
     }
 
@@ -84,7 +102,7 @@ class VariantsService {
 
     public async handleUpdateProductSku(skuId: string, payload: UpdateProductSkuPayload) {
         await variantsRepository.updateProductSku(skuId, {
-            price: payload.price ? rupeesToPaise(payload.price) : undefined, // Convert rupees to paise
+            price: payload.price,
             stock: payload.stock,
             isActive: payload.isActive,
         });

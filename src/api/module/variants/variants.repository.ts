@@ -9,8 +9,8 @@ class VariantsRepository {
         colorId: string;
         materialId: string;
         imageUrl?: string;
-    }) {
-        await prisma.variant.create({
+    }, tx: PrismaTx = prisma) {
+        return await tx.variant.create({
             data: {
                 id: getUuid(),
                 productId: data.productId,
@@ -19,7 +19,17 @@ class VariantsRepository {
                 materialId: data.materialId,
                 imageUrl: data.imageUrl,
             },
-            select: null,
+            select: {
+                id: true,
+                product: {
+                    select: {
+                        slug: true,
+                    }
+                },
+                sizeId: true,
+                colorId: true,
+                materialId: true,
+            },
         });
     }
 
@@ -89,8 +99,8 @@ class VariantsRepository {
         price: number;
         stock: number;
         isActive: boolean;
-    }) {
-        await prisma.sKU.create({
+    }, tx: PrismaTx = prisma) {
+        await tx.sKU.create({
             data: {
                 id: getUuid(),
                 variantId: data.variantId,

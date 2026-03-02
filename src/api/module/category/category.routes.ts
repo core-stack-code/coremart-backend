@@ -34,10 +34,10 @@ categoryRouter.get(
     asyncWrapper(categoryController.getCategoryList)
 );
 
-categoryRouter.patch(
-    "/:categoryId/toggle",
+categoryRouter.get(
+    "/options",
     adminMiddleware,
-    asyncWrapper(categoryController.toggleActive)
+    asyncWrapper(categoryController.getCategoriesOptions)
 );
 
 categoryRouter.get(
@@ -45,5 +45,17 @@ categoryRouter.get(
     adminMiddleware,
     asyncWrapper(productCategoryController.getProductByCategory)
 );
+
+categoryRouter.post(
+    '/:categoryId/product/:productId',
+    adminMiddleware,
+    asyncWrapper(productCategoryController.createProductCategory)
+)
+
+categoryRouter.delete(
+    "/:categoryId/product/:productId",
+    adminMiddleware,
+    asyncWrapper(productCategoryController.deleteProductCategory)
+)
 
 export default categoryRouter;

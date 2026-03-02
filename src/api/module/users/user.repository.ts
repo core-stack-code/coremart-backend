@@ -42,6 +42,74 @@ class UserRepository {
             data,
         });
     }
+
+    // admin queries
+    public async findMany(skip: number, take: number) {
+        const users = await prisma.user.findMany({
+            skip,
+            take,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                isEmailVerified: true,
+                profilePictureUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                _count: {
+                    select: {
+                        orders: true,
+                    }
+                }
+            }
+        });
+        return users;
+    }
+
+    public async count() {
+        return await prisma.user.count();
+    }
+
+    public async userDetails(id: string) {
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                isEmailVerified: true,
+                profilePictureUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                orders: {
+                    select: {
+                        id: true,
+                        totalAmount: true,
+                        status: true,
+                        createdAt: true,
+                        confirmedAt: true,
+                        _count: {
+                            select: {
+                                orderItems: true
+                            }
+                        }
+                    }
+                },
+                userAddresses: {
+                    select: {
+                        id: true,
+                        addressLine1: true,
+                        addressLine2: true,
+                        city: true,
+                        state: true,
+                        postalCode: true,
+                        country: true,
+                    }
+                }
+            }
+        });
+        return user;
+    }
 }
 
 export const userRepository = new UserRepository();

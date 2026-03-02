@@ -153,6 +153,7 @@ class ProductRepository {
                 variants: {
                     select: {
                         id: true,
+                        imageUrl: true,
                         sku: {
                             select: {
                                 id: true,

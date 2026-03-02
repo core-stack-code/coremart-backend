@@ -1,6 +1,6 @@
 import express from "express";
 import { adminController } from "./admin.controller";
-import { adminLoginSchema, adminSchema } from "./admin.validator";
+import { adminLoginSchema, adminSchema, updateAdminProfileSchema } from "./admin.validator";
 
 import { adminMiddleware } from "@api/middlewares/admin.middleware";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
@@ -43,6 +43,13 @@ adminRouter.get(
     "/profile",
     adminMiddleware,
     asyncWrapper(adminController.getProfile)
+);
+
+adminRouter.patch(
+    "/profile",
+    adminMiddleware,
+    validationMiddleware.validateRequest(updateAdminProfileSchema),
+    asyncWrapper(adminController.updateProfile)
 );
 
 export default adminRouter;

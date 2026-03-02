@@ -13,6 +13,7 @@ export const updateCategorySchema = z.object({
     bannerImageUrl: imageAltSchema("Banner Image").nullable().optional(),
     imageUrl: imageAltSchema("Category Image").nullable().optional(),
     parentId: z.string().optional(),
+    isActive: z.boolean().optional()
 }).refine(data => Object.keys(data).length > 0, {
     message: "At least name or parent category must be provided for update"
 });

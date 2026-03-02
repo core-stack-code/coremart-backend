@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AdminLoginPayload, AdminPayload } from "./admin.validator";
+import { AdminLoginPayload, AdminPayload, UpdateAdminProfilePayload } from "./admin.validator";
 import { AdminResponse, adminService } from "./admin.service";
 
 import { AppError, AppResponse } from "@core/utils/response";
@@ -75,6 +75,7 @@ class AdminController {
             id: admin.id,
             email: admin.email,
             name: admin.name,
+            imageUrl: admin.imageUrl,
             createdAt: admin.createdAt,
             updatedAt: admin.updatedAt,
         }
@@ -82,6 +83,19 @@ class AdminController {
         AppResponse(res, 200, {
             code: "OK",
             message: "Profile fetched successfully",
+            data: result,
+        });
+    }
+
+    public async updateProfile(req: Request, res: Response) {
+        const adminId = req.admin!.id;
+        const payload = req.body as UpdateAdminProfilePayload;
+
+        const result = await adminService.updateProfile(adminId, payload);
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Profile updated successfully",
             data: result,
         });
     }

@@ -1,6 +1,6 @@
 import { env } from "@core/config/env";
 import { randomUUID } from "crypto";
-import { AdminLoginPayload, AdminPayload } from "./admin.validator";
+import { AdminLoginPayload, AdminPayload, UpdateAdminProfilePayload } from "./admin.validator";
 import { adminRepository } from "./admin.repository";
 
 import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
@@ -14,6 +14,7 @@ export type AdminResponse = {
     id: string;
     email: string;
     name: string;
+    imageUrl: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -43,6 +44,7 @@ class AdminService {
                 id: admin.id,
                 email: admin.email,
                 name: admin.name,
+                imageUrl: admin.imageUrl,
                 createdAt: admin.createdAt,
                 updatedAt: admin.updatedAt,
             },
@@ -139,6 +141,18 @@ class AdminService {
         await adminRepository.updateRefreshToken(admin.id, tokens.refreshToken);
 
         return { admin, tokens };
+    }
+
+    public async updateProfile(adminId: string, payload: UpdateAdminProfilePayload) {
+        const admin = await adminRepository.findById(adminId);
+
+        if (!admin) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Admin not found");
+        }
+
+        const updatedAdmin = await adminRepository.updateProfile(adminId, payload);
+
+        return updatedAdmin;
     }
 }
 

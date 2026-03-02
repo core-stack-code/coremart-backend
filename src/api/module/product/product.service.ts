@@ -134,6 +134,7 @@ class ProductService {
                 color: v.color.name,
                 size: v.size.name,
                 material: v.material.name,
+                imageUrl: v.imageUrl || null,
                 sku: v.sku ? {
                     id: v.sku.id,
                     skuCode: v.sku.skuCode,

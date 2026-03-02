@@ -266,6 +266,7 @@ model Admin {
   email           String   @unique
   name            String
   password        String
+  imageUrl        String?
   passwordVersion Int      @default(1)
   refreshToken    String?  @unique
   createdAt       DateTime @default(now())
