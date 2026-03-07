@@ -8,6 +8,7 @@ import { asyncWrapper } from "@core/utils/asyncWrapper";
 
 const orderRouter = express.Router();
 
+// user routes
 orderRouter.post(
     "/checkout",
     authMiddleware(),
@@ -34,6 +35,7 @@ orderRouter.post(
     asyncWrapper(orderController.retryPayment)
 )
 
+// webhook routes
 orderRouter.post(
     "/cashfree/webhook",
     asyncWrapper(orderController.paymentWebhook)

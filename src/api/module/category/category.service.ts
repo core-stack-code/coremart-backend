@@ -1,6 +1,6 @@
 import { prisma } from "@core/config/prisma";
-import { CategoryImageInput, CategoryListItem, CategoryTreeNode, categoryRepository, CategoryTreeItem } from "./category.repository";
-import { CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
+import { CategoryImageInput, CategoryListItem, CategoryTreeNode, categoryRepository, CategoryTreeItem, CategoryWithImages } from "./category.repository";
+import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
 import { AppError } from "@core/utils/response";
 import { slugify } from "@core/utils/db.helper";
 
@@ -73,7 +73,7 @@ class CategoryService {
             // get descendants and prevent circular parent links.
             let descendants: Array<{ id: string; slug: string }> = [];
             if (isParentChanging || isNameChanging) {
-                descendants = await categoryRepository.findDescendants(id);
+                descendants = await this.findDescendants(id);
 
                 if (isParentChanging && payload.parentId && descendants.some(d => d.id === payload.parentId!)) {
                     throw new AppError(409, "CONFLICT", "Cannot create circular reference.");
@@ -145,15 +145,43 @@ class CategoryService {
         });
     }
 
-    public handleGetTree = async (): Promise<CategoryTreeNode[]> => {
-        const categoryResult = await categoryRepository.findAll();
+    public handleGetTree = async (categoryId: string): Promise<CategoryTreeNode[]> => {
+        const category = await categoryRepository.findCategoryTree(categoryId);
         
-        const categories: CategoryTreeItem[] = categoryResult.map(cat => {
+        if (!category) {
+            return [];
+        }
+        
+        const descendants = await this.findDescendants(categoryId);
+        const descendantIds = descendants.map(d => d.id);
+        
+        let allCategories: CategoryWithImages[] = [category];
+        
+        if (descendantIds.length > 0) {
+            const descendantCategories = await categoryRepository.findAll();
+            allCategories = [
+                category, 
+                ...descendantCategories.filter(cat => 
+                    descendantIds.includes(cat.id)
+                )
+            ];
+        }
+        
+        const categories: CategoryTreeItem[] = allCategories.map(cat => {
             const { categoryImages, ...rest } = cat;
+            const imageUrl = categoryImages.find(img => img.type === "IMAGE")
+            const baseImageUrl = categoryImages.find(img => img.type === "BANNER")
             
             return {
                 ...rest,
-                imageUrl: categoryImages.length > 0 ? categoryImages[0] : null,
+                image: imageUrl ? {
+                    url: imageUrl.url,
+                    altText: imageUrl.altText
+                } : null,
+                baseImage: baseImageUrl ? {
+                    url: baseImageUrl.url,
+                    altText: baseImageUrl.altText
+                } : null,
             }
         });
         
@@ -166,12 +194,12 @@ class CategoryService {
 
         categories.forEach(cat => {
             const node = categoryMap.get(cat.id)!;
-            if (cat.parentId) {
+            if (cat.parentId && categoryMap.has(cat.parentId)) {
                 const parent = categoryMap.get(cat.parentId);
                 if (parent) {
                     parent.children.push(node);
                 }
-            } else {
+            } else if (cat.id === categoryId) {
                 tree.push(node);
             }
         });
@@ -179,22 +207,43 @@ class CategoryService {
         return tree;
     }
 
-    public handleGetList = async () => {
-        const categoryResult = await categoryRepository.findList();
+    public handleGetList = async (query: CategoryListQuery) => {
+        const skip = (query.page - 1) * query.limit;
+        const take = query.limit;
+        
+        const categoryResult = await categoryRepository.findList({ skip, take });
+        const total = await categoryRepository.count();
         
         const categories = categoryResult.map(cate => {
-            const { categoryImages, ...rest } = cate;
-            const banner = categoryImages.find(img => img.type === "BANNER");
+            const { categoryImages } = cate;
             const image = categoryImages.find(img => img.type === "IMAGE");
 
             return {
-                ...rest,
-                bannerImageUrl: banner ?? null,
+                id: cate.id,
+                name: cate.name,
+                slug: cate.slug,
+                isActive: cate.isActive,
+                parent: cate.parent ? {
+                    id: cate.parent.id, 
+                    name: cate.parent.name || ''
+                } : null,
                 imageUrl: image ?? null,
             }
         })
 
-        return categories;
+        const totalPages = Math.ceil(total / query.limit);
+
+        return {
+            categories,
+            pagination: {
+                page: query.page,
+                limit: query.limit,
+                totalPages,
+                totalItems: total,
+                isPrevPage: query.page > 1,
+                isNextPage: query.page < totalPages,
+            },
+        };
     }
 
     public categoriesOptions = async () => {
@@ -219,6 +268,31 @@ class CategoryService {
         }
 
         return category.slug;
+    }
+
+
+    private findDescendants = async (categoryId: string): Promise<Array<{ 
+        id: string; 
+        parentId: string | null; 
+        slug: string 
+    }>> => {
+        const descendants: Array<{ 
+            id: string; 
+            parentId: string | null; 
+            slug: string 
+        }> = [];
+        let queue: string[] = [categoryId];
+
+        while (queue.length > 0) {
+            const children = await categoryRepository.findDirectChildren(queue);
+            
+            if (children.length === 0) break;
+
+            descendants.push(...children);
+            queue = children.map(child => child.id);
+        }
+
+        return descendants;
     }
 }
 

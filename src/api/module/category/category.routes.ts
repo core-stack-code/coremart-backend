@@ -1,7 +1,8 @@
 import express from "express";
-import { validationMiddleware } from "@api/middlewares/validate.middlewate";
-import { createCategorySchema, updateCategorySchema } from "./category.validator";
+import { categoryListQuery, createCategorySchema, updateCategorySchema } from "./category.validator";
 import { categoryController } from "./category.controller";
+
+import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { productCategoryController } from "@mod/product-category/productCategory.controller";
 import { adminMiddleware } from "@api/middlewares/admin.middleware";
 import { asyncWrapper } from "@core/utils/asyncWrapper";
@@ -23,14 +24,9 @@ categoryRouter.patch(
 );
 
 categoryRouter.get(
-    "/",
-    adminMiddleware,
-    asyncWrapper(categoryController.getCategoryTree)
-);
-
-categoryRouter.get(
     "/list",
     adminMiddleware,
+    validationMiddleware.validateQuery(categoryListQuery),
     asyncWrapper(categoryController.getCategoryList)
 );
 
@@ -38,6 +34,12 @@ categoryRouter.get(
     "/options",
     adminMiddleware,
     asyncWrapper(categoryController.getCategoriesOptions)
+);
+
+categoryRouter.get(
+    "/:categoryId/tree",
+    adminMiddleware,
+    asyncWrapper(categoryController.getCategoryTree)
 );
 
 categoryRouter.get(

@@ -7,17 +7,33 @@ export type CategoryTreeItem = {
     name: string;
     slug: string;
     parentId: string | null;
-    imageUrl: {
+    image: {
         url: string;
         altText: string | null;
     } | null;
+    baseImage: {
+        url: string;
+        altText: string | null;
+    } | null;
+}
+
+export type CategoryWithImages = {
+    id: string;
+    name: string;
+    slug: string;
+    parentId: string | null;
+    categoryImages: {
+        url: string;
+        altText: string | null;
+        type: CategoryImageType;
+    }[];
 }
 
 export type CategoryTreeNode = CategoryTreeItem & {
     children: CategoryTreeNode[];
 }
 
-export type CategoryListItem = Omit<CategoryTreeItem, "imageUrl"> & {
+export type CategoryListItem = Omit<CategoryTreeItem, "image" | "baseImage"> & {
     isActive: boolean;
     categoryImages: {
         url: string,
@@ -27,6 +43,10 @@ export type CategoryListItem = Omit<CategoryTreeItem, "imageUrl"> & {
     }[]
     createdAt: Date,
     updatedAt: Date,
+    parent: {
+        id: string;
+        name: string;
+    } | null;
 }
 
 
@@ -49,6 +69,8 @@ class CategoryRepository {
                 name: true,
                 parent: {
                     select: {
+                        id: true,
+                        name: true,
                         slug: true,
                     }
                 }
@@ -116,34 +138,26 @@ class CategoryRepository {
         });
     }
 
-    public findDescendants = async (categoryId: string) => {
-        const descendants: Array<Pick<Category, "id" | "parentId" | "slug">> = [];
-
-        let queue: string[] = [categoryId];
-
-        while (queue.length > 0) {
-            const children = await prisma.category.findMany({
-                where: {
-                    parentId: { in: queue },
-                },
-                select: {
-                    id: true,
-                    slug: true,
-                    parentId: true,
-                },
-            });
-
-            if (children.length === 0) break;
-
-            descendants.push(...children);
-            queue = children.map(child => child.id);
-        }
-
-        return descendants;
+    public findDirectChildren = async (parentIds: string[]) => {
+        return await prisma.category.findMany({
+            where: {
+                parentId: { in: parentIds },
+            },
+            select: {
+                id: true,
+                slug: true,
+                parentId: true,
+            },
+        });
     }
 
-    public findList = async (): Promise<CategoryListItem[]> => {
+    public findList = async (options?: {
+        skip?: number;
+        take?: number;
+    }): Promise<CategoryListItem[]> => {
         return await prisma.category.findMany({
+            skip: options?.skip,
+            take: options?.take,
             select: {
                 id: true,
                 name: true,
@@ -160,6 +174,13 @@ class CategoryRepository {
                 },
                 createdAt: true,
                 updatedAt: true,
+                parent: {
+                    select: {
+                        id: true,
+                        name: true,
+
+                    }
+                }
             },
             orderBy: [
                 { parentId: 'asc' },
@@ -167,6 +188,10 @@ class CategoryRepository {
             ],
         });
     }
+
+    public count = async () => {
+        return await prisma.category.count();
+    };
 
     public findAll = async () => {
         return await prisma.category.findMany({
@@ -177,13 +202,17 @@ class CategoryRepository {
                 slug: true,
                 parentId: true,
                 categoryImages: {
-                    where: { type: "IMAGE" },
+                    where: { 
+                        type: { 
+                            in: ["IMAGE", "BANNER"] 
+                        } 
+                    },
                     select: {
                         url: true,
                         altText: true,
+                        type: true,
                     },
-                    take: 1,
-                }
+                },
             },
             orderBy: [
                 { parentId: 'asc' },
@@ -197,6 +226,30 @@ class CategoryRepository {
             where: { id },
             select: {
                 isActive: true,
+            }
+        });
+    }
+
+    public findCategoryTree = async (categoryId: string) => {
+        return await prisma.category.findUnique({
+            where: { id: categoryId, isActive: true },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                parentId: true,
+                categoryImages: {
+                    where: { 
+                        type: { 
+                            in: ["IMAGE", "BANNER"] 
+                        } 
+                    },
+                    select: {
+                        url: true,
+                        altText: true,
+                        type: true,
+                    },
+                },
             }
         });
     }

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
+import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
 import { categoryService } from "./category.service";
 import { AppResponse } from "@core/utils/response";
 
@@ -28,8 +28,9 @@ class CategoryController {
         });
     }
 
-    public async getCategoryTree(_req: Request, res: Response) {
-        const tree = await categoryService.handleGetTree();
+    public async getCategoryTree(req: Request, res: Response) {
+        const categoryId = req.params.categoryId;
+        const tree = await categoryService.handleGetTree(categoryId);
 
         AppResponse(res, 200, {
             code: "OK",
@@ -38,8 +39,10 @@ class CategoryController {
         });
     }
 
-    public async getCategoryList(_req: Request, res: Response) {
-        const categories = await categoryService.handleGetList();
+    public async getCategoryList(req: Request, res: Response) {
+         const query = req.localsQuery as CategoryListQuery;
+
+        const categories = await categoryService.handleGetList(query);
 
         AppResponse(res, 200, {
             code: "OK",

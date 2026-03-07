@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { variantsService } from "./variants.service";
 import { 
     CreateProductSkuPayload,
-    CreateProductVariantPayload,
+    CreateProductVariantWithSkuPayload,
     UpdateProductSkuPayload,
     VariantImagePayload
 } from "./variants.validator";
@@ -12,7 +12,7 @@ import { AppResponse } from "@core/utils/response";
 class VariantsController {
     public async createVariants(req: Request, res: Response) {
         const productId = req.params.productId as string;
-        const payload = req.body as CreateProductVariantPayload;
+        const payload = req.body as CreateProductVariantWithSkuPayload;
 
         await variantsService.handleCreateVariants(productId, payload);
 

@@ -20,6 +20,7 @@ import reviewRouter from "@mod/review/review.routes";
 import discountRouter from "@mod/dicout/discount.routes";
 import analysisRouter from "@mod/analysis/analysis.routes";
 import customerRouter from "@mod/customer/customer.routes";
+import orderManagmentRouter from "@mod/order-management/orderManagment.routes";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { appConfig } from "@/core/config/app.config";
@@ -55,6 +56,7 @@ export default function appRoutes(app: Application) {
 
     app.use(`${baseRouteUrl}/analysis`, analysisRouter);
     app.use(`${baseRouteUrl}/customers`, customerRouter);
+    app.use(`${baseRouteUrl}/order-managment`, orderManagmentRouter);
 
     
 
