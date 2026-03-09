@@ -1,8 +1,11 @@
 import { prisma } from "@core/config/prisma";
-import { CategoryImageInput, CategoryListItem, CategoryTreeNode, categoryRepository, CategoryTreeItem, CategoryWithImages } from "./category.repository";
+import { CategoryImageInput, CategoryTreeNode, categoryRepository, CategoryTreeItem, CategoryWithImages } from "./category.repository";
 import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
+
 import { AppError } from "@core/utils/response";
 import { slugify } from "@core/utils/db.helper";
+import { deleteByPattern } from "@core/lib/redis/cache";
+import { getRedisKeys } from "@core/utils/gerRedisKeys";
 
 
 class CategoryService {
@@ -142,6 +145,8 @@ class CategoryService {
                     )
                 );
             }
+
+            await deleteByPattern(getRedisKeys('cache', 'categories:products', '*'));
         });
     }
 

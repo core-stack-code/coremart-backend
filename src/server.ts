@@ -1,10 +1,12 @@
 import App from './app';
-import { disconnectPrisma } from './core/config/prisma';
+import { disconnectPrisma } from '@core/config/prisma';
+import { disconnectRedis } from '@core/config/redis';
 import { logger } from './api/utils/logger';
 
 const serverShutdown = async (signal: string) => {
   logger.info(`${signal} received. Shutting down gracefully...`);
   await disconnectPrisma();
+  await disconnectRedis();
   process.exit(0);
 };
 

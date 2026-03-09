@@ -119,3 +119,50 @@ export type ProductCartItem = {
         material: string,
     }
 }
+
+export type ProductDetailApiResponse = {
+    product: {
+        name: string;
+        slug: string;
+        description: string;
+        brand: {
+            name: string | null;
+            slug: string | null;
+            logoUrl: string | null;
+        };
+        thumbnailImage: {
+            url: string;
+            altText: string | null;
+        } | null;
+        images: {
+            url: string;
+            altText: string | null;
+        }[];
+        isFavorite: boolean;
+    };
+    categories: {
+        name: string;
+        slug: string;
+    }[];
+    attributes: {
+        sizes: string[];
+        colors: string[];
+        materials: string[];
+    };
+    variants: ProductVariantWithSKU[];
+    review: {
+        averageRating: number;
+        totalReviews: number;
+        breakdown: Record<number, number>;
+    };
+}
+
+// -------------------- OTHER TYPES --------------------
+export type ProductVariantWithSKU = {
+    size: string;
+    color: string;
+    material: string;
+    price: number;
+    imageUrl: string | null;
+    inStock: boolean;
+}

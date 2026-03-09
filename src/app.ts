@@ -49,7 +49,7 @@ class App {
             },
         }));
         this.app.use(express.json());
-        this.app.set("trust proxy", true);
+        this.app.set("trust proxy", false);
         
         this.app.use(cookieParser());
         this.app.use(morgan('dev'));

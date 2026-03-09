@@ -2,24 +2,26 @@ import { Prisma } from "generated/prisma/browser";
 import { catalogRepository, CategoryTreeNode, CategoryTreeItem, RawCategoryTreeItem } from "./catalog.repository";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
-import { ProductListApiResponse, ProductListResultItem } from "@core/types/product";
+import { ProductDetailApiResponse, ProductListApiResponse, ProductListResultItem, ProductVariantWithSKU } from "@core/types/product";
 import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
 import { favoritesRepository } from "@mod/favorites/favorites.repository";
 import { favoritesService } from "@mod/favorites/favorites.service";
-
-type ProductVariantWithSKU = {
-    size: string;
-    color: string;
-    material: string;
-    price: number;
-    imageUrl: string | null;
-    inStock: boolean;
-}
+import { getRedisKeys } from "@core/utils/gerRedisKeys";
+import { getCache, setCache } from "@core/lib/redis/cache";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 
 class CatalogService {
-    public getProductDetail = async (productSlug: string, userId: string | null) => {
+    public getProductDetail = async (productSlug: string, userId: string | null): Promise<ProductDetailApiResponse> => {
+        // from cache
+        const key = getRedisKeys('cache', 'products:details', productSlug)
+        
+        const cached = await getCache<ProductDetailApiResponse>(key);
+        if (cached) return cached;
+
+
+        // form db
         const productResult = await catalogRepository.findProductBySlug(productSlug);
 
         if (!productResult) {
@@ -75,8 +77,8 @@ class CatalogService {
         ratingBreakdown.forEach(r => {
             breakdown[r.rating] = r._count.rating;
         });
-        
-        return {
+
+        const responseData: ProductDetailApiResponse = {
             product: {
                 name: productResult.name,
                 slug: productResult.slug,
@@ -105,14 +107,27 @@ class CatalogService {
                 totalReviews: productResult.totalReviews,
                 breakdown: breakdown,
             }
-        };
+        }
+        
+        // set to cache
+        await setCache(key, responseData, 900); // cache for 15 minutes
+
+        return responseData;
     }
 
     public getProducts = async (
         query: ProductListQuery,
         userId: string | null
     ) : Promise<ProductListApiResponse> => {
+        // from cache
+        const contexKey = JSON.stringify(query);
+        const key = getRedisKeys('cache', 'products:list', contexKey);
 
+        const cached = await getCache<ProductListApiResponse>(key);
+        if (cached) return cached;
+
+
+        // from db
         const where = this.buildWhereForProductList(query);
         const orderBy = this.buildOrderByForProductList(query.sortBy);
 
@@ -142,18 +157,17 @@ class CatalogService {
         }
 
         const formattedProducts = formatProductListItem(products, favoriteSet);
-        const totalPages = Math.ceil(total / query.limit);
+        const pagination = getPaginationData(query.page, query.limit, total);
+
+        // set to cache
+        await setCache(key, {
+            products: formattedProducts,
+            pagination,
+        }, 300); // cache for 5 minutes
 
         return {
             products: formattedProducts,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination,
         };
     }
 
@@ -213,6 +227,15 @@ class CatalogService {
         query: ProductsByCategoryQuery,
         userId: string | null
     ): Promise<ProductListApiResponse>  => {
+        // from cache
+        const context = JSON.stringify({ categorySlug, ...query });
+        const key = getRedisKeys('cache', 'categories:products', context);
+
+        const cached = await getCache<ProductListApiResponse>(key);
+        if (cached) return cached;
+
+
+        // from db
         const category = await catalogRepository.findCategoryBySlug(categorySlug);
 
         if (!category) {
@@ -246,19 +269,17 @@ class CatalogService {
         }
 
         const formattedProducts = formatProductListItem(products, favoriteSet);
-        const totalPages = Math.ceil(total / query.limit);
+        const pagination = getPaginationData(query.page, query.limit, total);
 
+        // set to cache
+        await setCache(key, {
+            products: formattedProducts,
+            pagination,
+        }, 300); // cache for 5 minutes
 
         return {
             products: formattedProducts,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination
         };
     }
 
