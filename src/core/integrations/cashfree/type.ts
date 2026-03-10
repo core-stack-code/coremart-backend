@@ -7,6 +7,7 @@ export type CashFreeCreateOrderPayload = {
         customer_phone: string,
         customer_name: string,
         customer_id: string,
+        customer_email: string
     },
     order_id: string,
     order_meta: {

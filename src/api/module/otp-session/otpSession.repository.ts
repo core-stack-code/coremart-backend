@@ -91,6 +91,17 @@ class OtpSessionRepository {
             },
         });
     }
+
+    public async cleanupExpiredSessions(cleanupDate: Date, tx: PrismaTx = prisma) {
+        return await tx.otpSession.deleteMany({
+            where: {
+                OR: [
+                    { isUsed: true },
+                    { otpExpiresAt: { lt: cleanupDate } },
+                ],
+            },
+        });
+    }
 }
 
 export const otpSessionRepository = new OtpSessionRepository();

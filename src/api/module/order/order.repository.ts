@@ -117,16 +117,16 @@ class OrderRepository {
         });
     }
 
-    public async updateManyOrder(orderId: string, data: OrderUpdateInput ,tx: PrismaTx = prisma) {
+    public async updateOrderIfPending(orderId: string, data: OrderUpdateInput ,tx: PrismaTx = prisma) {
         return await tx.order.updateMany({
             where: { id: orderId, status: "PENDING" },
             data,
         });
     }
 
-    public async updatePayment(id: string, data: PaymentUpdateInput ,tx: PrismaTx = prisma) {
-        return await tx.payment.update({
-            where: { id },
+    public async updatePaymentIfActive(id: string, data: PaymentUpdateInput ,tx: PrismaTx = prisma) {
+        return await tx.payment.updateMany({
+            where: { id, cfStatus: "ACTIVE" },
             data,
         });
     }
@@ -250,6 +250,12 @@ class OrderRepository {
             include: {
                 product: true
             }
+        });
+    }
+
+    public async findPayment(paymentId: string, tx: PrismaTx = prisma) {
+        return await tx.payment.findUnique({
+            where: { id: paymentId },
         });
     }
 }

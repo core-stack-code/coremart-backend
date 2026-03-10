@@ -11,6 +11,7 @@ import { rawBodyMiddleware } from "./api/middlewares/rawBody.middleware";
 import { rateLimitMiddleware } from "@api/middlewares/ratelimit.middleware";
 import { env } from "./core/config/env";
 
+import { registerCleanupJobs } from "@core/lib/jobs/scheduler/cleanup.scheduler";
 import { connectPrisma } from "./core/config/prisma";
 import { apiLimiter } from "./core/lib/rateLimit";
 import { AppError } from "./core/utils/response";
@@ -88,10 +89,15 @@ class App {
         });
     }
 
+    private async scheduler(): Promise<void> {
+        await registerCleanupJobs();
+    }
+
     private async start(): Promise<void> {
         try {
             await this.initializeDatabase();
             await this.initializeApp();
+            await this.scheduler()   
         }
         catch (error) {
             logger.error('Failed to start server:', error);

@@ -5,12 +5,11 @@ import { env } from "@core/config/env";
 import { CashFreeCreateOrderPayload, CashFreeCreateOrderResponse } from "./type";
 import { log } from "@api/utils/log";
 import { AppError } from "@core/utils/response";
+import { getPaymentExpiryTime } from "@mod/order/order.utils";
 
 const CASHFREE_API_KEY = env.CASHFREE_API_KEY;
 const CASHFREE_API_SECRET = env.CASHFREE_API_SECRET;
 const CASHFREE_API_VERSION = env.CASHFREE_API_VERSION;
-
-const PAYMENT_EXPIRY_TIME = 20 * 60 * 1000; // 20 minutes
 
 
 export const createCashfreeOrder = async (data: CashFreeCreateOrderPayload) => {
@@ -25,7 +24,7 @@ export const createCashfreeOrder = async (data: CashFreeCreateOrderPayload) => {
 
     const body = {
         ...data,
-        order_expiry_time: new Date(Date.now() + PAYMENT_EXPIRY_TIME).toISOString(),
+        order_expiry_time: getPaymentExpiryTime(),
     }
 
     try {

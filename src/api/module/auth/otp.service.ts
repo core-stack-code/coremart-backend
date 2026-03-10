@@ -7,12 +7,17 @@ import { userRepository } from "@mod/users/user.repository";
 import { passwordService } from "@mod/password/password.service";
 import { VerifyOtpPayload } from "./auth.validator";
 
-import { sendEmail } from "@core/lib/snedEmail";
+import { emailQueue, QUEUE_JOBS } from "@core/lib/jobs/queue";
 import { compareOtpHash, genrateOtpHash } from "@core/lib/crypto";
-import { getExpiryTime, getUuid } from "@core/utils/db.helper";
+import { getExpiryTime } from "@core/utils/db.helper";
 import { OTP_CONFIG } from "@core/constants/authConfig";
 import { AppError } from "@core/utils/response";
 import { log } from "@api/utils/log";
+
+const otpEmailJobMap: Record<OtpSessionType, string> = {
+    EMAIL_VERIFICATION: QUEUE_JOBS.EMAIL_VERIFICATION,
+    PASSWORD_RESET: QUEUE_JOBS.PASSWORD_RESET,
+};
 
 
 class OtpService {
@@ -74,13 +79,8 @@ class OtpService {
         });
 
 
-        await sendEmail(
-            user.email, 
-            { otp, name: user.name || "User" }, 
-            sessionType
-        )
+        await this.sendOtpEmail(user, otp, sessionType);
     }
-
 
     public async handleVerifyOtp(
         user: User, 
@@ -153,7 +153,6 @@ class OtpService {
         });
     }
 
-
     public async handleResendOtp(user: User, sessionType: OtpSessionType): Promise<void> {
         if (sessionType === "EMAIL_VERIFICATION" && user.isEmailVerified) {
             throw new AppError(400, "BAD_REQUEST", "Email is already verified.");
@@ -212,11 +211,24 @@ class OtpService {
             }
         );
 
-        await sendEmail(
-            user.email,
-            { otp, name: user.name || "User" },
-            sessionType
-        );
+        await this.sendOtpEmail(user, otp, sessionType);
+    }
+
+
+    private async sendOtpEmail(user: User, otp: string, sessionType: OtpSessionType): Promise<void> {
+        await emailQueue.add(otpEmailJobMap[sessionType], {
+            to: user.email,
+            otp,
+            name: user.name || "User"
+        }, {
+            attempts: 5,
+            backoff: {
+                type: "exponential",
+                delay: 5000
+            },
+            removeOnComplete: true,
+            removeOnFail: false
+        })
     }
 }
 

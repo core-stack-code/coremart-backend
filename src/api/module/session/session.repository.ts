@@ -111,6 +111,17 @@ class SessionRepository {
             data: { revokedAt: new Date() },
         });
     }
+
+    public async cleanupExpiredSessions(cleanupDate: Date, tx: PrismaTx = prisma) {
+        return await tx.session.deleteMany({
+            where: {
+                OR: [
+                    { revokedAt: { lt: cleanupDate } },
+                    { expiresAt: { lt: cleanupDate } }
+                ]
+            },
+        }); 
+    }
 }
 
 export const sessionRepository = new SessionRepository();

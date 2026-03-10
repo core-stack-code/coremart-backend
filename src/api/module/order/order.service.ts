@@ -1,5 +1,6 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { Order, User } from "generated/prisma/client";
+import { OrderOrderByWithRelationInput, OrderWhereInput, ProductWhereInput } from "generated/prisma/models";
 
 import { OrderItem, orderRepository, ShippingAddress } from "./order.repository";
 import { CheckoutPayload, OrderListQuery } from "./order.validator";
@@ -7,18 +8,17 @@ import { cartService } from "@mod/cart/cart.service";
 import { cartRepository } from "@mod/cart/cart.repository";
 import { variantsRepository } from "@mod/variants/variants.repository";
 import { addressRepository, MAX_ADDRESS_COUNT } from "@mod/address/address.repository";
+import { catalogRepository } from "@mod/catalog/catalog.repository";
 
 import { createCashfreeOrder } from "@core/integrations/cashfree/cashfree.client";
 import { CashFreeCreateOrderResponse, CashfreePaymentWebhookPayload } from "@core/integrations/cashfree/type";
 import { verifyCashFreeWebhookSignature } from "@core/integrations/cashfree/cashfree.client";
 import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@core/utils/response";
-import { OrderOrderByWithRelationInput, OrderWhereInput, ProductWhereInput } from "generated/prisma/models";
 import { PaginationType } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
-import { catalogRepository } from "@mod/catalog/catalog.repository";
-
-const ORDER_EXPIERY_TIME = 60 * 60 * 1000; // 60 minutes
+import { addOrderExpirationJob, addPaymentExpirationJob } from "./order.utils";
+import { emailQueue, QUEUE_JOBS } from "@core/lib/jobs/queue";
 
 type ItemQuantityMap = Map<string, { quantity: number }>;
 
@@ -135,6 +135,8 @@ class OrderService {
             address: shippingAddress,
         }, tx);
 
+        await addOrderExpirationJob(order.id);
+
         return {
             order,
             customer : {
@@ -168,6 +170,7 @@ class OrderService {
         const { 
             order: orderData,
             payment: paymentData,
+            customer_details
         } = payload.data;
 
         await prisma.$transaction(async (tx) => {
@@ -187,17 +190,22 @@ class OrderService {
 
             const isPaymentSuccess = paymentData.payment_status === "SUCCESS"
 
-            await orderRepository.updatePayment(payment.id, {
+            const paymentUpdate = await orderRepository.updatePaymentIfActive(payment.id, {
                 webhookPayload: rawBody,
                 cfStatus: isPaymentSuccess ? "PAID" : "EXPIRED",
             }, tx);
+
+
+            if (paymentUpdate.count === 0) {
+                return;
+            }
 
             if (!isPaymentSuccess) {
                 // Payment failed, do not update order status or clear cart or change stock
                 return;
             }
 
-            const updatedOrderResult = await orderRepository.updateManyOrder(order.id, {
+            const updatedOrderResult = await orderRepository.updateOrderIfPending(order.id, {
                 status: "CONFIRMED",
                 confirmedAt: new Date(paymentData.payment_time),
             }, tx);
@@ -213,6 +221,22 @@ class OrderService {
             await cartRepository.clearCart(cart.id, tx);
 
             // const orderItems = await orderRepository.findOrderItems(order.id, tx);
+
+            // send order confirm mail
+            await emailQueue.add(QUEUE_JOBS.ORDER_CONFIRM, {
+                to: customer_details.customer_email,
+                confirmedAt: new Date(paymentData.payment_time),
+                totalAmount: order.totalAmount,
+                orderId: order.id,
+            }, {
+                attempts: 5,
+                backoff: {
+                    type: "exponential",
+                    delay: 5000
+                },
+                removeOnComplete: true,
+                removeOnFail: false
+            })
         });
     }
 
@@ -324,16 +348,12 @@ class OrderService {
                 throw new AppError(404, "RESOURCE_NOT_FOUND", "Order not found");
             }
     
+            if (order.status === "EXPIRED") {
+                throw new AppError(400, "BAD_REQUEST", "Order has expired, cannot retry payment");
+            }
+
             if (order.status !== "PENDING") {
                 throw new AppError(400, "BAD_REQUEST", "Order has already been processed or completed, cannot retry payment");
-            }
-    
-            if (new Date().getTime() - order.createdAt.getTime() > ORDER_EXPIERY_TIME) {
-                await orderRepository.updateManyOrder(order.id, {
-                    status: "EXPIRED"
-                }, tx);
-    
-                throw new AppError(400, "BAD_REQUEST", "Order has expired, cannot retry payment");
             }
     
             const orderItems = await orderRepository.findOrderItems(order.id, tx);
@@ -405,6 +425,7 @@ class OrderService {
                 customer_name: customer.name,
                 customer_phone: customer.mobile,
                 customer_id: userId,
+                customer_email: customer.email
             },
             order_meta: {
                 // TODO: will add frontend url later
@@ -424,6 +445,8 @@ class OrderService {
             orderCreatedAt: paymentData.created_at,
             paymentSessionId: paymentData.payment_session_id,
         }, tx);
+
+        await addPaymentExpirationJob(payment.id);
 
         return payment;
     }
