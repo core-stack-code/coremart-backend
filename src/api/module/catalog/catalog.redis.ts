@@ -1,4 +1,4 @@
-import { getCache } from "@core/lib/redis/cache";
+import { getRedisCache } from "@core/lib/redis/cache";
 import { ProductListQuery } from "./catalog.validator";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
 
@@ -8,7 +8,7 @@ class CatalogRedis {
         const contexKey = JSON.stringify(query);
         const key = getRedisKeys('cache', 'products:list', contexKey);
 
-        const products = await getCache<ProductListQuery>(key);
+        const products = await getRedisCache<ProductListQuery>(key);
     }
 
 }

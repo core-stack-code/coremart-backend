@@ -8,8 +8,9 @@ import { AppError } from "@core/utils/response";
 import { favoritesRepository } from "@mod/favorites/favorites.repository";
 import { favoritesService } from "@mod/favorites/favorites.service";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
-import { getCache, setCache } from "@core/lib/redis/cache";
+import { getRedisCache, setRedisCache } from "@core/lib/redis/cache";
 import { getPaginationData } from "@core/utils/getPaginatoinData";
+import { REDIS_TTL } from "@core/constants/redisTtl";
 
 
 class CatalogService {
@@ -17,7 +18,7 @@ class CatalogService {
         // from cache
         const key = getRedisKeys('cache', 'products:details', productSlug)
         
-        const cached = await getCache<ProductDetailApiResponse>(key);
+        const cached = await getRedisCache<ProductDetailApiResponse>(key);
         if (cached) return cached;
 
 
@@ -110,7 +111,7 @@ class CatalogService {
         }
         
         // set to cache
-        await setCache(key, responseData, 900); // cache for 15 minutes
+        await setRedisCache(key, responseData, REDIS_TTL.PRODUCT_DETAIL);
 
         return responseData;
     }
@@ -123,7 +124,7 @@ class CatalogService {
         const contexKey = JSON.stringify(query);
         const key = getRedisKeys('cache', 'products:list', contexKey);
 
-        const cached = await getCache<ProductListApiResponse>(key);
+        const cached = await getRedisCache<ProductListApiResponse>(key);
         if (cached) return cached;
 
 
@@ -160,10 +161,10 @@ class CatalogService {
         const pagination = getPaginationData(query.page, query.limit, total);
 
         // set to cache
-        await setCache(key, {
+        await setRedisCache(key, {
             products: formattedProducts,
             pagination,
-        }, 300); // cache for 5 minutes
+        }, REDIS_TTL.PRODUCT_LIST);
 
         return {
             products: formattedProducts,
@@ -231,7 +232,7 @@ class CatalogService {
         const context = JSON.stringify({ categorySlug, ...query });
         const key = getRedisKeys('cache', 'categories:products', context);
 
-        const cached = await getCache<ProductListApiResponse>(key);
+        const cached = await getRedisCache<ProductListApiResponse>(key);
         if (cached) return cached;
 
 
@@ -272,10 +273,10 @@ class CatalogService {
         const pagination = getPaginationData(query.page, query.limit, total);
 
         // set to cache
-        await setCache(key, {
+        await setRedisCache(key, {
             products: formattedProducts,
             pagination,
-        }, 300); // cache for 5 minutes
+        }, REDIS_TTL.PRODUCT_LIST);
 
         return {
             products: formattedProducts,

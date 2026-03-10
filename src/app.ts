@@ -6,15 +6,17 @@ import helmet from "helmet";
 import hpp from "hpp";
 
 import appRoutes from "./core/router/appRoutes";
-import { env } from "./core/config/env";
-import { apiLimiter } from "./core/lib/rateLimit";
 import { globalErrorHandler } from "./api/middlewares/error.middleware";
 import { rawBodyMiddleware } from "./api/middlewares/rawBody.middleware";
-import { log } from "./api/utils/log";
-import { AppError } from "./core/utils/response";
+import { rateLimitMiddleware } from "@api/middlewares/ratelimit.middleware";
+import { env } from "./core/config/env";
+
 import { connectPrisma } from "./core/config/prisma";
-import { logger } from "./api/utils/logger";
+import { apiLimiter } from "./core/lib/rateLimit";
+import { AppError } from "./core/utils/response";
 import { appConfig } from "./core/config/app.config";
+import { logger } from "./api/utils/logger";
+import { log } from "./api/utils/log";
 
 class App {
     public app: Application;
@@ -55,6 +57,11 @@ class App {
         this.app.use(morgan('dev'));
         this.app.use(helmet());
         this.app.use(hpp());
+
+        // custom rate limit
+        this.app.use('/api', rateLimitMiddleware.publicAPiRateLimit);
+        
+        // use rate limit with libary as backup if redis goes down
         this.app.use('/api', apiLimiter);
     }
 

@@ -1,24 +1,28 @@
 import QueryString from "qs";
 import { OAuthProvider } from "generated/prisma/enums";
 
+
 import { oauthRepository } from "./oauth.repository";
+import { OauthLoginData } from "./oauth.utils";
 import { userRepository } from "@mod/users/user.repository";
 import { sessionService } from "@mod/session/session.service";
 
 import { env } from "@core/config/env";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
-import { OauthLoginData } from "./oauth.utils";
-import { getUuid } from "@core/utils/db.helper";
-import { getState, encryptLinkingState, decryptLinkingState } from "@core/lib/crypto";
+import { getState } from "@core/lib/crypto";
 import { AppError } from "@core/utils/response";
 import { exchangeGoogleCode, fetchGoogleProfile, GOOGLE_OAUTH } from "@core/integrations/oauth/google.client";
 import { exchangeGitHubCode, fetchGithubProfile, GITHUB_OAUTH } from "@core/integrations/oauth/github.client";
+import { getRedisTemp, setRedisTemp } from "@core/lib/redis/tempStore";
+import { getRedisKeys, RedisKeyEntity } from "@core/utils/gerRedisKeys";
+import { REDIS_TTL } from "@core/constants/redisTtl";
 
 type QyeryParam = string | QueryString.ParsedQs | (string | QueryString.ParsedQs)[] | undefined
+type RedisKeyType = Extract<RedisKeyEntity, "state:google" | "state:github" | "link:google" | "link:github">;
 
 
 class OAuthService {
-    public getGoogleAuthUrl(): { url: string; state: string } {
+    public async getGoogleAuthUrl() {
         const state = getState();
 
         const query = QueryString.stringify({
@@ -31,10 +35,10 @@ class OAuthService {
             prompt: "consent",
         });
 
-        return {
-            url: `${GOOGLE_OAUTH.authUrl}?${query}`,
-            state,
-        }
+        const key = getRedisKeys("oauth", "state:google", state);
+        await setRedisTemp(key, "1", REDIS_TTL.OAUTH_TEMP);
+
+        return `${GOOGLE_OAUTH.authUrl}?${query}`
     }
 
     public async handleGoogleCallback(code: string): Promise<OauthLoginData> {
@@ -50,7 +54,7 @@ class OAuthService {
         };
     }
 
-    public getGitHubAuthUrl(): { url: string; state: string } {
+    public async getGitHubAuthUrl() {
         const state = getState();
 
         const query = QueryString.stringify({
@@ -60,10 +64,10 @@ class OAuthService {
             state,
         });
 
-        return {
-            url: `${GITHUB_OAUTH.authUrl}?${query}`,
-            state,
-        }
+        const key = getRedisKeys("oauth", "state:github", state);
+        await setRedisTemp(key, "1", REDIS_TTL.OAUTH_TEMP);
+
+        return `${GITHUB_OAUTH.authUrl}?${query}`
     }
 
     
@@ -104,7 +108,6 @@ class OAuthService {
         }
 
         await oauthRepository.create(userId, {
-            id: getUuid(),
             provider,
             providerAccountId: oauthProviderId,
             email,
@@ -114,8 +117,8 @@ class OAuthService {
         return await sessionService.createSession(userId, deviceInfo);
     }
 
-    public getGoogleLinkingUrl(userId: string): { url: string; state: string } {
-        const state = encryptLinkingState(userId);
+    public async getGoogleLinkingUrl(userId: string) {
+        const state = getState();
 
         const query = QueryString.stringify({
             client_id: env.GOOGLE_CLIENT_ID,
@@ -127,14 +130,14 @@ class OAuthService {
             prompt: "consent",
         });
 
-        return {
-            url: `${GOOGLE_OAUTH.authUrl}?${query}`,
-            state,
-        }
+        const key = getRedisKeys("oauth", "link:google", state);
+        await setRedisTemp(key, { userId }, REDIS_TTL.OAUTH_TEMP);
+
+        return `${GOOGLE_OAUTH.authUrl}?${query}`
     }
 
-    public getGitHubLinkingUrl(userId: string): { url: string; state: string } {
-        const state = encryptLinkingState(userId);
+    public async getGitHubLinkingUrl(userId: string) {
+        const state = getState();
 
         const query = QueryString.stringify({
             client_id: env.GITHUB_CLIENT_ID,
@@ -143,18 +146,19 @@ class OAuthService {
             state,
         });
 
-        return {
-            url: `${GITHUB_OAUTH.authUrl}?${query}`,
-            state,
-        }
+        const key = getRedisKeys("oauth", "link:github", state);
+        await setRedisTemp(key, { userId }, REDIS_TTL.OAUTH_TEMP);
+
+        return `${GITHUB_OAUTH.authUrl}?${query}`
     }
 
     public async linkOAuthAccount(
-        state: string,
+        userId: string | null,
         userInfo: OauthLoginData & { provider: OAuthProvider }
     ): Promise<void> {
-        const stateData = decryptLinkingState(state);
-        const userId = stateData.userId;
+        if (!userId) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid linking state");
+        }
 
         const { email, oauthProviderId, provider } = userInfo;
 
@@ -190,14 +194,19 @@ class OAuthService {
 
         // Create the OAuth link
         await oauthRepository.create(userId, {
-            id: getUuid(),
             provider,
             providerAccountId: oauthProviderId,
             email,
         });
     }
 
-    public validateRedirectionQuery(code: QyeryParam, state: QyeryParam, storedState: any): { code: string; state: string } {
+    public async validateRedirectionQuery(
+        code: QyeryParam,
+        state: QyeryParam,
+        redisKeyType: RedisKeyType,
+    ) {
+        let userId: string | null = null;
+
         if (!code || typeof code !== "string") {
             throw new AppError(
                 400, 
@@ -206,15 +215,28 @@ class OAuthService {
             );
         }
 
+        const storedValue = await getRedisTemp(
+            getRedisKeys("oauth", redisKeyType, state as string)
+        );
+
         if (!state || typeof state !== "string") {
             throw new AppError(400, "BAD_REQUEST", "Missing OAuth state");
         }
 
-        if (!storedState || storedState !== state) {
+        if (!storedValue) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Invalid state, please try again later");
+        }
+
+        if ((redisKeyType.startsWith("state") && typeof storedValue !== "string") ||
+            (redisKeyType.startsWith("link") && typeof storedValue !== "object")) {
             throw new AppError(401, "UNAUTHORIZED", "Invalid OAuth state");
         }
 
-        return { code, state }
+        if (redisKeyType.startsWith("link") && typeof storedValue === "object" && "userId" in storedValue) {
+            userId = storedValue.userId as string;
+        }
+
+        return { code,  state, userId };
     }
 
     public getLinkedOAuthAccounts(userId: string) {

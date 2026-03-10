@@ -1,4 +1,5 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
+import { getUuid } from "@core/utils/db.helper";
 import { OtpSession } from "generated/prisma/client";
 import { OtpSessionType } from "generated/prisma/enums";
 import { OtpSessionUpdateInput } from "generated/prisma/models";
@@ -30,7 +31,6 @@ class OtpSessionRepository {
 
 
     public async create(data: {
-        id: string;
         userId: string;
         sessionType: OtpSessionType;
         otpHash: string;
@@ -40,7 +40,7 @@ class OtpSessionRepository {
     ): Promise<void> {
         await tx.otpSession.create({
             data: {
-                id: data.id,
+                id: getUuid(),
                 userId: data.userId,
                 sessionType: data.sessionType,
                 otpHash: data.otpHash,

@@ -4,7 +4,7 @@ import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from 
 
 import { AppError } from "@core/utils/response";
 import { slugify } from "@core/utils/db.helper";
-import { deleteByPattern } from "@core/lib/redis/cache";
+import { deleteRedisCacheByPattern } from "@core/lib/redis/cache";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
 
 
@@ -146,7 +146,7 @@ class CategoryService {
                 );
             }
 
-            await deleteByPattern(getRedisKeys('cache', 'categories:products', '*'));
+            await deleteRedisCacheByPattern(getRedisKeys('cache', 'categories:products', '*'));
         });
     }
 

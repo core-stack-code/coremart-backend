@@ -1,18 +1,19 @@
 
-type RedisKeyDomain = 'cache' | 'session' | 'ratelimit' | 'otp' | 'oauth';
+type RedisKeyDomain = 'cache'  | 'oauth' | 'ratelimit';
 
-type RedisKeyEntity = 
+export type RedisKeyEntity = 
     'products:list' |
     'products:details' |
     'categories:products' |
-    'reviews'
+    'reviews' |
+    'state:google' |
+    'state:github' |
+    'link:google' |
+    'link:github' |
+    'public:ip' |
+    'otp:user'
 
 
 export const getRedisKeys = (domain: RedisKeyDomain, entity: RedisKeyEntity, content: string) => {
-    switch (domain) {
-        case 'cache':
-            return `cache:${entity}:${content}`;
-        default:
-            return 'unknown';
-    }
+    return `${domain}:${entity}:${content}`;
 }

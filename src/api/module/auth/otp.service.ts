@@ -65,7 +65,6 @@ class OtpService {
             );
 
             await otpSessionRepository.create({
-                id: getUuid(),
                 userId: user.id,
                 sessionType,
                 otpHash: hash,

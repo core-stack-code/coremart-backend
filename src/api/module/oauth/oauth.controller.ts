@@ -1,32 +1,24 @@
 import { Request, Response } from "express";
 import { oauthService } from "./oauth.service";
-import { STATE_COOKIE_CONFIG } from "./oauth.utils";
+
+import { env } from "@core/config/env";
 import { applyAuthCookies } from "@core/utils/cookies.helper";
 import { AppResponse } from "@core/utils/response";
+import { log } from "@api/utils/log";
 
 
 class OauthController {
-    public googleRedirect(_req: Request, res: Response) {
-        const { url, state } = oauthService.getGoogleAuthUrl();
+    public async googleRedirect(_req: Request, res: Response) {
+        const url = await oauthService.getGoogleAuthUrl();
+        log.info("Redirecting to Google OAuth URL:", url);
 
-        res.cookie(STATE_COOKIE_CONFIG.name, state, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            maxAge: STATE_COOKIE_CONFIG.age,
-        });
-        
         return res.redirect(url)
     }
 
     public async googleCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
-
-        const { 
-            code: validCode,
-        } = oauthService.validateRedirectionQuery(code, state, storedState)
+        const { code: validCode } = await oauthService.validateRedirectionQuery(code, state, "state:google");
 
         const userInfo =  await oauthService.handleGoogleCallback(validCode);
 
@@ -40,21 +32,12 @@ class OauthController {
 
         applyAuthCookies(res, { accessToken, refreshToken });
 
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Google OAuth successful.",
-        });
+        return res.redirect(env.CLIENT_DOMAIN_URL);
     }
 
-    public githubRedirect(_req: Request, res: Response) {
-        const { url, state } = oauthService.getGitHubAuthUrl();
-
-        res.cookie(STATE_COOKIE_CONFIG.name, state, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            maxAge: STATE_COOKIE_CONFIG.age,
-        });
+    public async githubRedirect(_req: Request, res: Response) {
+        const url = await oauthService.getGitHubAuthUrl();
+        log.info("Redirecting to GitHub OAuth URL:", url);
         
         return res.redirect(url)
     }
@@ -62,11 +45,7 @@ class OauthController {
     public async githubCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
-
-        const { 
-            code: validCode,
-        } = oauthService.validateRedirectionQuery(code, state, storedState)
+        const { code: validCode } = await oauthService.validateRedirectionQuery(code, state, "state:github");
 
         const userInfo = await oauthService.handleGitHubCallback(validCode);
 
@@ -81,22 +60,13 @@ class OauthController {
         // Set cookies
         applyAuthCookies(res, { accessToken, refreshToken });
 
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "GitHub OAuth successful.",
-        });
+        return res.redirect(env.CLIENT_DOMAIN_URL);
     }
     
-    public linkGoogleRedirect(req: Request, res: Response) {
-        const { url, state } = oauthService.getGoogleLinkingUrl(req.user!.id);
-
-        res.cookie(STATE_COOKIE_CONFIG.name, state, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            maxAge: STATE_COOKIE_CONFIG.age,
-        });
-        
+    public async linkGoogleRedirect(req: Request, res: Response) {
+        const url = await oauthService.getGoogleLinkingUrl(req.user!.id);
+        log.info("Redirecting to Google OAuth URL for linking:", url);
+       
         return res.redirect(url);
     }
 
@@ -104,16 +74,14 @@ class OauthController {
     public async linkGoogleCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
-
         const { 
             code: validCode,
-            state: validState
-        } = oauthService.validateRedirectionQuery(code, state, storedState)
+            userId
+        } = await oauthService.validateRedirectionQuery(code, state, "link:google")
 
         const userInfo = await oauthService.handleGoogleCallback(validCode);
 
-        await oauthService.linkOAuthAccount(validState, {
+        await oauthService.linkOAuthAccount(userId, {
             ...userInfo,
             provider: "GOOGLE",
         });
@@ -125,16 +93,10 @@ class OauthController {
     }
 
 
-    public linkGithubRedirect(req: Request, res: Response) {
-        const { url, state } = oauthService.getGitHubLinkingUrl(req.user!.id);
+    public async linkGithubRedirect(req: Request, res: Response) {
+        const url = await oauthService.getGitHubLinkingUrl(req.user!.id);
+        log.info("Redirecting to GitHub OAuth URL for linking:", url);
 
-        res.cookie(STATE_COOKIE_CONFIG.name, state, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            maxAge: STATE_COOKIE_CONFIG.age,
-        });
-        
         return res.redirect(url);
     }
 
@@ -142,16 +104,14 @@ class OauthController {
     public async linkGithubCallback(req: Request, res: Response) {
         const { code, state } = req.query;
 
-        const storedState = req.cookies[STATE_COOKIE_CONFIG.name];
-
         const { 
             code: validCode,
-            state: validState
-        } = oauthService.validateRedirectionQuery(code, state, storedState)
+            userId
+        } = await oauthService.validateRedirectionQuery(code, state, "link:github")
 
         const userInfo = await oauthService.handleGitHubCallback(validCode);
 
-        await oauthService.linkOAuthAccount(validState, {
+        await oauthService.linkOAuthAccount(userId, {
             ...userInfo,
             provider: "GITHUB",
         });

@@ -32,7 +32,7 @@ export const getCookiesConfig = (): CookieOptions => {
 
 export const applyAuthCookies = (
     res: Response, 
-    {accessToken, refreshToken}: {accessToken: string, refreshToken: string},
+    { accessToken, refreshToken }: {accessToken: string, refreshToken: string},
     type: UserRole = 'user'
 ) => {
     const accessCookieName = type === 'admin' 

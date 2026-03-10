@@ -29,7 +29,9 @@ export const compareOtpHash = (otp: string, hash: string): boolean => {
     );
 }
 
-
+// ----------------------------------------------------------
+// as per new code with redis, this fucntions are not in used
+// ----------------------------------------------------------
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;

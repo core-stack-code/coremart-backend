@@ -1,4 +1,5 @@
 import { prisma } from "@core/config/prisma";
+import { getUuid } from "@core/utils/db.helper";
 import { OAuthAccount } from "generated/prisma/client";
 import { OAuthProvider } from "generated/prisma/enums";
 
@@ -33,7 +34,6 @@ class OAuthRepository {
     }
 
     public async create(userId: string, data: {
-        id: string;
         provider: OAuthProvider;
         providerAccountId: string;
         email: string;
@@ -41,7 +41,7 @@ class OAuthRepository {
         await prisma.oAuthAccount.create({
             data: {
                 userId,
-                id: data.id,
+                id: getUuid(),
                 provider: data.provider,
                 providerAccountId: data.providerAccountId,
                 emailFromProvider: data.email,

@@ -7,7 +7,7 @@ const oauthRouter = express.Router();
 
 oauthRouter.get(
     '/google',
-    oauthController.googleRedirect
+    asyncWrapper(oauthController.googleRedirect)
 );
 
 oauthRouter.get(
@@ -17,7 +17,7 @@ oauthRouter.get(
 
 oauthRouter.get(
     '/github',
-    oauthController.githubRedirect
+    asyncWrapper(oauthController.githubRedirect)
 );
 
 oauthRouter.get(
@@ -28,7 +28,7 @@ oauthRouter.get(
 oauthRouter.get(
     '/link-google',
     authMiddleware({ requireEmailVerified: false }),
-    oauthController.linkGoogleRedirect
+    asyncWrapper(oauthController.linkGoogleRedirect)
 );
 
 oauthRouter.get(
@@ -39,7 +39,7 @@ oauthRouter.get(
 oauthRouter.get(
     '/link-github',
     authMiddleware({ requireEmailVerified: false }),
-    oauthController.linkGithubRedirect
+    asyncWrapper(oauthController.linkGithubRedirect)
 );
 
 oauthRouter.get(

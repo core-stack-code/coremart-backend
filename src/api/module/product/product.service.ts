@@ -2,7 +2,7 @@ import { prisma } from "@core/config/prisma";
 import { CreateProductPayload, ProductListQuery, UpdateProductPayload } from "./product.validator";
 import { ProductInput, productRepository, ProductResultItem } from "./product.repository";
 
-import { deleteByPattern, deleteCache } from "@core/lib/redis/cache";
+import { deleteRedisCacheByPattern, deleteRedisCache } from "@core/lib/redis/cache";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
 import { ProductDetailItem, ProductsItem } from "@core/types/product";
 import { AppError } from "@core/utils/response";
@@ -44,8 +44,8 @@ class ProductService {
                 await productRepository.addImages(product.id, images, tx);
             }
 
-            await deleteByPattern(getRedisKeys('cache', 'products:list', '*'));
-            await deleteByPattern(getRedisKeys('cache', 'categories:products', '*'));
+            await deleteRedisCacheByPattern(getRedisKeys('cache', 'products:list', '*'));
+            await deleteRedisCacheByPattern(getRedisKeys('cache', 'categories:products', '*'));
         });
     }
 
@@ -90,9 +90,9 @@ class ProductService {
                 await productRepository.addImages(product.id, images, tx);
             }
 
-            await deleteByPattern(getRedisKeys('cache', 'products:list', '*'));
-            await deleteByPattern(getRedisKeys('cache', 'categories:products', '*'));
-            await deleteCache(getRedisKeys('cache', 'products:list', id))
+            await deleteRedisCacheByPattern(getRedisKeys('cache', 'products:list', '*'));
+            await deleteRedisCacheByPattern(getRedisKeys('cache', 'categories:products', '*'));
+            await deleteRedisCache(getRedisKeys('cache', 'products:list', id))
         });
     }
 

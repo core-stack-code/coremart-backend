@@ -14,6 +14,7 @@ import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { identityMiddleware } from '@api/middlewares/identity.middleware';
 import { changePasswordZodSchema } from '@core/validator/password.validator';
+import { rateLimitMiddleware } from '@api/middlewares/ratelimit.middleware';
 
 const authRouter = express.Router();
 
@@ -66,6 +67,7 @@ authRouter.post(
 authRouter.post(
     '/otp/generate',
     authMiddleware({ requireEmailVerified: false }),
+    rateLimitMiddleware.otpRateLimit,
     validationMiddleware.validateRequest(generateOtpZodSchema),
     asyncWrapper(authController.generateOtp)
 )
@@ -80,6 +82,7 @@ authRouter.post(
 authRouter.post(
     '/otp/resend',
     authMiddleware({ requireEmailVerified: false }),
+    rateLimitMiddleware.otpRateLimit,
     validationMiddleware.validateRequest(resendOtpZodSchema),
     asyncWrapper(authController.resentOtp)
 )
