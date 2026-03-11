@@ -1,6 +1,6 @@
 import { prisma, PrismaTx } from "@/core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
-import { UserUpdateInput } from "generated/prisma/models";
+import { UserUpdateInput, UserWhereInput } from "generated/prisma/models";
 
 
 class UserRepository {
@@ -66,8 +66,8 @@ class UserRepository {
         return users;
     }
 
-    public async count() {
-        return await prisma.user.count();
+    public async count(where: UserWhereInput = {}) {
+        return await prisma.user.count({ where });
     }
 
     public async userDetails(id: string) {

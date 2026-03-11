@@ -164,7 +164,7 @@ class OrderRepository {
         })
     }
 
-    public async countOrders(where: OrderWhereInput) {
+    public async countOrders(where: OrderWhereInput = {}) {
         return prisma.order.count({ where });
     }
 

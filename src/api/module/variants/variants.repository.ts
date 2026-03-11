@@ -1,5 +1,6 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { getUuid } from "@core/utils/db.helper";
+import { VariantWhereInput } from "generated/prisma/models";
 
 
 class VariantsRepository {
@@ -162,6 +163,12 @@ class VariantsRepository {
                 price: true,
             }
         });
+    }
+
+    public async count(where: VariantWhereInput = {}) {
+        return await prisma.variant.count({
+            where,
+        })
     }
 }
 

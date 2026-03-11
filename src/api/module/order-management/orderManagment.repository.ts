@@ -7,6 +7,9 @@ class OrderManagmentRepository {
         return await prisma.order.findMany({
             skip,
             take,
+            orderBy: {
+                createdAt: "asc"
+            },
             select: {
                 id: true,
                 status: true,
@@ -140,6 +143,41 @@ class OrderManagmentRepository {
         return await prisma.payment.update({
             where: { id: paymentId },
             data
+        })
+    }
+
+    public async totalRevenue(startData?: Date, endDate?: Date) {
+        return await prisma.order.aggregate({
+            _sum: {
+                totalAmount: true,
+            },
+            where: {
+                status: {
+                    in: ["CONFIRMED", "SHIPPED", "DELIVERED"],
+                },
+                createdAt: {
+                    gte: startData,
+                    lte: endDate,
+                }
+            }
+        })
+    }
+
+    public async groupByOrderStatus() {
+        return prisma.order.groupBy({
+            by: ["status"],
+            _count: {
+                status: true
+            }
+        })
+    }
+
+    public async groupByPaymentStatus() {
+        return prisma.payment.groupBy({
+            by: ["cfStatus"],
+            _count: {
+                cfStatus: true
+            }
         })
     }
 }
