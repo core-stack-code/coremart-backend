@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { addressService } from "./address.service";
 import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 class AddressController {
     public async createAddress(req: Request, res: Response) {

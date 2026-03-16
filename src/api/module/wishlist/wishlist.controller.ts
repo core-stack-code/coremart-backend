@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { wishlistService } from "./wishlist.service";
 import { ProductsOfWishlistQuery, WishlistPayload } from "./wishlist.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class WishlistController {

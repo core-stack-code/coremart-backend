@@ -4,7 +4,7 @@ import { createReviewSchema, updateReviewSchema } from './review.validator';
 
 import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
-import { asyncWrapper } from '@core/utils/asyncWrapper';
+import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const reviewRouter = express.Router();
 

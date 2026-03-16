@@ -3,7 +3,7 @@ import { QUEUE_NAMES, QUEUE_JOBS, redisConnection } from "../queue";
 import { handleOrderExpiration, handlePaymentExpiration } from "../handler/expiration.handler";
 import { handleEmailVerification, handlePasswordReset, handleOrderConfirm } from "../handler/email.handler";
 import { handleOtpCleanup, handleSessionCleanup } from "../handler/cleanup.handler";
-import { log } from "@api/utils/log";
+import { Log } from "@core/utils/log";
 
 
 new Worker(QUEUE_NAMES.EXPIRATION,
@@ -20,7 +20,7 @@ new Worker(QUEUE_NAMES.EXPIRATION,
             }
         }
         catch (e) {
-            log.error(`Expiratoin job failed: ${job.name}`, e);
+            Log.error(`Expiratoin job failed: ${job.name}`, e);
             throw e;
         }
     },
@@ -46,7 +46,7 @@ new Worker(QUEUE_NAMES.EMAIL,
             }
         }
         catch (e) {
-            log.error(`Email job failed: ${job.name}`, e);
+            Log.error(`Email job failed: ${job.name}`, e);
             throw e;
         }
         
@@ -69,7 +69,7 @@ new Worker(QUEUE_NAMES.CLEANUP,
         }
         }
         catch (e) {
-            log.error(`Cleanup job failed: ${job.name}`, e);
+            Log.error(`Cleanup job failed: ${job.name}`, e);
             throw e;
         }
     },

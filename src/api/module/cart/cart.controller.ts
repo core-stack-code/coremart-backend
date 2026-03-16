@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { cartService } from "./cart.service";
 import { UpdateCartItemPayload } from "./cart.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class CartController {

@@ -5,13 +5,10 @@ import {
     CreateDiscountPayload,
     UpdateDiscountPayload,
     ReplaceScopePayload,
-    ToggleDiscountPayload,
     DiscountListQuery,
 } from "./discount.validator";
-import { PaginationType } from "@core/types/common";
-import { AppError } from "@core/utils/response";
-import { paiseToRupees } from "@core/utils/product.helper";
-import { log } from "@api/utils/log";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
+import { AppError } from "@api/utils/response";
 
 
 class DiscountService {
@@ -20,7 +17,7 @@ class DiscountService {
 
         await this.validateScopeIds(productIds ?? [], categoryIds ?? []);
 
-        const result = await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx) => {
             const discount = await discountRepository.create(discountData, tx);
 
             if (productIds && productIds.length > 0) {
@@ -30,25 +27,13 @@ class DiscountService {
             if (categoryIds && categoryIds.length > 0) {
                 await discountRepository.createManyDiscountCategories(discount.id, categoryIds, tx);
             }
-
-            return discount;
         });
-
-        return {
-            ...result,
-            scopeProductCount: productIds?.length ?? 0,
-            scopeCategoryCount: categoryIds?.length ?? 0,
-        };
     }
 
     public async updateDiscount(discountId: string, payload: UpdateDiscountPayload) {
-        const existing = await discountRepository.findById(discountId);
+        const existDiscount = await this.existDiscount(discountId);
 
-        if (!existing) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Discount not found");
-        }
-
-        if (payload.type && payload.type !== existing.type) {
+        if (payload.type && payload.type !== existDiscount.type) {
             throw new AppError(400, "BAD_REQUEST", "Changing discount type is not allowed");
         }
 
@@ -57,11 +42,7 @@ class DiscountService {
     }
 
     public async replaceScope(discountId: string, payload: ReplaceScopePayload) {
-        const existing = await discountRepository.findById(discountId);
-
-        if (!existing) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Discount not found");
-        }
+        const existDiscount = await this.existDiscount(discountId);
 
         const productIds = payload.productIds ?? [];
         const categoryIds = payload.categoryIds ?? [];
@@ -88,19 +69,6 @@ class DiscountService {
         };
     }
 
-    public async toggleDiscount(discountId: string, payload: ToggleDiscountPayload) {
-        const existing = await discountRepository.findById(discountId);
-        if (!existing) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Discount not found");
-        }
-
-        const updated = await discountRepository.update(discountId, {
-            isActive: payload.isActive,
-        });
-
-        return updated;
-    }
-
     public async getDiscountList(query: DiscountListQuery) {
         const skip = (query.page - 1) * query.limit;
         const take = query.limit;
@@ -119,27 +87,13 @@ class DiscountService {
             discountRepository.count(where),
         ]);
 
-        const totalPages = Math.ceil(total / query.limit);
-        const pagination: PaginationType = {
-            page: query.page,
-            limit: query.limit,
-            totalPages,
-            totalItems: total,
-            isPrevPage: query.page > 1,
-            isNextPage: query.page < totalPages,
-        };
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         const formateDiscount = discounts.map((d) => {
             const { _count, ...discount } = d;
-            const benefitValue = discount.benefitType === "FIXED_AMOUNT"
-                ? paiseToRupees(discount.benefitValue)
-                : discount.benefitValue;
 
             return {
                 ...discount,
-                benefitValue,
-                maxDiscount: discount.maxDiscount ? paiseToRupees(discount.maxDiscount) : null,
-                minOrderAmount: discount.minOrderAmount ? paiseToRupees(discount.minOrderAmount) : null,
                 scopeProductCount: _count.discountProducts,
                 scopeCategoryCount: _count.discountCategories,
             };
@@ -165,8 +119,6 @@ class DiscountService {
 
         return {
             ...discountData,
-            maxDiscount: discount.maxDiscount ? paiseToRupees(discount.maxDiscount) : null,
-            minOrderAmount: discount.minOrderAmount ? paiseToRupees(discount.minOrderAmount) : null,
             discountProducts,
             discountCategories,
             scopeProductCount: _count.discountProducts,
@@ -175,12 +127,10 @@ class DiscountService {
     }
 
     public async deleteDiscount(discountId: string) {
-        const existing = await discountRepository.findById(discountId);
-        if (!existing) {
-            throw new AppError(404, "RESOURCE_NOT_FOUND", "Discount not found");
-        }
+        const existedDiscount = await this.existDiscount(discountId);
 
         const orderCount = await discountRepository.countOrdersByDiscountId(discountId);
+
         if (orderCount > 0) {
             throw new AppError(
                 400,
@@ -193,6 +143,15 @@ class DiscountService {
     }
 
 
+    private async existDiscount (discountId: string) {
+        const existedDiscount = await discountRepository.findById(discountId);
+
+        if (!existedDiscount) {
+            throw new AppError(404, "RESOURCE_NOT_FOUND", "Discount not found");
+        }
+
+        return existedDiscount;
+    }
 
     private async validateScopeIds(productIds: string[], categoryIds: string[]) {
         if (productIds.length > 0) {

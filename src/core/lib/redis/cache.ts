@@ -1,5 +1,5 @@
 import { redis } from "@core/config/redis";
-import { logger } from "@api/utils/logger";
+import { logger } from "@core/utils/logger";
 
 export const getRedisCache = async <T>(key: string): Promise<T | null> => {
     try {

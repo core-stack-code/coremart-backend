@@ -4,22 +4,20 @@ import {
     CreateDiscountPayload,
     UpdateDiscountPayload,
     ReplaceScopePayload,
-    ToggleDiscountPayload,
     DiscountListQuery,
 } from "./discount.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class DiscountController {
     public async createDiscount(req: Request, res: Response) {
         const payload = req.body as CreateDiscountPayload;
 
-        const result = await discountService.createDiscount(payload);
+        await discountService.createDiscount(payload);
 
         AppResponse(res, 201, {
             code: "CREATED",
-            message: "New discount created",
-            data: result,
+            message: "New discount created"
         });
     }
 
@@ -44,19 +42,6 @@ class DiscountController {
         AppResponse(res, 200, {
             code: "OK",
             message: "Discount scope replaced",
-            data: result,
-        });
-    }
-
-    public async toggleDiscount(req: Request, res: Response) {
-        const discountId = req.params.discountId;
-        const payload = req.body as ToggleDiscountPayload;
-
-        const result = await discountService.toggleDiscount(discountId, payload);
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Discount status toggled",
             data: result,
         });
     }

@@ -4,7 +4,7 @@ import { favoritesController } from "./favorites.controller";
 
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const favoritesRouter = express.Router();
 

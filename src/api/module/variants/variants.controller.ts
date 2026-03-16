@@ -6,7 +6,7 @@ import {
     UpdateProductSkuPayload,
     VariantImagePayload
 } from "./variants.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class VariantsController {

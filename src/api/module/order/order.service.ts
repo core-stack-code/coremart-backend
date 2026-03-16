@@ -14,7 +14,7 @@ import { createCashfreeOrder } from "@core/integrations/cashfree/cashfree.client
 import { CashFreeCreateOrderResponse, CashfreePaymentWebhookPayload } from "@core/integrations/cashfree/type";
 import { verifyCashFreeWebhookSignature } from "@core/integrations/cashfree/cashfree.client";
 import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { PaginationType } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
 import { addOrderExpirationJob, addPaymentExpirationJob } from "./order.utils";

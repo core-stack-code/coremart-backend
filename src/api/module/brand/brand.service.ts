@@ -1,6 +1,6 @@
 import { CreateBrandPayload, UpdateBrandPayload } from "./brand.validator";
 import { brandRepository } from "./brand.repository";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { slugify } from "@core/utils/db.helper";
 
 class BrandService {

@@ -5,7 +5,7 @@ import { categoryController } from "./category.controller";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { productCategoryController } from "@mod/product-category/productCategory.controller";
 import { adminMiddleware } from "@api/middlewares/admin.middleware";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const categoryRouter = express.Router();
 

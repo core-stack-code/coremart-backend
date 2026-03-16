@@ -4,7 +4,7 @@ import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
 import { ProductDetailApiResponse, ProductListApiResponse, ProductListResultItem, ProductVariantWithSKU } from "@core/types/product";
 import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { favoritesRepository } from "@mod/favorites/favorites.repository";
 import { favoritesService } from "@mod/favorites/favorites.service";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";

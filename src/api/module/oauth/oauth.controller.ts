@@ -3,14 +3,14 @@ import { oauthService } from "./oauth.service";
 
 import { env } from "@core/config/env";
 import { applyAuthCookies } from "@core/utils/cookies.helper";
-import { AppResponse } from "@core/utils/response";
-import { log } from "@api/utils/log";
+import { AppResponse } from "@api/utils/response";
+import { Log } from "@core/utils/log";
 
 
 class OauthController {
     public async googleRedirect(_req: Request, res: Response) {
         const url = await oauthService.getGoogleAuthUrl();
-        log.info("Redirecting to Google OAuth URL:", url);
+        Log.info("Redirecting to Google OAuth URL:", url);
 
         return res.redirect(url)
     }
@@ -37,7 +37,7 @@ class OauthController {
 
     public async githubRedirect(_req: Request, res: Response) {
         const url = await oauthService.getGitHubAuthUrl();
-        log.info("Redirecting to GitHub OAuth URL:", url);
+        Log.info("Redirecting to GitHub OAuth URL:", url);
         
         return res.redirect(url)
     }
@@ -65,7 +65,7 @@ class OauthController {
     
     public async linkGoogleRedirect(req: Request, res: Response) {
         const url = await oauthService.getGoogleLinkingUrl(req.user!.id);
-        log.info("Redirecting to Google OAuth URL for linking:", url);
+        Log.info("Redirecting to Google OAuth URL for linking:", url);
        
         return res.redirect(url);
     }
@@ -95,7 +95,7 @@ class OauthController {
 
     public async linkGithubRedirect(req: Request, res: Response) {
         const url = await oauthService.getGitHubLinkingUrl(req.user!.id);
-        log.info("Redirecting to GitHub OAuth URL for linking:", url);
+        Log.info("Redirecting to GitHub OAuth URL for linking:", url);
 
         return res.redirect(url);
     }

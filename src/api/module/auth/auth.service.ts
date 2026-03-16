@@ -3,7 +3,7 @@ import { passwordService } from "@mod/password/password.service";
 import { userRepository } from "@mod/users/user.repository";
 import { passwordRepository } from "@mod/password/password.repository";
 
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
 import { LoginPayload, SignupPayload } from "./auth.validator";

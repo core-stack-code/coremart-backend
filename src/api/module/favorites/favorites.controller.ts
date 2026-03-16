@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { favoritesService } from "./favorites.service";
 import { FavoriteListQuery } from "./favorites.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 class FavoritesController {
     public async getFavoritesList(req: Request, res: Response) {

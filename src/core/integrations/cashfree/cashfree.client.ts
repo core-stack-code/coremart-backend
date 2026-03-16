@@ -3,8 +3,8 @@ import crypto from "crypto";
 import { env } from "@core/config/env";
 
 import { CashFreeCreateOrderPayload, CashFreeCreateOrderResponse } from "./type";
-import { log } from "@api/utils/log";
-import { AppError } from "@core/utils/response";
+import { Log } from "@core/utils/log";
+import { AppError } from "@api/utils/response";
 import { getPaymentExpiryTime } from "@mod/order/order.utils";
 
 const CASHFREE_API_KEY = env.CASHFREE_API_KEY;
@@ -29,11 +29,11 @@ export const createCashfreeOrder = async (data: CashFreeCreateOrderPayload) => {
 
     try {
         const res = await axios.post<CashFreeCreateOrderResponse>(URL, body, { headers });
-        log.info("Cashfree order created successfully:", res.data);
+        Log.info("Cashfree order created successfully:", res.data);
         return res.data;
     }
     catch (e: any) {
-        log.error("Error creating Cashfree Order:", {
+        Log.error("Error creating Cashfree Order:", {
             message: e.message,
             response: e.response?.data,
         });
@@ -55,7 +55,7 @@ export const verifyCashFreeWebhookSignature = (rawBody: any, signature: string, 
         .update(message)
         .digest("base64");
 
-    log.info("Verifying Cashfree Signature:", {
+    Log.info("Verifying Cashfree Signature:", {
         expectedSignature,
         signature
     });

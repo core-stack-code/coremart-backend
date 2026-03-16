@@ -3,7 +3,7 @@ import { brandController } from './brand.controller';
 import { createBrandSchema, updateBrandSchema } from './brand.validator';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { adminMiddleware } from '@api/middlewares/admin.middleware';
-import { asyncWrapper } from '@core/utils/asyncWrapper';
+import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const brandRouter = express.Router();
 

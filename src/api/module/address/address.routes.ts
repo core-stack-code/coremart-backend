@@ -3,7 +3,7 @@ import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { createAddressSchema, updateAddressSchema } from "./address.validator";
 import { addressController } from "./address.controller";
 import { authMiddleware } from "@api/middlewares/auth.middleware";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const addressRouter = express.Router();
 

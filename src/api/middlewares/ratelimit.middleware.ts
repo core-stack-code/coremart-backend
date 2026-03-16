@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { checkRateLimit } from '@core/lib/redis/rateLimit';
 import { getRedisKeys } from '@core/utils/gerRedisKeys';
-import { AppError } from '@core/utils/response';
+import { AppError } from '@api/utils/response';
 
 
 class RateLimitMiddleware {

@@ -3,7 +3,7 @@ import { adminRepository } from "@mod/admin/admin.repository";
 import { env } from "@core/config/env";
 
 import { verifyJwtToken } from "@core/lib/jwt";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 

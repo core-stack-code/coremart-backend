@@ -1,4 +1,4 @@
-import { log } from "@api/utils/log";
+import { Log } from "@core/utils/log";
 import { sendEmail } from "@core/lib/sendEmail";
 import { orderRepository } from "@mod/order/order.repository";
 
@@ -32,7 +32,7 @@ export const handleOrderConfirm = async (data: { orderId: string, confirmedAt: D
     const result = await orderRepository.findCustomerDetails(data.orderId);
 
     if (!result) {
-        log.error(`Customer details not found for order ID: ${data.orderId}`);
+        Log.error(`Customer details not found for order ID: ${data.orderId}`);
         return;
     }
 

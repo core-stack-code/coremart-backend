@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
 import { categoryService } from "./category.service";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class CategoryController {

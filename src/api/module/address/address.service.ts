@@ -1,5 +1,5 @@
 import { prisma } from "@core/config/prisma";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { addressRepository, AddressResultItem, MAX_ADDRESS_COUNT } from "./address.repository";
 import { CreateAddressPayload, UpdateAddressPayload } from "./address.validator";
 

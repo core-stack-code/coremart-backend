@@ -2,7 +2,7 @@ import { prisma } from "@core/config/prisma";
 import { CategoryImageInput, CategoryTreeNode, categoryRepository, CategoryTreeItem, CategoryWithImages } from "./category.repository";
 import { CategoryListQuery, CreateCategoryPayload, UpdateCategoryPayload } from "./category.validator";
 
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { slugify } from "@core/utils/db.helper";
 import { deleteRedisCacheByPattern } from "@core/lib/redis/cache";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";

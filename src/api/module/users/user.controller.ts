@@ -3,7 +3,7 @@ import { UpdateUserPayload } from "./user.validator";
 import { userService } from "./user.service";
 
 import { clearAuthCookies } from "@core/utils/cookies.helper";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class UserController {

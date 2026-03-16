@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { env } from "@core/config/env";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 export const getState = () => {
     return crypto.randomBytes(16).toString("hex")

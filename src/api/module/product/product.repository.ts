@@ -201,6 +201,23 @@ class ProductRepository {
             select: { id: true },
         });
     }
+
+    public options = async () => {
+        return await prisma.product.findMany({
+            where: { status: "ACTIVE" },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                productImages: {
+                    select: {
+                        url: true,
+                        type: true,
+                    }
+                }
+            }
+        });
+    }
 }
 
 export const productRepository = new ProductRepository();

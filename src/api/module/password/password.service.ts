@@ -1,7 +1,7 @@
 import { prisma, PrismaTx } from "@core/config/prisma";
 import { passwordRepository } from "./password.repository";
 import { comparePassword, generatePasswordHash } from '@core/lib/passsword';
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class PasswordService {

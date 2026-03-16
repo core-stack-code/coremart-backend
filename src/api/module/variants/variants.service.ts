@@ -8,7 +8,7 @@ import {
 import { attributesService } from "@mod/attributes/attributes.service";
 import { productRepository } from "@mod/product/product.repository";
 import { paiseToRupees, rupeesToPaise } from "@core/utils/product.helper";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class VariantsService {

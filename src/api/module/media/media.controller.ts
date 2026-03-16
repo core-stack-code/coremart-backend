@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { mediaService } from "./media.service";
 import { MediaPayload } from "./media.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class MediaController {

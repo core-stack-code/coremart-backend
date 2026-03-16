@@ -3,7 +3,7 @@ import { attributesService } from "./attributes.service";
 import { 
     CreateColorPayload, CreateMaterialPayload, CreateSizePayload, UpdateColorPayload, UpdateMaterialPayload, UpdateSizePayload
 } from "./attributes.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class AttributesController {

@@ -59,14 +59,20 @@ class DiscountRepository {
             orderBy: args.orderBy,
             skip: args.skip,
             take: args.take,
-            include: {
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                benefitType: true,
+                benefitValue: true,
+                isActive: true,
                 _count: {
                     select: {
                         discountProducts: true,
                         discountCategories: true,
                         orders: true,
-                    },
-                },
+                    }
+                }
             },
         });
     }

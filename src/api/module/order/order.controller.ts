@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { orderService } from "./order.service";
 import { CheckoutPayload, OrderListQuery } from "./order.validator";
-import { AppResponse } from "@core/utils/response";
-import { log } from "@api/utils/log";
+import { AppResponse } from "@api/utils/response";
+import { Log } from "@core/utils/log";
 
 
 class OrderController {
@@ -22,7 +22,7 @@ class OrderController {
     public async paymentWebhook(req: Request, res: Response) {
         const rawBody = (req as any).rawBody;
 
-        log.info("Received payment webhook with body:", rawBody);
+        Log.info("Received payment webhook with body:", rawBody);
 
         const signature = req.headers["x-webhook-signature"];
         const timestamp = req.headers["x-webhook-timestamp"];

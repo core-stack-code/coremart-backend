@@ -1,6 +1,6 @@
 import { userRepository } from "@mod/users/user.repository";
 import { CustomersListQuery } from "./customer.validator";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 class CustomerService {
     public async getCustomersList(query: CustomersListQuery) {

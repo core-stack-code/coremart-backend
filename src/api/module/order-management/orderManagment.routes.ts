@@ -4,7 +4,7 @@ import { orderListQuerySchema, orderStatusSchema, paymentStatusSchema } from "./
 
 import { adminMiddleware } from "@api/middlewares/admin.middleware"
 import { validationMiddleware } from "@api/middlewares/validate.middlewate"
-import { asyncWrapper } from "@core/utils/asyncWrapper"
+import { asyncWrapper } from "@api/utils/asyncWrapper"
 
 const orderManagmentRouter = express.Router()
 

@@ -5,7 +5,7 @@ import { UpdateCartItemPayload } from "./cart.validator";
 import { variantsRepository } from "@mod/variants/variants.repository";
 import { ProductCartItem } from "@core/types/product";
 import { paiseToRupees } from "@core/utils/product.helper";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class CartService {

@@ -8,7 +8,7 @@ import {
     signupZodSchema,
     verifyOtpZodSchema
 } from './auth.validator';
-import { asyncWrapper } from '@core/utils/asyncWrapper';
+import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 import { authMiddleware } from '@api/middlewares/auth.middleware';
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';

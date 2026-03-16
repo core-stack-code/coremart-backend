@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { analysisService } from "./analysis.service";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 import { RevenueAnalysisQuery, StatusAnalysisQuery } from "./analysis.validator";
 
 

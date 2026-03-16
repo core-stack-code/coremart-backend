@@ -5,10 +5,10 @@ import { ProductInput, productRepository, ProductResultItem } from "./product.re
 import { deleteRedisCacheByPattern, deleteRedisCache } from "@core/lib/redis/cache";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
 import { ProductDetailItem, ProductsItem } from "@core/types/product";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { slugify } from "@core/utils/db.helper";
 import { PaginationType } from "@core/types/common";
-import { log } from "@api/utils/log";
+import { Log } from "@core/utils/log";
 
 
 class ProductService {
@@ -106,7 +106,7 @@ class ProductService {
         const productsResult = await productRepository.getList(skip, take);
         const total = await productRepository.count();
 
-        log.info("productsResult", productsResult);
+        Log.info("productsResult", productsResult);
         // name, status, thumbnailUrl, updatedAt, brand, number of variants
 
         const totalPages = Math.ceil(total / query.limit);
@@ -176,6 +176,21 @@ class ProductService {
             variants: variantsWithSku
         };
     }
+
+    public async getProductOptions() {
+        const products = await productRepository.options();
+
+        return products.map(pro => {
+            const { productImages, ...rest } = pro
+            const thumbnail = productImages.find(img => img.type === "THUMBNAIL")
+
+            return {
+                ...rest,
+                thumbnail: thumbnail ? thumbnail.url : null
+            }
+        }) 
+    }
+
 
     private productsMaping = (products: ProductResultItem[]): ProductsItem[] => {
         return products.map(prod => {

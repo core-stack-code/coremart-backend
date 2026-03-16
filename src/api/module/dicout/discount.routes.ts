@@ -4,13 +4,12 @@ import {
     createDiscountSchema,
     updateDiscountSchema,
     replaceScopeSchema,
-    toggleDiscountSchema,
     discountListQuerySchema,
 } from "./discount.validator";
 
 import { adminMiddleware } from "@api/middlewares/admin.middleware";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const discountRouter = express.Router();
 
@@ -33,13 +32,6 @@ discountRouter.patch(
     adminMiddleware,
     validationMiddleware.validateRequest(replaceScopeSchema),
     asyncWrapper(discountController.replaceScope)
-);
-
-discountRouter.patch(
-    "/:discountId/toggle",
-    adminMiddleware,
-    validationMiddleware.validateRequest(toggleDiscountSchema),
-    asyncWrapper(discountController.toggleDiscount)
 );
 
 discountRouter.get(

@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusType } from '@/core/constants/httpStatusCode';
 // import { clearAuthCookies } from '@core/utils/cookies.helper';
-import { AppError, errorResponse } from '@core/utils/response';
+import { AppError, errorResponse } from '@api/utils/response';
 
-import { log } from '../utils/log';
-import { logger } from '../utils/logger';
+import { Log } from '../../core/utils/log';
+import { logger } from '../../core/utils/logger';
 
 
 export const globalErrorHandler  = (err: any, req: Request, res: Response, _next: NextFunction) => {
@@ -45,14 +45,14 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     logger.error(`${req.method} ${req.originalUrl} - ${status} - ${message}`);
 
-    log.error('Global Error Handler:', {
+    Log.error('Global Error Handler:', {
         message: err.message,
         code: code,
         status: status,
         // stack: err.stack,
     });
 
-    log.error('Error data:', err.code);
+    Log.error('Error data:', err.code);
 
     // if (status === 401) {
     //     clearAuthCookies(res);

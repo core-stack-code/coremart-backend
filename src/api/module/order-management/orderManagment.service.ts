@@ -1,6 +1,6 @@
 import { OrderListQuery, OrderStatusPayload, PaymentStatusPayload } from "./orderManagment.validator";
 import { orderManagmentRepository } from "./orderManagment.repository";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class OrderManagmentService {

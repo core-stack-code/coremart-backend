@@ -9,7 +9,7 @@ import { getExpiryTime, getUuid } from "@core/utils/db.helper";
 import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class SessionService {

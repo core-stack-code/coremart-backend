@@ -14,10 +14,10 @@ import { env } from "./core/config/env";
 import { registerCleanupJobs } from "@core/lib/jobs/scheduler/cleanup.scheduler";
 import { connectPrisma } from "./core/config/prisma";
 import { apiLimiter } from "./core/lib/rateLimit";
-import { AppError } from "./core/utils/response";
+import { AppError } from "./api/utils/response";
 import { appConfig } from "./core/config/app.config";
-import { logger } from "./api/utils/logger";
-import { log } from "./api/utils/log";
+import { logger } from "./core/utils/logger";
+import { Log } from "./core/utils/log";
 
 class App {
     public app: Application;
@@ -38,7 +38,7 @@ class App {
                 if (origin === env.CLIENT_DOMAIN_URL || origin === env.ADMIN_DOMAIN_URL) {
                     callback(null, true);
                 } else {
-                    log.error('Blocked origin:', origin);
+                    Log.error('Blocked origin:', origin);
                     callback(new Error('Not allowed by CORS'));
                 }
             },

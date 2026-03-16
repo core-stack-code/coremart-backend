@@ -4,7 +4,7 @@ import { CreateReviewPayload, UpdateReviewPayload } from "./review.validator";
 
 import { productRepository } from "@mod/product/product.repository";
 import { orderRepository } from "@mod/order/order.repository";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 
 class ReviewService {

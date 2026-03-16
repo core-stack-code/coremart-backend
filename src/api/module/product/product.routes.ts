@@ -4,34 +4,37 @@ import { createProductSchema, productListQuerySchema, updateProductSchema } from
 
 import { validationMiddleware } from '@api/middlewares/validate.middlewate'
 import { adminMiddleware } from '@api/middlewares/admin.middleware'
-import { asyncWrapper } from '@core/utils/asyncWrapper'
+import { asyncWrapper } from '@api/utils/asyncWrapper'
 
 const productRouter = express.Router()
 
+productRouter.use(adminMiddleware)
+
 productRouter.post(
     '/',
-    adminMiddleware,
     validationMiddleware.validateRequest(createProductSchema),
     asyncWrapper(productController.createProduct)
 )
 
 productRouter.patch(
     '/:productId',
-    adminMiddleware,
     validationMiddleware.validateRequest(updateProductSchema),
     asyncWrapper(productController.updateProduct)
 )
 
 productRouter.get(
     '/list',
-    adminMiddleware,
     validationMiddleware.validateQuery(productListQuerySchema),
     asyncWrapper(productController.getProductList)
 )
 
 productRouter.get(
+    '/options',
+    asyncWrapper(productController.getProductOptions)
+)
+
+productRouter.get(
     '/:productId',
-    adminMiddleware,
     asyncWrapper(productController.getProduct)
 )
 

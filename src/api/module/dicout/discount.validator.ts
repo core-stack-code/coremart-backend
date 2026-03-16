@@ -90,6 +90,7 @@ const discountUpdateShape = {
     usageLimit: discountBaseShape.usageLimit,
     startsAt: discountBaseShape.startsAt,
     endsAt: discountBaseShape.endsAt,
+    isActive: z.boolean().optional(),
 };
 
 export const updateDiscountSchema = z
@@ -99,10 +100,6 @@ export const updateDiscountSchema = z
 export const replaceScopeSchema = z.object({
     productIds: z.array(z.uuid()).optional(),
     categoryIds: z.array(z.uuid()).optional(),
-});
-
-export const toggleDiscountSchema = z.object({
-    isActive: z.boolean(),
 });
 
 export const discountListQuerySchema = z.object({
@@ -118,5 +115,4 @@ export const discountListQuerySchema = z.object({
 export type CreateDiscountPayload = z.infer<typeof createDiscountSchema>;
 export type UpdateDiscountPayload = z.infer<typeof updateDiscountSchema>;
 export type ReplaceScopePayload = z.infer<typeof replaceScopeSchema>;
-export type ToggleDiscountPayload = z.infer<typeof toggleDiscountSchema>;
 export type DiscountListQuery = z.infer<typeof discountListQuerySchema>;

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import util from 'util';
-import { env } from '../../core/config/env';
+import { env } from '../config/env';
 
 const formatArgs = (args: any[]) => {
     return args.map(arg => {
@@ -13,7 +13,7 @@ const formatArgs = (args: any[]) => {
 
 const isDev = env.NODE_ENV !== 'production';
 
-export const log = {
+export const Log = {
     info: (text: string, ...args: any[]) => {
         if (isDev) {
             console.log(chalk.blue('[---INFO---]'), chalk.white.bgBlue.bold(` ${text} `));

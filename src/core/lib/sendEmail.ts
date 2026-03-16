@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { env } from '@core/config/env';
-import { log } from '@api/utils/log';
-import { AppError } from '@core/utils/response';
+import { Log } from '@core/utils/log';
+import { AppError } from '@api/utils/response';
 import { paiseToRupees } from '@core/utils/product.helper';
 
 
@@ -128,7 +128,7 @@ export const sendEmail = async <T extends EmailType>(
             html
         });
 
-        log.info("Email response", response);
+        Log.info("Email response", response);
         if (!response || !response.data || response.error) {
             throw new AppError(500, "INTERNAL_SERVER_ERROR", "Failed to send email. Please try again later.");
         }

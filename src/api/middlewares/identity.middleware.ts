@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../../core/utils/response";
+import { AppError } from "../utils/response";
 import { CLIENT_MAP } from "@core/constants/authConfig";
 import { ClientType } from "@core/types/common";
 

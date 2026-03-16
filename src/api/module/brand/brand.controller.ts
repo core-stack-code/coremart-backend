@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { brandService } from "./brand.service";
 import { CreateBrandPayload, UpdateBrandPayload } from "./brand.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 class BrandController {
     public async createBrand(req: Request, res: Response) {

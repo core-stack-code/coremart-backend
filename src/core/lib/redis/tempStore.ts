@@ -1,5 +1,5 @@
 import { redis } from "@core/config/redis";
-import { logger } from "@api/utils/logger";
+import { logger } from "@core/utils/logger";
 
 
 export const setRedisTemp = async (key: string, value: unknown, ttlSeconds: number) => {

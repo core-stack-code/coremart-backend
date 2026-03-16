@@ -6,7 +6,7 @@ import { adminRepository } from "./admin.repository";
 import { generateJwtToken, verifyJwtToken } from "@core/lib/jwt";
 import { comparePassword, generatePasswordHash } from "@core/lib/passsword";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { TokensResponse } from "@core/types/common";
 import { ChangePasswordPayload } from "@core/validator/password.validator";
 

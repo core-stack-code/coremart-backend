@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { productService } from "./product.service";
 import { CreateProductPayload, ProductListQuery, UpdateProductPayload } from "./product.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class ProductController {
@@ -49,6 +49,16 @@ class ProductController {
             code: "OK",
             message: "Product fetched successfully.",
             data: product,
+        });
+    }
+
+    public async getProductOptions(req: Request, res: Response) {
+        const result = await productService.getProductOptions();
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Product options fetched successfully.",
+            data: result,
         });
     }
 }

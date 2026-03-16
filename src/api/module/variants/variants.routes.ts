@@ -9,7 +9,7 @@ import { variantsController } from './variants.controller';
 
 import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { adminMiddleware } from '@api/middlewares/admin.middleware';
-import { asyncWrapper } from '@core/utils/asyncWrapper';
+import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const variantsRouter = express.Router();
 

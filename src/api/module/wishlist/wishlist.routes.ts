@@ -4,7 +4,7 @@ import { wishlistController } from "./wishlist.controller";
 
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { authMiddleware } from "@api/middlewares/auth.middleware";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const wishlistRouter = express.Router();
 

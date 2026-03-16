@@ -10,7 +10,7 @@ import { sessionService } from "@mod/session/session.service";
 import { env } from "@core/config/env";
 import { DeviceInfo, TokensResponse } from "@core/types/common";
 import { getState } from "@core/lib/crypto";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 import { exchangeGoogleCode, fetchGoogleProfile, GOOGLE_OAUTH } from "@core/integrations/oauth/google.client";
 import { exchangeGitHubCode, fetchGithubProfile, GITHUB_OAUTH } from "@core/integrations/oauth/github.client";
 import { getRedisTemp, setRedisTemp } from "@core/lib/redis/tempStore";

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { HttpStatusType } from '../constants/httpStatusCode';
+import { HttpStatusType } from '../../core/constants/httpStatusCode';
 
 interface IApiResponse<T> {
     success?: boolean;

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaPg  } from "@prisma/adapter-pg";
 import { PrismaClient, Prisma } from "generated/prisma/client";
-import { logger } from "@api/utils/logger";
+import { logger } from "@core/utils/logger";
 import { env } from "./env";
 
 

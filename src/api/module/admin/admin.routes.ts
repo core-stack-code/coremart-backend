@@ -4,7 +4,7 @@ import { adminLoginSchema, adminSchema, updateAdminProfileSchema } from "./admin
 
 import { adminMiddleware } from "@api/middlewares/admin.middleware";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
-import { asyncWrapper } from "@core/utils/asyncWrapper";
+import { asyncWrapper } from "@api/utils/asyncWrapper";
 import { changePasswordZodSchema } from "@core/validator/password.validator";
 
 const adminRouter = express.Router();

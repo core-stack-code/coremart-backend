@@ -1,6 +1,6 @@
 import { CookieOptions, Response } from "express";
 import { env } from "../config/env"
-import { log } from "@api/utils/log";
+import { Log } from "@core/utils/log";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 type SameSiteType = boolean | "lax" | "strict" | "none" | undefined
@@ -25,7 +25,7 @@ export const getCookiesConfig = (): CookieOptions => {
         }
     };
 
-    log.info(`Cookie Configs for ${environment}:`, configs[environment]);
+    Log.info(`Cookie Configs for ${environment}:`, configs[environment]);
 
     return configs[environment];
 }

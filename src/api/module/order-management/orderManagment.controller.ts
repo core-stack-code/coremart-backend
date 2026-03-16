@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { OrderListQuery, OrderStatusPayload, PaymentStatusPayload } from "./orderManagment.validator"
 import { orderManagmentService } from "./orderManagment.service";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class OrderMangementController {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CreateReviewPayload, UpdateReviewPayload } from "./review.validator";
 import { reviewService } from "./review.service";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 class ReviewController {
     public async addReview(req: Request, res: Response) {

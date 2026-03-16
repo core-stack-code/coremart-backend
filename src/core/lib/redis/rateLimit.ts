@@ -1,4 +1,4 @@
-import { logger } from "@api/utils/logger";
+import { logger } from "@core/utils/logger";
 import { redis } from "@core/config/redis";
 
 export const checkRateLimit = async (key: string, limit: number, windowSeconds: number): Promise<boolean> => {

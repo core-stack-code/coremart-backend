@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { catalogService } from "./catalog.service";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class CatalogController {

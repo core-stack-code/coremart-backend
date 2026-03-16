@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { productCategoryService } from "./productCategory.service";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 
 class ProductCategoryController {

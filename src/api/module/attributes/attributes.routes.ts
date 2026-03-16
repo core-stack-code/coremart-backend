@@ -5,7 +5,7 @@ import {
     createColorSchema, createMaterialSchema, createSizeSchema, updateColorSchema, updateMaterialSchema, updateSizeSchema
 } from './attributes.validator';
 import { adminMiddleware } from '@api/middlewares/admin.middleware';
-import { asyncWrapper } from '@core/utils/asyncWrapper';
+import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const attributesRouter = express.Router();
 

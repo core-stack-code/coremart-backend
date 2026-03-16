@@ -5,7 +5,7 @@ import { wishlistRepository } from "./wishlist.repository";
 import { catalogService } from "@mod/catalog/catalog.service";
 import { formatProductListItem } from "@core/utils/product.helper";
 import { ProductListApiResponse } from "@core/types/product";
-import { AppError } from "@core/utils/response";
+import { AppError } from "@api/utils/response";
 
 const MAX_WISHLIST_PER_USER = 3;
 

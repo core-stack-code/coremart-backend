@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { customerService } from "./customer.service";
 import { CustomersListQuery } from "./customer.validator";
-import { AppResponse } from "@core/utils/response";
+import { AppResponse } from "@api/utils/response";
 
 class CustomerController {
     public async getCustomers(req: Request, res: Response) {

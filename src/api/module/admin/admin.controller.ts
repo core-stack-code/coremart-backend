@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { AdminLoginPayload, AdminPayload, UpdateAdminProfilePayload } from "./admin.validator";
 import { AdminResponse, adminService } from "./admin.service";
 
-import { AppError, AppResponse } from "@core/utils/response";
+import { AppError, AppResponse } from "@api/utils/response";
 import { applyAuthCookies, clearAuthCookies } from "@core/utils/cookies.helper";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 import { ChangePasswordPayload } from "@core/validator/password.validator";

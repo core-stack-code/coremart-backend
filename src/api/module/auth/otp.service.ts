@@ -11,8 +11,8 @@ import { emailQueue, QUEUE_JOBS } from "@core/lib/jobs/queue";
 import { compareOtpHash, genrateOtpHash } from "@core/lib/crypto";
 import { getExpiryTime } from "@core/utils/db.helper";
 import { OTP_CONFIG } from "@core/constants/authConfig";
-import { AppError } from "@core/utils/response";
-import { log } from "@api/utils/log";
+import { AppError } from "@api/utils/response";
+import { Log } from "@core/utils/log";
 
 const otpEmailJobMap: Record<OtpSessionType, string> = {
     EMAIL_VERIFICATION: QUEUE_JOBS.EMAIL_VERIFICATION,
@@ -59,7 +59,7 @@ class OtpService {
 
         const { otp, hash } = genrateOtpHash()
 
-        log.info("generated otp", otp);
+        Log.info("generated otp", otp);
 
         await prisma.$transaction(async (tx) => {
             await otpSessionRepository.invalidateActiveByUserAndType(
@@ -101,13 +101,13 @@ class OtpService {
 
         if (!otpSession) {
             // No active OTP session found.
-            log.info("No active OTP session found for user:", user.id);
+            Log.info("No active OTP session found for user:", user.id);
             throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
         }
         
         if (otpSession.sessionType !== payload.sessionType) {
             // OTP session type mismatch.
-            log.info("OTP session type mismatch for user:", user.id);
+            Log.info("OTP session type mismatch for user:", user.id);
             throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
         }
 
@@ -122,7 +122,7 @@ class OtpService {
 
         if (otpSession.otpExpiresAt.getTime() < new Date().getTime()) {
             // OTP has expired.
-            log.info("OTP has expired for user:", user.id);
+            Log.info("OTP has expired for user:", user.id);
             throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
         }
 
@@ -133,7 +133,7 @@ class OtpService {
 
         if (!isValidOtp) {
             // Invalid OTP
-            log.info("Invalid OTP provided by user:", user.id);
+            Log.info("Invalid OTP provided by user:", user.id);
             throw new AppError(400, "BAD_REQUEST", "Invalid OTP. Please check OTP or generate a new one.");
         }
 
@@ -199,7 +199,7 @@ class OtpService {
 
         const { otp, hash } = genrateOtpHash();
 
-        log.info("resent otp", otp);
+        Log.info("resent otp", otp);
 
         await otpSessionRepository.updateById(
             otpSession.id,
