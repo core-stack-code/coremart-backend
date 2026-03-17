@@ -1,0 +1,18 @@
+services:
+  api:
+    build: .
+    container_name: coremart-api
+    command: npm start
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: coremart-worker
+    command: npm run worker
+    env_file:
+      - .env
+    restart: unless-stopped
