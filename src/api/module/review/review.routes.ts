@@ -8,23 +8,22 @@ import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const reviewRouter = express.Router();
 
+reviewRouter.use(authMiddleware());
+
 reviewRouter.post(
     '/',
-    authMiddleware(),
     validationMiddleware.validateRequest(createReviewSchema),
     asyncWrapper(reviewController.addReview)
 );
 
 reviewRouter.put(
     '/:reviewId',
-    authMiddleware(),
     validationMiddleware.validateRequest(updateReviewSchema),
     asyncWrapper(reviewController.updateReview)
 );
 
 reviewRouter.delete(
     '/:reviewId',
-    authMiddleware(),
     asyncWrapper(reviewController.deleteReview)
 );
 

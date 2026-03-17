@@ -8,29 +8,27 @@ import { asyncWrapper } from "@api/utils/asyncWrapper"
 
 const orderManagmentRouter = express.Router()
 
+orderManagmentRouter.use(adminMiddleware)
+
 orderManagmentRouter.get(
     "/",
-    adminMiddleware,
     validationMiddleware.validateQuery(orderListQuerySchema),
     asyncWrapper(orderManagmentController.orderList)
 )
 
 orderManagmentRouter.get(
     "/:orderId",
-    adminMiddleware,
     asyncWrapper(orderManagmentController.orderDetails)
 )
 
 orderManagmentRouter.patch(
     '/:orderId/status',
-    adminMiddleware,
     validationMiddleware.validateRequest(orderStatusSchema),
     asyncWrapper(orderManagmentController.changeOrderStatus)
 )
 
 orderManagmentRouter.patch(
     '/:orderId/payment/:paymentId',
-    adminMiddleware,
     validationMiddleware.validateRequest(paymentStatusSchema),
     asyncWrapper(orderManagmentController.changePaymentStatus)
 )

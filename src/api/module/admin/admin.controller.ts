@@ -16,6 +16,10 @@ class AdminController {
 
         applyAuthCookies(res, tokens, 'admin');
 
+        if (admin.isDemo) {
+            throw new AppError(403, "FORBIDDEN", "Demo admin is not allowed to perform this action.");
+        }
+
         AppResponse(res, 200, {
             code: "OK",
             message: "Login successful",
@@ -78,6 +82,7 @@ class AdminController {
             imageUrl: admin.imageUrl,
             createdAt: admin.createdAt,
             updatedAt: admin.updatedAt,
+            isDemo: admin.isDemo,
         }
 
         AppResponse(res, 200, {
@@ -110,6 +115,23 @@ class AdminController {
         AppResponse(res, 201, {
             code: "CREATED",
             message: "Admin registered successfully",
+            data: admin,
+        });
+    }
+
+    public async guestLogin(_req: Request, res: Response) {
+        const payload = {
+            email: "admindemo@coremart.com",
+            password: "demo1234A@demo"
+        }
+
+        const { admin, tokens } = await adminService.loginAdmin(payload);
+
+        applyAuthCookies(res, tokens, 'admin');
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Login successful",
             data: admin,
         });
     }

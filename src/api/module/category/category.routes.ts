@@ -9,54 +9,48 @@ import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const categoryRouter = express.Router();
 
+categoryRouter.use(adminMiddleware);
+
 categoryRouter.post(
     "/",
-    adminMiddleware,
     validationMiddleware.validateRequest(createCategorySchema),
     asyncWrapper(categoryController.createCategory)
 );
 
 categoryRouter.patch(
     "/:id",
-    adminMiddleware,
     validationMiddleware.validateRequest(updateCategorySchema),
     asyncWrapper(categoryController.updateCategory)
 );
 
 categoryRouter.get(
     "/list",
-    adminMiddleware,
     validationMiddleware.validateQuery(categoryListQuery),
     asyncWrapper(categoryController.getCategoryList)
 );
 
 categoryRouter.get(
     "/options",
-    adminMiddleware,
     asyncWrapper(categoryController.getCategoriesOptions)
 );
 
 categoryRouter.get(
     "/:categoryId/tree",
-    adminMiddleware,
     asyncWrapper(categoryController.getCategoryTree)
 );
 
 categoryRouter.get(
     '/:categoryId/products',
-    adminMiddleware,
     asyncWrapper(productCategoryController.getProductByCategory)
 );
 
 categoryRouter.post(
     '/:categoryId/product/:productId',
-    adminMiddleware,
     asyncWrapper(productCategoryController.createProductCategory)
 )
 
 categoryRouter.delete(
     "/:categoryId/product/:productId",
-    adminMiddleware,
     asyncWrapper(productCategoryController.deleteProductCategory)
 )
 

@@ -11,6 +11,7 @@ class AdminRepository {
         email: string;
         name: string;
         password: string;
+        isDemo?: boolean;
     }) {
         return await prisma.admin.create({
             data: {
@@ -18,6 +19,7 @@ class AdminRepository {
                 email: data.email,
                 name: data.name,
                 password: data.password,
+                isDemo: data.isDemo ?? false,
             },
             select: {
                 id: true,
@@ -26,6 +28,7 @@ class AdminRepository {
                 imageUrl: true,
                 createdAt: true,
                 updatedAt: true,
+                isDemo: true,
             }
         })
     }

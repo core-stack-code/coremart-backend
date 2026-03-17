@@ -17,6 +17,7 @@ export type AdminResponse = {
     imageUrl: string | null;
     createdAt: Date;
     updatedAt: Date;
+    isDemo: boolean;
 }
 
 
@@ -47,6 +48,7 @@ class AdminService {
                 imageUrl: admin.imageUrl,
                 createdAt: admin.createdAt,
                 updatedAt: admin.updatedAt,
+                isDemo: admin.isDemo,
             },
             tokens 
         };
@@ -123,7 +125,7 @@ class AdminService {
     public async registerAdmin(payload: AdminPayload): Promise<{ admin: AdminResponse, tokens: TokensResponse }> {
         const adminCount = await adminRepository.count();
 
-        if (adminCount > 0) {
+        if (adminCount > 1) {
             throw new AppError(409, "CONFLICT", "Admin already exists");
         }
 
@@ -133,6 +135,7 @@ class AdminService {
             email: payload.email,
             name: payload.name,
             password: passwordHash,
+            // isDemo: true,
         });
 
         const tokens = this.generateAdminTokens(admin.id);

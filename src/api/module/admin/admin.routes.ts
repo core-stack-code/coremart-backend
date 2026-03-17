@@ -39,6 +39,11 @@ adminRouter.post(
     asyncWrapper(adminController.refreshToken)
 );
 
+adminRouter.post(
+    "/demo-login",
+    asyncWrapper(adminController.guestLogin)
+)
+
 adminRouter.get(
     "/profile",
     adminMiddleware,

@@ -42,7 +42,7 @@ class DiscountService {
     }
 
     public async replaceScope(discountId: string, payload: ReplaceScopePayload) {
-        const existDiscount = await this.existDiscount(discountId);
+        await this.existDiscount(discountId);
 
         const productIds = payload.productIds ?? [];
         const categoryIds = payload.categoryIds ?? [];
@@ -127,7 +127,7 @@ class DiscountService {
     }
 
     public async deleteDiscount(discountId: string) {
-        const existedDiscount = await this.existDiscount(discountId);
+        await this.existDiscount(discountId);
 
         const orderCount = await discountRepository.countOrdersByDiscountId(discountId);
 
@@ -143,7 +143,7 @@ class DiscountService {
     }
 
 
-    private async existDiscount (discountId: string) {
+    private async existDiscount(discountId: string) {
         const existedDiscount = await discountRepository.findById(discountId);
 
         if (!existedDiscount) {
