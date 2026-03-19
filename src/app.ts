@@ -84,7 +84,7 @@ class App {
 
     private async initializeApp(): Promise<void> {
         const PORT = appConfig.port;
-        this.app.listen(PORT, () => {
+        this.app.listen(PORT, '0.0.0.0', () => {
             logger.info(`Server running... at ${PORT}`);
         });
     }
