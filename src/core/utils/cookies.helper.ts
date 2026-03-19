@@ -5,7 +5,7 @@ import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 type SameSiteType = boolean | "lax" | "strict" | "none" | undefined
 type UserRole = 'user' | 'admin';
-const DOMAIN = ".coremart.com";
+const DOMAIN = env.DOMAIN;
 
 
 export const getCookiesConfig = (): CookieOptions => {

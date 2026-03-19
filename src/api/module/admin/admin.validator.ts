@@ -15,6 +15,7 @@ export const adminSchema = z.object({
     email: z.email("Invalid email address"),
     name: z.string().min(1, "Name is required"),
     password: passwordSchema,
+    isDemo: z.boolean().optional(),
 });
 
 export type AdminLoginPayload = z.infer<typeof adminLoginSchema>;

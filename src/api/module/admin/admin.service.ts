@@ -135,7 +135,7 @@ class AdminService {
             email: payload.email,
             name: payload.name,
             password: passwordHash,
-            // isDemo: true,
+            isDemo: payload.isDemo,
         });
 
         const tokens = this.generateAdminTokens(admin.id);
