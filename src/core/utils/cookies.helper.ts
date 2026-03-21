@@ -4,7 +4,7 @@ import { Log } from "@core/utils/log";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 
 type SameSiteType = boolean | "lax" | "strict" | "none" | undefined
-type UserRole = 'user' | 'admin';
+type UserRole = 'user' | 'admin' | 'both';
 const DOMAIN = env.DOMAIN;
 
 
@@ -56,14 +56,15 @@ export const applyAuthCookies = (
 
 
 export const clearAuthCookies = (res: Response, type: UserRole = 'user') => {
-    const accessCookieName = type === 'admin' 
-        ? AUTH_CONFIG.adminCookiesName.accessToken
-        : AUTH_CONFIG.cookieName.accessToken;
+    const cookieConfig = getCookiesConfig();
 
-    const refreshCookieName = type === 'admin' 
-        ? AUTH_CONFIG.adminCookiesName.refreshToken
-        : AUTH_CONFIG.cookieName.refreshToken;
+    const cookieSets =
+        type === 'both'
+            ? [AUTH_CONFIG.adminCookiesName, AUTH_CONFIG.cookieName]
+            : [type === 'admin' ? AUTH_CONFIG.adminCookiesName : AUTH_CONFIG.cookieName];
 
-    res.clearCookie(accessCookieName, {...getCookiesConfig()});
-    res.clearCookie(refreshCookieName, {...getCookiesConfig()});
+    for (const cookieNames of cookieSets) {
+        res.clearCookie(cookieNames.accessToken, { ...cookieConfig });
+        res.clearCookie(cookieNames.refreshToken, { ...cookieConfig });
+    }
 }

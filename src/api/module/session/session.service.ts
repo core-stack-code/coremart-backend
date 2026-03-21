@@ -88,6 +88,10 @@ class SessionService {
             throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
         }
 
+        if (session.refreshToken !== oldRefreshToken) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid token.");
+        }
+
         const accessToken = generateJwtToken({
             sub: session.userId,
         }, env.JWT_ACCESS_SECRET, AUTH_CONFIG.jwtExpiry.accessToken);

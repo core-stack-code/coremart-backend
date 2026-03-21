@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusType } from '@/core/constants/httpStatusCode';
-// import { clearAuthCookies } from '@core/utils/cookies.helper';
+import { clearAuthCookies } from '@core/utils/cookies.helper';
 import { AppError, errorResponse } from '@api/utils/response';
 
 import { Log } from '../../core/utils/log';
 import { logger } from '../../core/utils/logger';
+import { env } from '@core/config/env';
 
 
 export const globalErrorHandler  = (err: any, req: Request, res: Response, _next: NextFunction) => {
@@ -54,9 +55,9 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     Log.error('Error data:', err.code);
 
-    // if (status === 401) {
-    //     clearAuthCookies(res);
-    // }
+    if (status === 401 && env.NODE_ENV === 'production') {
+        clearAuthCookies(res);
+    }
 
     errorResponse(res, status, { code, message });
 };

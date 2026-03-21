@@ -101,6 +101,10 @@ class AdminService {
             throw new AppError(401, "UNAUTHORIZED", "Invalid or expired token.");
         }
 
+        if (admin.refreshToken !== oldRefreshToken) {
+            throw new AppError(401, "UNAUTHORIZED", "Invalid or expired token.");
+        }
+
         const tokens = this.generateAdminTokens(admin.id);
 
         // Update refresh token in database
