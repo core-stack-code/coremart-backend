@@ -7,7 +7,7 @@ import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 
 const analysisRouter = exporess.Router();
 
-analysisRouter.use(adminMiddleware);
+analysisRouter.use(adminMiddleware());
 
 analysisRouter.get(
     '/overview-matrix',

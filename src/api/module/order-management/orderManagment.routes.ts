@@ -8,7 +8,7 @@ import { asyncWrapper } from "@api/utils/asyncWrapper"
 
 const orderManagmentRouter = express.Router()
 
-orderManagmentRouter.use(adminMiddleware)
+orderManagmentRouter.use(adminMiddleware())
 
 orderManagmentRouter.get(
     "/",

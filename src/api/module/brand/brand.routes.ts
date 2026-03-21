@@ -9,33 +9,33 @@ const brandRouter = express.Router();
 
 brandRouter.post(
     '/',
-    adminMiddleware,
+    adminMiddleware(),
     validationMiddleware.validateRequest(createBrandSchema),
     asyncWrapper(brandController.createBrand)
 );
 
 brandRouter.patch(
     '/:brandId',
-    adminMiddleware,
+    adminMiddleware(),
     validationMiddleware.validateRequest(updateBrandSchema),
     asyncWrapper(brandController.updateBrand)
 );
 
 brandRouter.get(
     '/list',
-    adminMiddleware,
+    adminMiddleware(),
     asyncWrapper(brandController.getBrandList)
 );
 
 brandRouter.post(
     '/:brandId/product/:productId',
-    adminMiddleware,
+    adminMiddleware(),
     asyncWrapper(brandController.assignProduct)
 );
 
 brandRouter.delete(
     '/:brandId/product/:productId',
-    adminMiddleware,
+    adminMiddleware(),
     asyncWrapper(brandController.removeProduct)
 );
 

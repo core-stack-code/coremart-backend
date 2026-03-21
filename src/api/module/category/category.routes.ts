@@ -9,7 +9,7 @@ import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const categoryRouter = express.Router();
 
-categoryRouter.use(adminMiddleware);
+categoryRouter.use(adminMiddleware());
 
 categoryRouter.post(
     "/",

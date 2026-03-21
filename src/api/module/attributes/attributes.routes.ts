@@ -9,7 +9,7 @@ import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const attributesRouter = express.Router();
 
-attributesRouter.use(adminMiddleware);
+attributesRouter.use(adminMiddleware());
 
 attributesRouter.get(
     '/active-list',

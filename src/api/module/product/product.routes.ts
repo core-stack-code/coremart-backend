@@ -8,7 +8,7 @@ import { asyncWrapper } from '@api/utils/asyncWrapper'
 
 const productRouter = express.Router()
 
-productRouter.use(adminMiddleware)
+productRouter.use(adminMiddleware())
 
 productRouter.post(
     '/',

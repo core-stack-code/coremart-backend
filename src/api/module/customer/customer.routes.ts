@@ -6,7 +6,7 @@ import { customerController } from "./customer.controller";
 
 const customerRouter = express.Router();
 
-customerRouter.use(adminMiddleware);
+customerRouter.use(adminMiddleware());
 
 customerRouter.get(
     "/",

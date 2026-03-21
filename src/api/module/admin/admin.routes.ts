@@ -23,13 +23,13 @@ adminRouter.post(
 
 adminRouter.post(
     "/logout",
-    adminMiddleware,
+    adminMiddleware({ isAllowDemoAdmin: true }),
     asyncWrapper(adminController.logoutAdmin)
 );
 
 adminRouter.post(
     "/change-password",
-    adminMiddleware,
+    adminMiddleware(),
     validationMiddleware.validateRequest(changePasswordZodSchema),
     asyncWrapper(adminController.changePassword)
 );
@@ -46,13 +46,13 @@ adminRouter.post(
 
 adminRouter.get(
     "/profile",
-    adminMiddleware,
+    adminMiddleware(),
     asyncWrapper(adminController.getProfile)
 );
 
 adminRouter.patch(
     "/profile",
-    adminMiddleware,
+    adminMiddleware(),
     validationMiddleware.validateRequest(updateAdminProfileSchema),
     asyncWrapper(adminController.updateProfile)
 );

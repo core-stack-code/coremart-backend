@@ -7,8 +7,13 @@ import { AppError } from "@api/utils/response";
 import { AUTH_CONFIG } from "@core/constants/authConfig";
 import { logger } from "@core/utils/logger";
 
+type AdminMiddlewareOptions = {
+    isAllowDemoAdmin?: boolean;
+}
 
-export const adminMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
+
+export const adminMiddleware = (options: AdminMiddlewareOptions = { isAllowDemoAdmin: false }) => 
+    async (req: Request, _res: Response, next: NextFunction) => {
     try {
         const token = req.cookies[AUTH_CONFIG.adminCookiesName.accessToken];
         const method = req.method;
@@ -28,7 +33,7 @@ export const adminMiddleware = async (req: Request, _res: Response, next: NextFu
             throw new AppError(401, "UNAUTHORIZED", "Admin not found.");
         }
 
-        if(admin.isDemo && method !== "GET") {
+        if (method !== "GET" && admin.isDemo && !options.isAllowDemoAdmin) {
             logger.warn(`Demo admin attempted to perform a ${method} request. Access denied.`);
             throw new AppError(403, "FORBIDDEN", "Demo admin is not allowed to perform this action.");
         }

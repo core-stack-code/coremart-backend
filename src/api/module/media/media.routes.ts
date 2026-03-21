@@ -9,7 +9,7 @@ const mediaRouter = express.Router();
 
 mediaRouter.post(
     '/signature',
-    adminMiddleware,
+    adminMiddleware(),
     validationMiddleware.validateRequest(mediaSchema),
     asyncWrapper(mediaController.generateSignature)
 );

@@ -13,7 +13,7 @@ import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const variantsRouter = express.Router();
 
-variantsRouter.use(adminMiddleware)
+variantsRouter.use(adminMiddleware())
 
 variantsRouter.post(
     '/product/:productId',

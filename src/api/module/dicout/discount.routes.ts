@@ -13,7 +13,7 @@ import { asyncWrapper } from "@api/utils/asyncWrapper";
 
 const discountRouter = express.Router();
 
-discountRouter.use(adminMiddleware);
+discountRouter.use(adminMiddleware());
 
 discountRouter.post(
     "/",
