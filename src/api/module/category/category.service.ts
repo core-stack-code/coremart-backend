@@ -105,7 +105,7 @@ class CategoryService {
             // update images if needed.
             const images: CategoryImageInput[] = [];
 
-            if (payload.bannerImageUrl !== undefined) {
+            if (payload.bannerImageUrl) {
                 await categoryRepository.deleteImages(id, "BANNER", tx)
 
                 if (payload.bannerImageUrl) {
@@ -117,7 +117,7 @@ class CategoryService {
                 }
             }
 
-            if (payload.imageUrl !== undefined) {
+            if (payload.imageUrl) {
                 await categoryRepository.deleteImages(id, "IMAGE", tx)
 
                 if (payload.imageUrl) {
@@ -232,7 +232,7 @@ class CategoryService {
                     id: cate.parent.id, 
                     name: cate.parent.name || ''
                 } : null,
-                imageUrl: image ?? null,
+                imageUrl: image ? image.url : null,
             }
         })
 
