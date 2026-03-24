@@ -27,9 +27,9 @@ class VariantsRepository {
                         slug: true,
                     }
                 },
-                sizeId: true,
-                colorId: true,
-                materialId: true,
+                size: { select: { name: true,} },
+                color: { select: { name: true,} },
+                material: { select: { name: true,} },
             },
         });
     }

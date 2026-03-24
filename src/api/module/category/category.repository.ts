@@ -133,6 +133,7 @@ class CategoryRepository {
                 name: data.name,
                 parentId: data.parentId,
                 slug: data.slug,
+                isActive: data.isActive,
             },
             select: null,
         });
@@ -232,7 +233,7 @@ class CategoryRepository {
 
     public findCategoryTree = async (categoryId: string) => {
         return await prisma.category.findUnique({
-            where: { id: categoryId, isActive: true },
+            where: { id: categoryId },
             select: {
                 id: true,
                 name: true,

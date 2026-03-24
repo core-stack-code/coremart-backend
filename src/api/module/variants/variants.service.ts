@@ -9,6 +9,7 @@ import { attributesService } from "@mod/attributes/attributes.service";
 import { productRepository } from "@mod/product/product.repository";
 import { paiseToRupees, rupeesToPaise } from "@core/utils/product.helper";
 import { AppError } from "@api/utils/response";
+import { Log } from "@core/utils/log";
 
 
 class VariantsService {
@@ -31,11 +32,13 @@ class VariantsService {
                 ...payload,
             }, tx)
 
+            Log.info("Variant created with ID: " + variant);
+
             const skuCode = generateSkuCode(
                 variant.product.slug, 
-                variant.sizeId, 
-                variant.colorId, 
-                variant.materialId
+                variant.size.name, 
+                variant.color.name, 
+                variant.material.name
             );
 
             await variantsRepository.createProductSku({

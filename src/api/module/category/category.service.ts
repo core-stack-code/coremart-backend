@@ -73,6 +73,10 @@ class CategoryService {
                 newParentSlug = await this.checkCategoryActive(payload.parentId!);
             }
 
+            if (payload.parentId === null) {
+                newParentSlug = null;
+            }
+
             // get descendants and prevent circular parent links.
             let descendants: Array<{ id: string; slug: string }> = [];
             if (isParentChanging || isNameChanging) {
@@ -105,7 +109,7 @@ class CategoryService {
             // update images if needed.
             const images: CategoryImageInput[] = [];
 
-            if (payload.bannerImageUrl) {
+            if(payload.bannerImageUrl !== undefined) {
                 await categoryRepository.deleteImages(id, "BANNER", tx)
 
                 if (payload.bannerImageUrl) {
@@ -117,7 +121,7 @@ class CategoryService {
                 }
             }
 
-            if (payload.imageUrl) {
+            if (payload.imageUrl !== undefined) {
                 await categoryRepository.deleteImages(id, "IMAGE", tx)
 
                 if (payload.imageUrl) {

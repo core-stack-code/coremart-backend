@@ -1,0 +1,5 @@
+-- DropForeignKey
+ALTER TABLE "SKU" DROP CONSTRAINT "SKU_variantId_fkey";
+
+-- AddForeignKey
+ALTER TABLE "SKU" ADD CONSTRAINT "SKU_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "Variant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
