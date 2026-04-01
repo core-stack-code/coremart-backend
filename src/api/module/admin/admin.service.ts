@@ -101,7 +101,7 @@ class AdminService {
             throw new AppError(401, "UNAUTHORIZED", "Invalid or expired token.");
         }
 
-        if (admin.refreshToken !== oldRefreshToken) {
+        if (!admin.isDemo && admin.refreshToken !== oldRefreshToken) {
             throw new AppError(401, "UNAUTHORIZED", "Invalid or expired token.");
         }
 
