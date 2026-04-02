@@ -15,6 +15,7 @@ import { validationMiddleware } from '@api/middlewares/validate.middlewate';
 import { identityMiddleware } from '@api/middlewares/identity.middleware';
 import { changePasswordZodSchema } from '@core/validator/password.validator';
 import { rateLimitMiddleware } from '@api/middlewares/ratelimit.middleware';
+import { REFRESH_TOKEN_ENDPOINT } from '@core/constants/authConfig';
 
 const authRouter = express.Router();
 
@@ -47,7 +48,7 @@ authRouter.post(
 )
 
 authRouter.post(
-    '/refresh-token',
+    `/${REFRESH_TOKEN_ENDPOINT}`,
     identityMiddleware.detectClient,
     asyncWrapper(authController.refreshTokens)
 )

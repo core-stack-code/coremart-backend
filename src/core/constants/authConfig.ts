@@ -30,3 +30,5 @@ export const OTP_CONFIG = {
     resendCooldownMs: 2 * 60 * 1000, // 2 minutes
     newOtpIntervalMs: 5 * 60 * 1000, // 5 minutes
 } as const;
+
+export const REFRESH_TOKEN_ENDPOINT = "refresh-token";

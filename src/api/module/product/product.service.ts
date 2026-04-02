@@ -103,10 +103,10 @@ class ProductService {
         const skip = (query.page - 1) * query.limit;
         const take = query.limit;
 
-        const productsResult = await productRepository.getList(skip, take);
+        const productsResult = await productRepository.getList(skip, take, query.search);
         const total = await productRepository.count();
 
-        Log.info("productsResult", productsResult);
+        // Log.info("productsResult", productsResult);
         // name, status, thumbnailUrl, updatedAt, brand, number of variants
 
         const totalPages = Math.ceil(total / query.limit);

@@ -6,6 +6,7 @@ import { AppError, errorResponse } from '@api/utils/response';
 import { Log } from '../../core/utils/log';
 import { logger } from '../../core/utils/logger';
 import { env } from '@core/config/env';
+import { REFRESH_TOKEN_ENDPOINT } from '@core/constants/authConfig';
 
 
 export const globalErrorHandler  = (err: any, req: Request, res: Response, _next: NextFunction) => {
@@ -55,7 +56,7 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     Log.error('Error data:', err.code);
 
-    if (status === 401 && env.NODE_ENV === 'production') {
+    if (status === 401 && env.NODE_ENV === 'production' && req.path.endsWith(REFRESH_TOKEN_ENDPOINT)) {
         clearAuthCookies(res, "both");
     }
 

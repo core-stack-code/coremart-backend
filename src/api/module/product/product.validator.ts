@@ -60,6 +60,7 @@ export const updateProductSchema = z.object({
 export const productListQuerySchema = z.object({
     page: pageQuery,
     limit: limitQuery(),
+    search: z.string().trim().min(1).max(100).optional(),
 });
 
 

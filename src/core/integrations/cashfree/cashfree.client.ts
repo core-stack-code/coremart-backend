@@ -29,7 +29,7 @@ export const createCashfreeOrder = async (data: CashFreeCreateOrderPayload) => {
 
     try {
         const res = await axios.post<CashFreeCreateOrderResponse>(URL, body, { headers });
-        Log.info("Cashfree order created successfully:", res.data);
+        // Log.info("Cashfree order created successfully:", res.data);
         return res.data;
     }
     catch (e: any) {
@@ -55,10 +55,10 @@ export const verifyCashFreeWebhookSignature = (rawBody: any, signature: string, 
         .update(message)
         .digest("base64");
 
-    Log.info("Verifying Cashfree Signature:", {
-        expectedSignature,
-        signature
-    });
+    // Log.info("Verifying Cashfree Signature:", {
+    //     expectedSignature,
+    //     signature
+    // });
 
     return expectedSignature === signature;
 }

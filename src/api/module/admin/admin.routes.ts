@@ -6,6 +6,7 @@ import { adminMiddleware } from "@api/middlewares/admin.middleware";
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { asyncWrapper } from "@api/utils/asyncWrapper";
 import { changePasswordZodSchema } from "@core/validator/password.validator";
+import { REFRESH_TOKEN_ENDPOINT } from "@core/constants/authConfig";
 
 const adminRouter = express.Router();
 
@@ -35,7 +36,7 @@ adminRouter.post(
 );
 
 adminRouter.post(
-    "/refresh-token",
+    `/${REFRESH_TOKEN_ENDPOINT}`,
     asyncWrapper(adminController.refreshToken)
 );
 
