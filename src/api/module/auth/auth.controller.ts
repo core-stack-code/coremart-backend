@@ -176,7 +176,7 @@ class AuthController {
         const clientType = req.clientType;
 
         if (!refreshToken || typeof refreshToken !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Refresh token is missing.");
+            throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
         }
 
         const { 

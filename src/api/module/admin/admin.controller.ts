@@ -58,7 +58,7 @@ class AdminController {
         const refreshToken = req.cookies[AUTH_CONFIG.adminCookiesName.refreshToken];
 
         if (!refreshToken || typeof refreshToken !== "string") {
-            throw new AppError(400, "BAD_REQUEST", "Refresh token is missing.");
+            throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
         }
 
         const tokens = await adminService.refreshToken(refreshToken);
