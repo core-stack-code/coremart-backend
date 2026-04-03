@@ -55,21 +55,26 @@ class AdminController {
     }
 
     public async refreshToken(req: Request, res: Response) {
-        const refreshToken = req.cookies[AUTH_CONFIG.adminCookiesName.refreshToken];
+        try {
+            const refreshToken = req.cookies[AUTH_CONFIG.adminCookiesName.refreshToken];
 
-        if (!refreshToken || typeof refreshToken !== "string") {
-            throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
+            if (!refreshToken || typeof refreshToken !== "string") {
+                throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
+            }
+
+            const tokens = await adminService.refreshToken(refreshToken);
+
+            applyAuthCookies(res, tokens, 'admin');
+
+            AppResponse(res, 200, {
+                code: "OK",
+                message: "Tokens refreshed successfully",
+                data: null,
+            });
+        } catch (error) {
+            clearAuthCookies(res, 'admin');
+            throw error;
         }
-
-        const tokens = await adminService.refreshToken(refreshToken);
-
-        applyAuthCookies(res, tokens, 'admin');
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Tokens refreshed successfully",
-            data: null,
-        });
     }
 
     public async getProfile(req: Request, res: Response) {

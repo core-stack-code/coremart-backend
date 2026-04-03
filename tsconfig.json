@@ -7,12 +7,12 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@mod/*": ["src/api/module/*"],
-      "@api/*": ["src/api/*"],
-      "@core/*": ["src/core/*"],
-      "@/*": ["src/*"],
+      "@mod/*": ["./src/api/module/*"],
+      "@api/*": ["./src/api/*"],
+      "@core/*": ["./src/core/*"],
+      "@/*": ["./src/*"],
+      "generated/*": ["./generated/*"],
     }
   },
   "include": ["src", "generated"]

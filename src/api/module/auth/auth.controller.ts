@@ -172,30 +172,35 @@ class AuthController {
 
 
     public async refreshTokens(req: Request, res: Response) {
-        const refreshToken = req.cookies[AUTH_CONFIG.cookieName.refreshToken];
-        const clientType = req.clientType;
+        try {
+            const refreshToken = req.cookies[AUTH_CONFIG.cookieName.refreshToken];
+            const clientType = req.clientType;
 
-        if (!refreshToken || typeof refreshToken !== "string") {
-            throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
+            if (!refreshToken || typeof refreshToken !== "string") {
+                throw new AppError(401, "UNAUTHORIZED", "Token is missing.");
+            }
+
+            const { 
+                accessToken, 
+                refreshToken: newRefreshToken 
+            } = await sessionService.refreshSession(refreshToken);
+
+            // Set cookies
+            applyAuthCookies(res, { accessToken, refreshToken: newRefreshToken });
+
+            const responseData = clientType === "web" 
+                ? null
+                : { accessToken, refreshToken: newRefreshToken };
+
+            AppResponse(res, 200, {
+                code: "OK",
+                message: "Tokens refreshed successfully",
+                data: responseData,
+            });
+        } catch (error) {
+            clearAuthCookies(res, 'user');
+            throw error;
         }
-
-        const { 
-            accessToken, 
-            refreshToken: newRefreshToken 
-        } = await sessionService.refreshSession(refreshToken);
-
-        // Set cookies
-        applyAuthCookies(res, { accessToken, refreshToken: newRefreshToken });
-
-        const responseData = clientType === "web" 
-            ? null
-            : { accessToken, refreshToken: newRefreshToken };
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Tokens refreshed successfully",
-            data: responseData,
-        });
     }
 };
 

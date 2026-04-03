@@ -2,10 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { HttpStatusType } from '@/core/constants/httpStatusCode';
 import { clearAuthCookies } from '@core/utils/cookies.helper';
 import { AppError, errorResponse } from '@api/utils/response';
-import { REFRESH_TOKEN_ENDPOINT } from '@core/constants/authConfig';
 
 import { Log } from '../../core/utils/log';
 import { logger } from '../../core/utils/logger';
+import { REFRESH_TOKEN_ENDPOINT } from '@core/constants/authConfig';
 
 
 export const globalErrorHandler  = (err: any, req: Request, res: Response, _next: NextFunction) => {
@@ -55,11 +55,12 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     Log.error('Error data:', err.code);
 
+    if (req.path.endsWith(REFRESH_TOKEN_ENDPOINT)) {
+        clearAuthCookies(res, 'both', true);
+    }
+
     if (status === 401) {
-        const normalizedPath = req.path.replace(/\/+$/, "");
-        const isRefreshTokenRequest = normalizedPath.endsWith(`/${REFRESH_TOKEN_ENDPOINT}`);
-        
-        clearAuthCookies(res, 'both', isRefreshTokenRequest);
+        clearAuthCookies(res, 'both', false);
     }
 
     errorResponse(res, status, { code, message });
