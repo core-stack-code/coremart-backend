@@ -56,8 +56,8 @@ export const globalErrorHandler  = (err: any, req: Request, res: Response, _next
 
     Log.error('Error data:', err.code);
 
-    if (status === 401 && env.NODE_ENV === 'production' && req.path.endsWith(REFRESH_TOKEN_ENDPOINT)) {
-        clearAuthCookies(res, "both");
+    if (status === 401 && env.NODE_ENV === 'production') {
+        clearAuthCookies(res, "both", req.path.endsWith(REFRESH_TOKEN_ENDPOINT));
     }
 
     errorResponse(res, status, { code, message });

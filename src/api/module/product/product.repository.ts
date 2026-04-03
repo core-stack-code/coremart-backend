@@ -93,8 +93,8 @@ class ProductRepository {
 
     public getList = async (skip: number, take: number, search: string | undefined): Promise<ProductResultItem[]> => {
         return await prisma.product.findMany({
-            skip,
-            take,
+            skip: !search ? skip : undefined,
+            take: !search ? take : undefined,
             where: {
                 name: search ? {
                     contains: search,

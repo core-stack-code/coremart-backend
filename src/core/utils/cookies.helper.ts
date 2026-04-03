@@ -55,7 +55,7 @@ export const applyAuthCookies = (
 }
 
 
-export const clearAuthCookies = (res: Response, type: UserRole = 'user') => {
+export const clearAuthCookies = (res: Response, type: UserRole = 'user', isClearRefreshToken: boolean = true) => {
     const cookieConfig = getCookiesConfig();
 
     const cookieSets =
@@ -65,6 +65,9 @@ export const clearAuthCookies = (res: Response, type: UserRole = 'user') => {
 
     for (const cookieNames of cookieSets) {
         res.clearCookie(cookieNames.accessToken, { ...cookieConfig });
-        res.clearCookie(cookieNames.refreshToken, { ...cookieConfig });
+        
+        if (isClearRefreshToken) {
+            res.clearCookie(cookieNames.refreshToken, { ...cookieConfig });
+        }
     }
 }
