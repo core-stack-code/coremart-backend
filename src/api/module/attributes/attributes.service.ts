@@ -1,3 +1,4 @@
+import { AppError } from "@api/utils/response";
 import { attributesRepository } from "./attributes.repository";
 import { 
     CreateColorPayload, CreateMaterialPayload, CreateSizePayload, UpdateColorPayload, UpdateMaterialPayload, UpdateSizePayload
@@ -35,7 +36,7 @@ class AttributesService {
         ]);
 
         if (!size || !color || !material) {
-            throw new Error("Invalid variant attributes");
+            throw new AppError(400, "BAD_REQUEST", "Invalid variant attributes");
         }
     }
 

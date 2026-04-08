@@ -31,8 +31,6 @@ class VariantsService {
                 ...payload,
             }, tx)
 
-            // Log.info("Variant created with ID: " + variant);
-
             const skuCode = generateSkuCode(
                 variant.product.slug, 
                 variant.size.name, 
