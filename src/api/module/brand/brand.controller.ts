@@ -39,16 +39,6 @@ class BrandController {
         });
     }
 
-    public async getBrandSimpleList(_req: Request, res: Response) {
-        const brands = await brandService.getBrandSimpleList();
-
-        AppResponse(res, 200, {
-            code: "OK",
-            message: "Brand simple list fetched successfully.",
-            data: brands,
-        });
-    }
-
     public async assignProduct(req: Request, res: Response) {
         const brandId = req.params.brandId as string;
         const productId = req.params.productId as string;

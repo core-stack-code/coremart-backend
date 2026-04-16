@@ -8,7 +8,7 @@ import { ProductDetailItem, ProductsItem } from "@core/types/product";
 import { AppError } from "@api/utils/response";
 import { slugify } from "@core/utils/db.helper";
 import { PaginationType } from "@core/types/common";
-import { Log } from "@core/utils/log";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 
 class ProductService {
@@ -92,7 +92,7 @@ class ProductService {
 
             await deleteRedisCacheByPattern(getRedisKeys('cache', 'products:list', '*'));
             await deleteRedisCacheByPattern(getRedisKeys('cache', 'categories:products', '*'));
-            await deleteRedisCache(getRedisKeys('cache', 'products:list', id))
+            await deleteRedisCache(getRedisKeys('cache', 'products:details', product.slug));
         });
     }
 
@@ -109,20 +109,13 @@ class ProductService {
         // Log.info("productsResult", productsResult);
         // name, status, thumbnailUrl, updatedAt, brand, number of variants
 
-        const totalPages = Math.ceil(total / query.limit);
+        const pagination = getPaginationData(query.page, query.limit, total);
         
         const products = this.productsMaping(productsResult);
 
         return {
             products,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            }
+            pagination
         }
     }
 

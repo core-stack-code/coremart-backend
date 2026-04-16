@@ -6,6 +6,7 @@ import { catalogService } from "@mod/catalog/catalog.service";
 import { formatProductListItem } from "@core/utils/product.helper";
 import { ProductListApiResponse } from "@core/types/product";
 import { AppError } from "@api/utils/response";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 const MAX_WISHLIST_PER_USER = 3;
 
@@ -104,19 +105,12 @@ class WishlistService {
 
         const products = productList.map((item) => item.product);
 
-        const formattedProducts = formatProductListItem(products, false, false);
-        const totalPages = Math.ceil(total / query.limit);
+        const formattedProducts = formatProductListItem(products);
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         return {
             products: formattedProducts,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination
         };
     }
 }

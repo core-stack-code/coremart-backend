@@ -5,18 +5,19 @@ import { productListQuerySchema, productsByCategoryQuerySchema } from "./catalog
 import { validationMiddleware } from "@api/middlewares/validate.middlewate";
 import { authMiddleware } from "@api/middlewares/auth.middleware";
 import { asyncWrapper } from "@api/utils/asyncWrapper";
+import { attributesController } from "@mod/attributes/attributes.controller";
 
 const catalogRouter = express.Router();
 
+catalogRouter.use(authMiddleware({ isGuestRoute: true }));
+
 catalogRouter.get(
     "/product/:productSlug",
-    authMiddleware({ isGuestRoute: true }),
     asyncWrapper(catalogController.getProductDetail)
 )
 
 catalogRouter.get(
     "/products",
-    authMiddleware({ isGuestRoute: true }),
     validationMiddleware.validateQuery(productListQuerySchema),
     asyncWrapper(catalogController.getProducts)
 )
@@ -33,15 +34,23 @@ catalogRouter.get(
 
 catalogRouter.get(
     "/category/:categorySlug/products",
-    authMiddleware({ isGuestRoute: true }),
     validationMiddleware.validateQuery(productsByCategoryQuerySchema),
     asyncWrapper(catalogController.getProductsByCategory)
 )
 
 catalogRouter.get(
     "/reviews/product/:productSlug",
-    authMiddleware({ isGuestRoute: true }),
     asyncWrapper(catalogController.getProductReviews)
+)
+
+catalogRouter.get(
+    "/brand",
+    asyncWrapper(catalogController.getBrandList)
+)
+
+catalogRouter.get(
+    '/active-list',
+    asyncWrapper(attributesController.getAttibutes)
 )
 
 export default catalogRouter;

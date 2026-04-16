@@ -82,6 +82,16 @@ class CatalogController {
             data: reviews
         })
     }
+
+    public async getBrandList(_req: Request, res: Response) {
+        const brands = await catalogService.getBrandSimpleList();
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Brand list fetched successfully.",
+            data: brands,
+        });
+    }
 }
 
 export const catalogController = new CatalogController();

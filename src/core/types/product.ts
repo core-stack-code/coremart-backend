@@ -122,6 +122,7 @@ export type ProductCartItem = {
 
 export type ProductDetailApiResponse = {
     product: {
+        id: string;
         name: string;
         slug: string;
         description: string;
@@ -138,7 +139,7 @@ export type ProductDetailApiResponse = {
             url: string;
             altText: string | null;
         }[];
-        isFavorite: boolean;
+        isFavorite?: boolean;
     };
     categories: {
         name: string;
@@ -159,6 +160,8 @@ export type ProductDetailApiResponse = {
 
 // -------------------- OTHER TYPES --------------------
 export type ProductVariantWithSKU = {
+    skuId: string;
+    variantId: string;
     size: string;
     color: string;
     material: string;

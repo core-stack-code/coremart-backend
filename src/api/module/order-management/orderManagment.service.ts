@@ -1,6 +1,7 @@
 import { OrderListQuery, OrderStatusPayload, PaymentStatusPayload } from "./orderManagment.validator";
 import { orderManagmentRepository } from "./orderManagment.repository";
 import { AppError } from "@api/utils/response";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 
 class OrderManagmentService {
@@ -20,18 +21,11 @@ class OrderManagmentService {
             }
         })
 
-        const totalPages = Math.ceil(total / take)
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         return {
             orders: orderList,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination
         }
     }
 

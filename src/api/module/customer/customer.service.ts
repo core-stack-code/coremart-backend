@@ -1,6 +1,7 @@
 import { userRepository } from "@mod/users/user.repository";
 import { CustomersListQuery } from "./customer.validator";
 import { AppError } from "@api/utils/response";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 class CustomerService {
     public async getCustomersList(query: CustomersListQuery) {
@@ -10,7 +11,7 @@ class CustomerService {
         const customers = await userRepository.findMany(skip, take)
         const total = await userRepository.count();
 
-        const totalPages = Math.ceil(total / query.limit);
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         const formatedCustomers = customers.map(cus => {
             const { _count, ...rest } = cus;
@@ -22,14 +23,7 @@ class CustomerService {
 
         return {
             customers: formatedCustomers,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination,
         }
     }
 

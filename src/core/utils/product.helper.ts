@@ -10,8 +10,6 @@ export function paiseToRupees(value: number): number {
 
 export const formatProductListItem = (
     products: ProductListResultItem[],
-    favoriteSet: Set<string> | boolean,
-    addIsFavorite = true
 ): ProductListItem[] => {
     return products.map((p) => {
         const prices = p.variants
@@ -20,9 +18,7 @@ export const formatProductListItem = (
 
         const price = prices.length ? paiseToRupees(Math.min(...prices)) : null;
 
-        const isFavorite = typeof favoriteSet === "boolean" ? favoriteSet : favoriteSet.has(p.id);
-
-        const product = {
+        return {
             id: p.id,
             name: p.name,
             slug: p.slug,
@@ -33,7 +29,17 @@ export const formatProductListItem = (
             rating: p.rating,
             totalReviews: p.totalReviews,
         };
+    });
+}
 
-        return addIsFavorite ? { ...product, isFavorite } : product;
+
+export const productFavoriteMapping = (
+    products: ProductListItem[],
+    favoriteSet: Set<string> | boolean,
+    addIsFavorite = true
+): ProductListItem[] => {
+    return products.map((prod) => {
+        const isFavorite = typeof favoriteSet === "boolean" ? favoriteSet : favoriteSet.has(prod.id);
+        return addIsFavorite ? { ...prod, isFavorite } : prod;
     });
 }

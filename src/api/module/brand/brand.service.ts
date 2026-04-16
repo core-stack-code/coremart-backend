@@ -33,11 +33,7 @@ class BrandService {
             productCount: brand._count.products,
         }));
     }
-
-    public getBrandSimpleList = async () => {
-        return await brandRepository.findAllSimple();
-    }
-
+    
     public assignProduct = async (brandId: string, productId: string) => {
         const brand = await brandRepository.exists(brandId);
 

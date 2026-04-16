@@ -202,6 +202,19 @@ class CatalogRepository {
             _count: { rating: true }
         });
     }
+
+    public findBrandList = async () => {
+        return await prisma.brand.findMany({
+            select: {
+                name: true,
+                slug: true,
+                logoUrl: true,
+            },
+            orderBy: {
+                name: "asc",
+            },
+        });
+    }
 }
 
 export const catalogRepository = new CatalogRepository();

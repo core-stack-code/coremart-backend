@@ -2,7 +2,8 @@ import { favoritesRepository } from "./favorites.repository";
 import { FavoriteListQuery } from "./favorites.validator";
 
 import { ProductListApiResponse, ProductListResultItem } from "@core/types/product";
-import { formatProductListItem } from "@core/utils/product.helper";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
+import { formatProductListItem, productFavoriteMapping } from "@core/utils/product.helper";
 import { catalogService } from "@mod/catalog/catalog.service";
 
 
@@ -25,19 +26,13 @@ class FavoritesService {
 
         const total = await favoritesRepository.countFavoriteProducts(userId);
 
-        const formattedProducts = formatProductListItem(products, true);
-        const totalPages = Math.ceil(total / query.limit);
+        const formattedProducts = formatProductListItem(products);
+        const favoriteMappedProducts = productFavoriteMapping(formattedProducts, true);
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         return {
-            products: formattedProducts,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            products: favoriteMappedProducts,
+            pagination
         };
     }
 

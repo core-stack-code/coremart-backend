@@ -15,10 +15,10 @@ import { CashFreeCreateOrderResponse, CashfreePaymentWebhookPayload } from "@cor
 import { verifyCashFreeWebhookSignature } from "@core/integrations/cashfree/cashfree.client";
 import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
 import { AppError } from "@api/utils/response";
-import { PaginationType } from "@core/types/common";
 import { getUuid } from "@core/utils/db.helper";
 import { addOrderExpirationJob, addPaymentExpirationJob } from "./order.utils";
 import { emailQueue, QUEUE_JOBS } from "@core/lib/jobs/queue";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 type ItemQuantityMap = Map<string, { quantity: number }>;
 
@@ -282,16 +282,7 @@ class OrderService {
             }
         });
 
-        const totalPages = Math.ceil(total / query.limit);
-
-        const pagination: PaginationType = {
-            page: query.page,
-            limit: query.limit,
-            totalPages,
-            totalItems: total,
-            isPrevPage: query.page > 1,
-            isNextPage: query.page < totalPages,
-        }
+        const pagination = getPaginationData(query.page, query.limit, total);
         
         return { orders, pagination };
     }
@@ -318,7 +309,7 @@ class OrderService {
             take: productIds.length,
         })
 
-        const formattedProducts = formatProductListItem(products, false, false);
+        const formattedProducts = formatProductListItem(products);
 
         const productMap = new Map(formattedProducts.map(p => [p.id, p]));
 

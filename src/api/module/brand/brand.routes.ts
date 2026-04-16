@@ -7,42 +7,33 @@ import { asyncWrapper } from '@api/utils/asyncWrapper';
 
 const brandRouter = express.Router();
 
+brandRouter.use(adminMiddleware());
+
 brandRouter.post(
     '/',
-    adminMiddleware(),
     validationMiddleware.validateRequest(createBrandSchema),
     asyncWrapper(brandController.createBrand)
 );
 
 brandRouter.patch(
     '/:brandId',
-    adminMiddleware(),
     validationMiddleware.validateRequest(updateBrandSchema),
     asyncWrapper(brandController.updateBrand)
 );
 
 brandRouter.get(
     '/list',
-    adminMiddleware(),
     asyncWrapper(brandController.getBrandList)
 );
 
 brandRouter.post(
     '/:brandId/product/:productId',
-    adminMiddleware(),
     asyncWrapper(brandController.assignProduct)
 );
 
 brandRouter.delete(
     '/:brandId/product/:productId',
-    adminMiddleware(),
     asyncWrapper(brandController.removeProduct)
-);
-
-// public api (might need in future)
-brandRouter.get(
-    '/',
-    asyncWrapper(brandController.getBrandSimpleList)
 );
 
 export default brandRouter;

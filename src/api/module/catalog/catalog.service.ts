@@ -3,7 +3,7 @@ import { catalogRepository, CategoryTreeNode, CategoryTreeItem, RawCategoryTreeI
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
 import { ProductDetailApiResponse, ProductListApiResponse, ProductListResultItem, ProductVariantWithSKU } from "@core/types/product";
-import { formatProductListItem, paiseToRupees } from "@core/utils/product.helper";
+import { formatProductListItem, paiseToRupees, productFavoriteMapping } from "@core/utils/product.helper";
 import { AppError } from "@api/utils/response";
 import { favoritesRepository } from "@mod/favorites/favorites.repository";
 import { favoritesService } from "@mod/favorites/favorites.service";
@@ -19,7 +19,19 @@ class CatalogService {
         const key = getRedisKeys('cache', 'products:details', productSlug)
         
         const cached = await getRedisCache<ProductDetailApiResponse>(key);
-        if (cached) return cached;
+        if (cached) {
+            let isFavorite = false;
+
+            if (userId) {
+                const favoriteProduct = await favoritesRepository.checkFavorite(userId, cached.product.id);
+                isFavorite = !!favoriteProduct;
+            }
+
+            return {
+                ...cached,
+                product: { ...cached.product, isFavorite,}
+            }
+        };
 
 
         // form db
@@ -48,6 +60,8 @@ class CatalogService {
                 materials.add(v.material.name);
 
                 return {
+                    skuId: v.sku!.id,
+                    variantId: v.id,
                     size: v.size.name,
                     color: v.color.name,
                     material: v.material.name,
@@ -81,6 +95,7 @@ class CatalogService {
 
         const responseData: ProductDetailApiResponse = {
             product: {
+                id: productResult.id,
                 name: productResult.name,
                 slug: productResult.slug,
                 description: productResult.description,
@@ -94,7 +109,6 @@ class CatalogService {
                     altText: thumbnailImage.altText,
                 } : null,
                 images,
-                isFavorite,
             },
             categories: activeCategories,
             attributes: {
@@ -113,7 +127,10 @@ class CatalogService {
         // set to cache
         await setRedisCache(key, responseData, REDIS_TTL.PRODUCT_DETAIL);
 
-        return responseData;
+        return {
+            ...responseData,
+            product: { ...responseData.product, isFavorite }
+        };
     }
 
     public getProducts = async (
@@ -125,8 +142,23 @@ class CatalogService {
         const key = getRedisKeys('cache', 'products:list', contexKey);
 
         const cached = await getRedisCache<ProductListApiResponse>(key);
-        if (cached) return cached;
 
+        if (cached) {
+            // get favorite info from cache
+            let favoriteSet = new Set<string>()
+
+            if (userId) {
+                const productIds = cached.products.map(product => product.id);
+                favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+            }
+
+            const favoriteMappedProducts = productFavoriteMapping(cached.products, favoriteSet);
+
+            return {
+                products: favoriteMappedProducts,
+                pagination: cached.pagination,
+            }
+        }
 
         // from db
         const where = this.buildWhereForProductList(query);
@@ -150,14 +182,7 @@ class CatalogService {
 
         const total = await catalogRepository.countProducts(where);
 
-        let favoriteSet = new Set<string>()
-
-        if (userId) {
-            const productIds = products.map(product => product.id);
-            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
-        }
-
-        const formattedProducts = formatProductListItem(products, favoriteSet);
+        const formattedProducts = formatProductListItem(products);
         const pagination = getPaginationData(query.page, query.limit, total);
 
         // set to cache
@@ -166,8 +191,19 @@ class CatalogService {
             pagination,
         }, REDIS_TTL.PRODUCT_LIST);
 
+
+        // get favorite info
+        let favoriteSet = new Set<string>()
+
+        if (userId) {
+            const productIds = products.map(product => product.id);
+            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+        }
+
+        const favoriteMappedProducts = productFavoriteMapping(formattedProducts, favoriteSet);
+
         return {
-            products: formattedProducts,
+            products: favoriteMappedProducts,
             pagination,
         };
     }
@@ -233,7 +269,23 @@ class CatalogService {
         const key = getRedisKeys('cache', 'categories:products', context);
 
         const cached = await getRedisCache<ProductListApiResponse>(key);
-        if (cached) return cached;
+
+        if (cached) {
+            // get favorite info from cache
+            let favoriteSet = new Set<string>()
+
+            if (userId) {
+                const productIds = cached.products.map(product => product.id);
+                favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+            }
+
+            const favoriteMappedProducts = productFavoriteMapping(cached.products, favoriteSet);
+
+            return {
+                products: favoriteMappedProducts,
+                pagination: cached.pagination,
+            }
+        };
 
 
         // from db
@@ -260,16 +312,10 @@ class CatalogService {
             products = this.sortProductsByPrice(products, direction);
         }
 
+
         const total = await catalogRepository.countProductsByCategory(category.id);
 
-        let favoriteSet = new Set<string>()
-
-        if (userId) {
-            const productIds = products.map(product => product.id);
-            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
-        }
-
-        const formattedProducts = formatProductListItem(products, favoriteSet);
+        const formattedProducts = formatProductListItem(products);
         const pagination = getPaginationData(query.page, query.limit, total);
 
         // set to cache
@@ -278,8 +324,19 @@ class CatalogService {
             pagination,
         }, REDIS_TTL.PRODUCT_LIST);
 
+
+        // get favorite info
+        let favoriteSet = new Set<string>()
+
+        if (userId) {
+            const productIds = products.map(product => product.id);
+            favoriteSet = await favoritesService.findFavoriteProducts(userId, productIds);
+        }
+
+        const favoriteMappedProducts = productFavoriteMapping(formattedProducts, favoriteSet);
+
         return {
-            products: formattedProducts,
+            products: favoriteMappedProducts,
             pagination
         };
     }
@@ -414,6 +471,10 @@ class CatalogService {
             createdAt: review.createdAt,
             userName: review.user.name,
         }));
+    }
+
+    public getBrandSimpleList = async () => {
+        return await catalogRepository.findBrandList();
     }
 }
 

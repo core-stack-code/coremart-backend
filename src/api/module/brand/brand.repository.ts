@@ -63,19 +63,6 @@ class BrandRepository {
         });
     }
 
-    public findAllSimple = async () => {
-        return await prisma.brand.findMany({
-            select: {
-                name: true,
-                slug: true,
-                logoUrl: true,
-            },
-            orderBy: {
-                name: "asc",
-            },
-        });
-    }
-
     public assignProductToBrand = async (brandId: string, productId: string, tx: PrismaTx = prisma) => {
         return await tx.product.update({
             where: { id: productId },

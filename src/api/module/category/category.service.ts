@@ -6,6 +6,7 @@ import { AppError } from "@api/utils/response";
 import { slugify } from "@core/utils/db.helper";
 import { deleteRedisCacheByPattern } from "@core/lib/redis/cache";
 import { getRedisKeys } from "@core/utils/gerRedisKeys";
+import { getPaginationData } from "@core/utils/getPaginatoinData";
 
 
 class CategoryService {
@@ -240,18 +241,11 @@ class CategoryService {
             }
         })
 
-        const totalPages = Math.ceil(total / query.limit);
+        const pagination = getPaginationData(query.page, query.limit, total);
 
         return {
             categories,
-            pagination: {
-                page: query.page,
-                limit: query.limit,
-                totalPages,
-                totalItems: total,
-                isPrevPage: query.page > 1,
-                isNextPage: query.page < totalPages,
-            },
+            pagination,
         };
     }
 
