@@ -4,6 +4,8 @@ type RedisKeyDomain = 'cache'  | 'oauth' | 'ratelimit';
 export type RedisKeyEntity = 
     'products:list' |
     'products:details' |
+    'products:new' |
+    'products:rated' |
     'categories:products' |
     'reviews' |
     'state:google' |

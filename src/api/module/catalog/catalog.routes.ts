@@ -12,6 +12,16 @@ const catalogRouter = express.Router();
 catalogRouter.use(authMiddleware({ isGuestRoute: true }));
 
 catalogRouter.get(
+    '/product/new-arrivals',
+    asyncWrapper(catalogController.getNewArrivals)
+)
+
+catalogRouter.get(
+    '/product/top-rated',
+    asyncWrapper(catalogController.getTopRatedProducts)
+)
+
+catalogRouter.get(
     "/product/:productSlug",
     asyncWrapper(catalogController.getProductDetail)
 )
@@ -49,8 +59,9 @@ catalogRouter.get(
 )
 
 catalogRouter.get(
-    '/active-list',
+    '/attributes',
     asyncWrapper(attributesController.getAttibutes)
 )
+
 
 export default catalogRouter;

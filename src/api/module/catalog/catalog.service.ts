@@ -2,7 +2,7 @@ import { Prisma } from "generated/prisma/browser";
 import { catalogRepository, CategoryTreeNode, CategoryTreeItem, RawCategoryTreeItem } from "./catalog.repository";
 import { ProductListQuery, ProductsByCategoryQuery } from "./catalog.validator";
 
-import { ProductDetailApiResponse, ProductListApiResponse, ProductListResultItem, ProductVariantWithSKU } from "@core/types/product";
+import { ProductDetailApiResponse, ProductListApiResponse, ProductListItem, ProductListResultItem, ProductVariantWithSKU } from "@core/types/product";
 import { formatProductListItem, paiseToRupees, productFavoriteMapping } from "@core/utils/product.helper";
 import { AppError } from "@api/utils/response";
 import { favoritesRepository } from "@mod/favorites/favorites.repository";
@@ -339,6 +339,66 @@ class CatalogService {
             products: favoriteMappedProducts,
             pagination
         };
+    }
+
+    public getNewArrivals = async (): Promise<ProductListItem[]> => {
+        const key = getRedisKeys('cache', 'products:new', '');
+
+        const cached = await getRedisCache<ProductListItem[]>(key);
+        if (cached) return cached;
+
+        let products: ProductListResultItem[] = await catalogRepository.findProducts({
+            where: {
+                status: "ACTIVE",
+                variants: {
+                    some: {
+                        sku: { is: { isActive: true } }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+            take: 8,
+            skip: 0,
+        });
+
+        const formattedProducts = formatProductListItem(products);
+
+        // set cache
+        await setRedisCache(key, formattedProducts, REDIS_TTL.NEW_PRODUCTS);
+
+        return formattedProducts;
+    }
+
+    public getTopRatedProducts = async (): Promise<ProductListItem[]> => {
+        const key = getRedisKeys('cache', 'products:rated', '');
+
+        const cached = await getRedisCache<ProductListItem[]>(key);
+        if (cached) return cached;
+
+        let products: ProductListResultItem[] = await catalogRepository.findProducts({
+            where: {
+                status: "ACTIVE",
+                variants: {
+                    some: {
+                        sku: { is: { isActive: true } }
+                    }
+                }
+            },
+            orderBy: { 
+                rating: "desc" 
+            },
+            take: 8,
+            skip: 0,
+        });
+
+        const formattedProducts = formatProductListItem(products);
+
+        // set cache
+        await setRedisCache(key, formattedProducts, REDIS_TTL.RATED_PRODUCTS);
+
+        return formattedProducts;
     }
 
 

@@ -92,6 +92,26 @@ class CatalogController {
             data: brands,
         });
     }
+
+    public async getNewArrivals(_req: Request, res: Response) {
+        const newArrivals = await catalogService.getNewArrivals();
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "New arrivals fetched successfully.",
+            data: newArrivals,
+        });
+    }
+
+    public async getTopRatedProducts(_req: Request, res: Response) {
+        const topRatedProducts = await catalogService.getTopRatedProducts();
+
+        AppResponse(res, 200, {
+            code: "OK",
+            message: "Top rated products fetched successfully.",
+            data: topRatedProducts,
+        });
+    }
 }
 
 export const catalogController = new CatalogController();

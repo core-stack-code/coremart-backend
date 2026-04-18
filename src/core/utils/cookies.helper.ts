@@ -16,7 +16,6 @@ export const getCookiesConfig = (): CookieOptions => {
             httpOnly: true,
             secure: true,
             sameSite: 'none' as SameSiteType,
-            path: '/',
         },
         production: {
             httpOnly: true,
