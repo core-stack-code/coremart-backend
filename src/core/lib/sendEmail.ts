@@ -2,10 +2,11 @@ import { Resend } from 'resend';
 import { env } from '@core/config/env';
 import { AppError } from '@api/utils/response';
 import { paiseToRupees } from '@core/utils/product.helper';
+import { Log } from '@core/utils/log';
 
 
 const resend = new Resend(env.RESEND_API_KEY);
-
+const EMAIL_DOMAIN = env.EMAIL_DOMAIN;
 
 type OtpMailData = {
     otp: string;
@@ -121,7 +122,7 @@ export const sendEmail = async <T extends EmailType>(
         const { html, subject } = prepareMailData(emailType, details);
 
         const response = await resend.emails.send({
-            from: 'Core Mart <hello@maulikkoli.me>',
+            from: `Core Mart <hello@${EMAIL_DOMAIN}>`,
             to,
             subject,
             html
@@ -133,6 +134,14 @@ export const sendEmail = async <T extends EmailType>(
         }
 
     } catch (error: any) {
+        Log.error("Error sending email", {
+            to,
+            emailType,
+            error: {
+                message: error.message,
+                statusCode: error.statusCode,
+            }
+        });
         throw new AppError(
             error?.statusCode || 500,
             "INTERNAL_SERVER_ERROR",

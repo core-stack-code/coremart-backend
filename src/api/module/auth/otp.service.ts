@@ -78,7 +78,6 @@ class OtpService {
             }, tx);
         });
 
-
         await this.sendOtpEmail(user, otp, sessionType);
     }
 

@@ -10,7 +10,9 @@ const envSchema = z.object({
   ADMIN_DOMAIN_URL: z.url(),
   DATABASE_URL: z.string().trim().min(1),
   REDIS_URL: z.string().trim().min(1),
+  
   DOMAIN: z.string().trim().min(1),
+  EMAIL_DOMAIN: z.string().trim().min(1),
 
   JWT_ACCESS_SECRET: z.string().trim().min(1),
   JWT_REFRESH_SECRET: z.string().trim().min(1),
